@@ -306,13 +306,13 @@ void GLWidget::paintGL()
     glEnable(GL_DEPTH_TEST);
 
     QMatrix4x4 modelview;
-    modelview.rotate(m_fAngle, 0.0f, 1.0f, 0.0f);
-    modelview.rotate(m_fAngle, 1.0f, 0.0f, 0.0f);
-    modelview.rotate(m_fAngle, 0.0f, 0.0f, 1.0f);
+    modelview.perspective(60.0, 16.0/9.0, 1.0, 200.0);
+    modelview.lookAt(QVector3D(0.0,8.0,0.0),QVector3D(0.0,0.0,0.0),QVector3D(0.0,0.0,1.0));
+    modelview.rotate(m_fAngle, 0, 1, 0);
+    modelview.rotate(m_fAngle, 1, 0, 0);
+    modelview.rotate(m_fAngle, 0, 0, 1);
     modelview.scale(m_fScale);
 //    modelview.translate(0.0f, -2.0f, 0.0f);
-    modelview.perspective(90.0, 4.0/3.0, 1.0, 200.0);
-    modelview.lookAt(QVector3D(5.0,0.0,0.0),QVector3D(0.0,0.0,0.0),QVector3D(0.0,0.0,1.0));
 
     glDepthMask(GL_TRUE);
     if (qtLogo) {
