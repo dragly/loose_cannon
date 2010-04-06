@@ -310,26 +310,9 @@ void GLWidget::paintGL()
     modelview.rotate(m_fAngle, 1.0f, 0.0f, 0.0f);
     modelview.rotate(m_fAngle, 0.0f, 0.0f, 1.0f);
     modelview.scale(m_fScale);
-    modelview.translate(0.0f, -2.0f, 0.0f);
-
-
-    glMatrixMode(GL_PROJECTION);
-    glLoadIdentity();
-    double fovy = 90.0;
-    double aspect = 4.0 / 3.0;
-    double zNear = 0.001;
-    double zFar = 200.0;
-    double xmin, xmax, ymin, ymax;
-
-    ymax = zNear * tan(fovy * M_PI / 360.0);
-    ymin = -ymax;
-    xmin = ymin * aspect;
-    xmax = ymax * aspect;
-
-
-    glFrustum(xmin, xmax, ymin, ymax, zNear, zFar);
-    glMatrixMode(GL_MODELVIEW);
-    glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);
+//    modelview.translate(0.0f, -2.0f, 0.0f);
+    modelview.perspective(90.0, 4.0/3.0, 1.0, 200.0);
+    modelview.lookAt(QVector3D(5.0,0.0,0.0),QVector3D(0.0,0.0,0.0),QVector3D(0.0,0.0,1.0));
 
     glDepthMask(GL_TRUE);
     if (qtLogo) {
