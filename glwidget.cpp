@@ -50,7 +50,7 @@
 const int bubbleNum = 8;
 
 GLWidget::GLWidget(QWidget *parent)
-    : QGLWidget(parent)
+        : QGLWidget(parent)
 {
     qtLogo = true;
     frames = 0;
@@ -75,7 +75,7 @@ void GLWidget::setScaling(int scale) {
     else if (scale < 50)
         m_fScale =  1- (qreal(50 - scale) / 50 * 1/2);
     else
-      m_fScale = 1;
+        m_fScale = 1;
 }
 
 void GLWidget::setLogo() {
@@ -88,7 +88,7 @@ void GLWidget::setTexture() {
 
 void GLWidget::showBubbles(bool bubbles)
 {
-   m_showBubbles = bubbles;
+    m_showBubbles = bubbles;
 }
 
 void GLWidget::paintQtLogo()
@@ -113,12 +113,12 @@ void GLWidget::paintQtLogo()
                                  model->normals[3 * model->triangles[group->triangles[i]].vindices[j] + 2]);
                 norms.append(vector);
             }
-                    program1.enableAttributeArray(normalAttr1);
+            program1.enableAttributeArray(normalAttr1);
             program1.enableAttributeArray(vertexAttr1);
             program1.setAttributeArray(vertexAttr1, verts.constData());
-                    program1.setAttributeArray(normalAttr1, norms.constData());
+            program1.setAttributeArray(normalAttr1, norms.constData());
             glDrawArrays(GL_TRIANGLES, 0, verts.size());
-                    program1.disableAttributeArray(normalAttr1);
+            program1.disableAttributeArray(normalAttr1);
             program1.disableAttributeArray(vertexAttr1);
         }
         group = group->next;
@@ -199,34 +199,33 @@ void GLWidget::paintTexturedCube()
 void GLWidget::initializeGL ()
 {
     glClearColor(0.1f, 0.1f, 0.2f, 1.0f);
-
     glGenTextures(1, &m_uiTexture);
     m_uiTexture = bindTexture(QImage(":/qt.png"));
 
     QGLShader *vshader1 = new QGLShader(QGLShader::Vertex, this);
     const char *vsrc1 =
-        "attribute highp vec4 vertex;\n"
-        "attribute mediump vec3 normal;\n"
-        "uniform mediump mat4 matrix;\n"
-        "varying mediump vec4 color;\n"
-        "void main(void)\n"
-        "{\n"
-        "    vec3 toLight = normalize(vec3(0.0, 0.3, 1.0));\n"
-        "    float angle = max(dot(normal, toLight), 0.0);\n"
-        "    vec3 col = vec3(0.40, 1.0, 0.0);\n"
-        "    color = vec4(col * 0.2 + col * 0.8 * angle, 1.0);\n"
-        "    color = clamp(color, 0.0, 1.0);\n"
-        "    gl_Position = matrix * vertex;\n"
-        "}\n";
+            "attribute highp vec4 vertex;\n"
+            "attribute mediump vec3 normal;\n"
+            "uniform mediump mat4 matrix;\n"
+            "varying mediump vec4 color;\n"
+            "void main(void)\n"
+            "{\n"
+            "    vec3 toLight = normalize(vec3(0.0, 0.3, 1.0));\n"
+            "    float angle = max(dot(normal, toLight), 0.0);\n"
+            "    vec3 col = vec3(0.40, 1.0, 0.0);\n"
+            "    color = vec4(col * 0.2 + col * 0.8 * angle, 1.0);\n"
+            "    color = clamp(color, 0.0, 1.0);\n"
+            "    gl_Position = matrix * vertex;\n"
+            "}\n";
     vshader1->compileSourceCode(vsrc1);
 
     QGLShader *fshader1 = new QGLShader(QGLShader::Fragment, this);
     const char *fsrc1 =
-        "varying mediump vec4 color;\n"
-        "void main(void)\n"
-        "{\n"
-        "    gl_FragColor = color;\n"
-        "}\n";
+            "varying mediump vec4 color;\n"
+            "void main(void)\n"
+            "{\n"
+            "    gl_FragColor = color;\n"
+            "}\n";
     fshader1->compileSourceCode(fsrc1);
 
     program1.addShader(vshader1);
@@ -239,32 +238,32 @@ void GLWidget::initializeGL ()
 
     QGLShader *vshader2 = new QGLShader(QGLShader::Vertex);
     const char *vsrc2 =
-        "attribute highp vec4 vertex;\n"
-        "attribute highp vec4 texCoord;\n"
-        "attribute mediump vec3 normal;\n"
-        "uniform mediump mat4 matrix;\n"
-        "varying highp vec4 texc;\n"
-        "varying mediump float angle;\n"
-        "void main(void)\n"
-        "{\n"
-        "    vec3 toLight = normalize(vec3(0.0, 0.3, 1.0));\n"
-        "    angle = max(dot(normal, toLight), 0.0);\n"
-        "    gl_Position = matrix * vertex;\n"
-        "    texc = texCoord;\n"
-        "}\n";
+            "attribute highp vec4 vertex;\n"
+            "attribute highp vec4 texCoord;\n"
+            "attribute mediump vec3 normal;\n"
+            "uniform mediump mat4 matrix;\n"
+            "varying highp vec4 texc;\n"
+            "varying mediump float angle;\n"
+            "void main(void)\n"
+            "{\n"
+            "    vec3 toLight = normalize(vec3(0.0, 0.3, 1.0));\n"
+            "    angle = max(dot(normal, toLight), 0.0);\n"
+            "    gl_Position = matrix * vertex;\n"
+            "    texc = texCoord;\n"
+            "}\n";
     vshader2->compileSourceCode(vsrc2);
 
     QGLShader *fshader2 = new QGLShader(QGLShader::Fragment);
     const char *fsrc2 =
-        "varying highp vec4 texc;\n"
-        "uniform sampler2D tex;\n"
-        "varying mediump float angle;\n"
-        "void main(void)\n"
-        "{\n"
-        "    highp vec3 color = texture2D(tex, texc.st).rgb;\n"
-        "    color = color * 0.2 + color * 0.8 * angle;\n"
-        "    gl_FragColor = vec4(clamp(color, 0.0, 1.0), 1.0);\n"
-        "}\n";
+            "varying highp vec4 texc;\n"
+            "uniform sampler2D tex;\n"
+            "varying mediump float angle;\n"
+            "void main(void)\n"
+            "{\n"
+            "    highp vec3 color = texture2D(tex, texc.st).rgb;\n"
+            "    color = color * 0.2 + color * 0.8 * angle;\n"
+            "    gl_FragColor = vec4(clamp(color, 0.0, 1.0), 1.0);\n"
+            "}\n";
     fshader2->compileSourceCode(fsrc2);
 
     program2.addShader(vshader2);
@@ -311,8 +310,28 @@ void GLWidget::paintGL()
     modelview.rotate(m_fAngle, 1.0f, 0.0f, 0.0f);
     modelview.rotate(m_fAngle, 0.0f, 0.0f, 1.0f);
     modelview.scale(m_fScale);
-    modelview.translate(0.0f, -0.8f, 0.0f);
+    modelview.translate(0.0f, -2.0f, 0.0f);
 
+
+    glMatrixMode(GL_PROJECTION);
+    glLoadIdentity();
+    double fovy = 90.0;
+    double aspect = 4.0 / 3.0;
+    double zNear = 0.001;
+    double zFar = 200.0;
+    double xmin, xmax, ymin, ymax;
+
+    ymax = zNear * tan(fovy * M_PI / 360.0);
+    ymin = -ymax;
+    xmin = ymin * aspect;
+    xmax = ymax * aspect;
+
+
+    glFrustum(xmin, xmax, ymin, ymax, zNear, zFar);
+    glMatrixMode(GL_MODELVIEW);
+    glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);
+
+    glDepthMask(GL_TRUE);
     if (qtLogo) {
         program1.bind();
         program1.setUniformValue(matrixUniform1, modelview);
@@ -354,10 +373,10 @@ void GLWidget::createBubbles(int number)
 {
     for (int i = 0; i < number; ++i) {
         QPointF position(width()*(0.1 + (0.8*qrand()/(RAND_MAX+1.0))),
-                        height()*(0.1 + (0.8*qrand()/(RAND_MAX+1.0))));
+                         height()*(0.1 + (0.8*qrand()/(RAND_MAX+1.0))));
         qreal radius = qMin(width(), height())*(0.0175 + 0.0875*qrand()/(RAND_MAX+1.0));
         QPointF velocity(width()*0.0175*(-0.5 + qrand()/(RAND_MAX+1.0)),
-                        height()*0.0175*(-0.5 + qrand()/(RAND_MAX+1.0)));
+                         height()*0.0175*(-0.5 + qrand()/(RAND_MAX+1.0)));
 
         bubbles.append(new Bubble(position, radius, velocity));
     }
@@ -368,7 +387,7 @@ QVector<QVector3D> GLWidget::convertToQVector(GLfloat *values, int size) {
     QVector3D vector;
     int num = 0;
     for(int i = 0; i < size; i++) {
-//        qDebug() << values[i];
+        //        qDebug() << values[i];
         if(num == 0) {
             vector.setX(values[i]);
         } else if(num == 1) {
@@ -376,7 +395,7 @@ QVector<QVector3D> GLWidget::convertToQVector(GLfloat *values, int size) {
         } else if(num == 2) {
             vector.setZ(values[i]);
             vectors.append(vector);
-//            qDebug() << "--";
+            //            qDebug() << "--";
             num = -1;
         }
         num++;
@@ -405,7 +424,7 @@ void GLWidget::quad(qreal x1, qreal y1, qreal x2, qreal y2, qreal x3, qreal y3, 
     vertices << QVector3D(x2, y2, -0.05f);
 
     QVector3D n = QVector3D::normal
-        (QVector3D(x2 - x1, y2 - y1, 0.0f), QVector3D(x4 - x1, y4 - y1, 0.0f));
+                  (QVector3D(x2 - x1, y2 - y1, 0.0f), QVector3D(x4 - x1, y4 - y1, 0.0f));
 
     normals << n;
     normals << n;
@@ -446,7 +465,7 @@ void GLWidget::extrude(qreal x1, qreal y1, qreal x2, qreal y2)
     vertices << QVector3D(x2, y2, +0.05f);
 
     QVector3D n = QVector3D::normal
-        (QVector3D(x2 - x1, y2 - y1, 0.0f), QVector3D(0.0f, 0.0f, -0.1f));
+                  (QVector3D(x2 - x1, y2 - y1, 0.0f), QVector3D(0.0f, 0.0f, -0.1f));
 
     normals << n;
     normals << n;
