@@ -61,7 +61,42 @@ GLWidget::GLWidget(QWidget *parent)
 #ifndef Q_WS_QWS
     setMinimumSize(300, 250);
 #endif
-    model = glmReadOBJ("monkey.obj");
+    model = glmReadOBJ("monkey1.obj");
+    GLMgroup* group;
+    group = model->groups;
+    while (group) {
+        Group grp;
+        for(int i = 0; i < group->numtriangles; i++) {
+            Triangle triangle;
+            QVector<QVector3D> verts;
+            for(int j = 0; j < 3; j++) {
+                QVector3D vector(model->vertices[3 * model->triangles[group->triangles[i]].vindices[j] + 0],
+                                 model->vertices[3 * model->triangles[group->triangles[i]].vindices[j] + 1],
+                                 model->vertices[3 * model->triangles[group->triangles[i]].vindices[j] + 2]);
+                verts.append(vector);
+            }
+            QVector<QVector3D> norms;
+            for(int j = 0; j < 3; j++) {
+                QVector3D vector(model->normals[3 * model->triangles[group->triangles[i]].nindices[j] + 0],
+                                 model->normals[3 * model->triangles[group->triangles[i]].nindices[j] + 1],
+                                 model->normals[3 * model->triangles[group->triangles[i]].nindices[j] + 2]);
+                norms.append(vector);
+            }
+            QVector<QVector3D> texs;
+            for(int j = 0; j < 3; j++) {
+                QVector3D vector(model->texcoords[3 * model->triangles[group->triangles[i]].tindices[j] + 0],
+                                 model->texcoords[3 * model->triangles[group->triangles[i]].tindices[j] + 1],
+                                 model->texcoords[3 * model->triangles[group->triangles[i]].tindices[j] + 2]);
+                texs.append(vector);
+            }
+            triangle.vertices = verts;
+            triangle.normals = norms;
+//            triangle.texcoords = texs;
+            grp.triangles.append(triangle);
+        }
+        groups.append(grp);
+        group = group->next;
+    }
 }
 
 GLWidget::~GLWidget()
@@ -93,35 +128,16 @@ void GLWidget::showBubbles(bool bubbles)
 
 void GLWidget::paintQtLogo()
 {
-
-    GLMgroup* group;
-    group = model->groups;
-    while (group) {
-        for(int i = 0; i < group->numtriangles; i++) {
-            QVector<QVector3D> verts;
-            for(int j = 0; j < 3; j++) {
-                QVector3D vector(model->vertices[3 * model->triangles[group->triangles[i]].vindices[j] + 0],
-                                 model->vertices[3 * model->triangles[group->triangles[i]].vindices[j] + 1],
-                                 model->vertices[3 * model->triangles[group->triangles[i]].vindices[j] + 2]);
-                verts.append(vector);
-
-            }
-            QVector<QVector3D> norms;
-            for(int j = 0; j < 3; j++) {
-                QVector3D vector(model->normals[3 * model->triangles[group->triangles[i]].vindices[j] + 0],
-                                 model->normals[3 * model->triangles[group->triangles[i]].vindices[j] + 1],
-                                 model->normals[3 * model->triangles[group->triangles[i]].vindices[j] + 2]);
-                norms.append(vector);
-            }
+    foreach(Group grp, groups) {
+        foreach(Triangle triangle, grp.triangles) {
             program1.enableAttributeArray(normalAttr1);
             program1.enableAttributeArray(vertexAttr1);
-            program1.setAttributeArray(vertexAttr1, verts.constData());
-            program1.setAttributeArray(normalAttr1, norms.constData());
-            glDrawArrays(GL_TRIANGLES, 0, verts.size());
+            program1.setAttributeArray(vertexAttr1, triangle.vertices.constData());
+            program1.setAttributeArray(normalAttr1, triangle.normals.constData());
+            glDrawArrays(GL_TRIANGLES, 0, triangle.vertices.size());
             program1.disableAttributeArray(normalAttr1);
             program1.disableAttributeArray(vertexAttr1);
         }
-        group = group->next;
     }
 }
 
@@ -201,32 +217,20 @@ void GLWidget::initializeGL ()
     glClearColor(0.1f, 0.1f, 0.2f, 1.0f);
     glGenTextures(1, &m_uiTexture);
     m_uiTexture = bindTexture(QImage(":/qt.png"));
-
+    QFile vfile("vshader.glsl");
+    if(!vfile.open(QIODevice::ReadOnly)) return;
+    QString vsrc1 = vfile.readAll();
     QGLShader *vshader1 = new QGLShader(QGLShader::Vertex, this);
-    const char *vsrc1 =
-            "attribute highp vec4 vertex;\n"
-            "attribute mediump vec3 normal;\n"
-            "uniform mediump mat4 matrix;\n"
-            "varying mediump vec4 color;\n"
-            "void main(void)\n"
-            "{\n"
-            "    vec3 toLight = normalize(vec3(0.0, 0.3, 1.0));\n"
-            "    float angle = max(dot(normal, toLight), 0.0);\n"
-            "    vec3 col = vec3(0.40, 1.0, 0.0);\n"
-            "    color = vec4(col * 0.2 + col * 0.8 * angle, 1.0);\n"
-            "    color = clamp(color, 0.0, 1.0);\n"
-            "    gl_Position = matrix * vertex;\n"
-            "}\n";
-    vshader1->compileSourceCode(vsrc1);
+    vshader1->compileSourceCode(vsrc1.toAscii());
+    vfile.close();
 
+    QFile ffile("fshader.glsl");
+    if(!ffile.open(QIODevice::ReadOnly)) return;
+    QString fsrc1 = ffile.readAll();
+    qDebug() << "Output:\n" << fsrc1;
     QGLShader *fshader1 = new QGLShader(QGLShader::Fragment, this);
-    const char *fsrc1 =
-            "varying mediump vec4 color;\n"
-            "void main(void)\n"
-            "{\n"
-            "    gl_FragColor = color;\n"
-            "}\n";
-    fshader1->compileSourceCode(fsrc1);
+    fshader1->compileSourceCode(fsrc1.toAscii());
+    ffile.close();
 
     program1.addShader(vshader1);
     program1.addShader(fshader1);
@@ -234,7 +238,9 @@ void GLWidget::initializeGL ()
 
     vertexAttr1 = program1.attributeLocation("vertex");
     normalAttr1 = program1.attributeLocation("normal");
+    texCoordAttr1 = program1.attributeLocation("texCoord");
     matrixUniform1 = program1.uniformLocation("matrix");
+    textureUniform1 = program1.uniformLocation("tex");
 
     QGLShader *vshader2 = new QGLShader(QGLShader::Vertex);
     const char *vsrc2 =

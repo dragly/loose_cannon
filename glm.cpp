@@ -758,9 +758,6 @@ static GLvoid
     }
 
     }
-    for(int i = 0; i < numvertices; i++) {
-        printf("out %f",vertices[i]);
-    }
 #if 0
     /* announce the memory requirements */
     printf(" Memory: %d bytes\n",

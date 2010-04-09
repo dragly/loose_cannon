@@ -48,6 +48,7 @@
 #include <QtOpenGL/qglshaderprogram.h>
 #include <QTime>
 #include <QVector>
+#include "group.h"
 
 #include "glm.h"
 
@@ -77,8 +78,10 @@ private:
     void createBubbles(int number);
     void quad(qreal x1, qreal y1, qreal x2, qreal y2, qreal x3, qreal y3, qreal x4, qreal y4);
     void extrude(qreal x1, qreal y1, qreal x2, qreal y2);
+
     QVector<QVector3D> vertices;
     QVector<QVector3D> normals;
+    QVector<Group> groups;
     bool qtLogo;
     QList<Bubble*> bubbles;
     int frames;
@@ -88,6 +91,8 @@ private:
     int vertexAttr1;
     int normalAttr1;
     int matrixUniform1;
+    int texCoordAttr1;
+    int textureUniform1;
     int vertexAttr2;
     int normalAttr2;
     int texCoordAttr2;
