@@ -82,6 +82,7 @@ GLWidget::GLWidget(QWidget *parent)
                                  model->normals[3 * model->triangles[group->triangles[i]].nindices[j] + 2]);
                 norms.append(vector);
             }
+
             QVector<QVector3D> texs;
             for(int j = 0; j < 3; j++) {
                 QVector3D vector(model->texcoords[3 * model->triangles[group->triangles[i]].tindices[j] + 0],
