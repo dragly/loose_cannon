@@ -1,0 +1,1 @@
+This project merges the GLM library and the hellogl_es2 example from Nokia. This is an initial move to make a library for importing obj files to Qt's OpenGL ES implementation.
