@@ -85,14 +85,14 @@ GLWidget::GLWidget(QWidget *parent)
 
             QVector<QVector3D> texs;
             for(int j = 0; j < 3; j++) {
-                QVector3D vector(model->texcoords[3 * model->triangles[group->triangles[i]].tindices[j] + 0],
-                                 model->texcoords[3 * model->triangles[group->triangles[i]].tindices[j] + 1],
-                                 model->texcoords[3 * model->triangles[group->triangles[i]].tindices[j] + 2]);
+                QVector3D vector(model->texcoords[2 * model->triangles[group->triangles[i]].tindices[j] + 0],
+                                 model->texcoords[2 * model->triangles[group->triangles[i]].tindices[j] + 1],
+                                 model->texcoords[2 * model->triangles[group->triangles[i]].tindices[j] + 2]);
                 texs.append(vector);
             }
             triangle.vertices = verts;
             triangle.normals = norms;
-//            triangle.texcoords = texs;
+            triangle.texcoords = texs;
             grp.triangles.append(triangle);
         }
         groups.append(grp);
@@ -129,15 +129,20 @@ void GLWidget::showBubbles(bool bubbles)
 
 void GLWidget::paintQtLogo()
 {
+    glBindTexture(GL_TEXTURE_2D, m_uiTexture);
     foreach(Group grp, groups) {
         foreach(Triangle triangle, grp.triangles) {
+            program1.setUniformValue(textureUniform1, 0);    // use texture unit 0
             program1.enableAttributeArray(normalAttr1);
             program1.enableAttributeArray(vertexAttr1);
+            program1.enableAttributeArray(texCoordAttr1);
             program1.setAttributeArray(vertexAttr1, triangle.vertices.constData());
             program1.setAttributeArray(normalAttr1, triangle.normals.constData());
+            program1.setAttributeArray(texCoordAttr1, triangle.texcoords.constData());
             glDrawArrays(GL_TRIANGLES, 0, triangle.vertices.size());
             program1.disableAttributeArray(normalAttr1);
             program1.disableAttributeArray(vertexAttr1);
+            program1.disableAttributeArray(texCoordAttr1);
         }
     }
 }
@@ -217,7 +222,7 @@ void GLWidget::initializeGL ()
 {
     glClearColor(0.1f, 0.1f, 0.2f, 1.0f);
     glGenTextures(1, &m_uiTexture);
-    m_uiTexture = bindTexture(QImage(":/qt.png"));
+    m_uiTexture = bindTexture(QImage(":/fur.resized.jpg"));
     QFile vfile("vshader.glsl");
     if(!vfile.open(QIODevice::ReadOnly)) return;
     QString vsrc1 = vfile.readAll();
@@ -318,7 +323,7 @@ void GLWidget::paintGL()
     modelview.rotate(m_fAngle, 0, 1, 0);
     modelview.rotate(m_fAngle, 1, 0, 0);
     modelview.rotate(m_fAngle, 0, 0, 1);
-    modelview.scale(m_fScale);
+    modelview.scale(m_fScale * 2.0);
 //    modelview.translate(0.0f, -2.0f, 0.0f);
 
     glDepthMask(GL_TRUE);

@@ -221,8 +221,8 @@ GLvoid
  *            GLM_TEXTURE -  render with texture coords
  *            GLM_FLAT and GLM_SMOOTH should not both be specified.
  */
-//GLvoid
-//glmDraw(GLMmodel* model, GLuint mode);
+GLvoid
+glmDraw(GLMmodel* model, GLuint mode);
 
 /* glmList: Generates and returns a display list for the model using
  * the mode specified.
@@ -235,8 +235,8 @@ GLvoid
  *            GLM_TEXTURE -  render with texture coords
  *            GLM_FLAT and GLM_SMOOTH should not both be specified.
  */
-//GLuint
-//glmList(GLMmodel* model, GLuint mode);
+GLuint
+glmList(GLMmodel* model, GLuint mode);
 
 /* glmWeld: eliminate (weld) vectors that are within an epsilon of
  * each other.

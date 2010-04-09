@@ -1,5 +1,6 @@
-<!DOCTYPE RCC><RCC version="1.0">
-<qresource>
-    <file>qt.png</file>
-</qresource>
+<RCC>
+    <qresource prefix="/">
+        <file>qt.png</file>
+        <file>fur.resized.jpg</file>
+    </qresource>
 </RCC>
