@@ -42,6 +42,7 @@
 #include <QApplication>
 #include <QMainWindow>
 #include "mainwindow.h"
+#include "glwidget.h"
 
 int main( int argc, char ** argv )
 {

@@ -81,6 +81,7 @@ private:
     void createBubbles(int number);
     void quad(qreal x1, qreal y1, qreal x2, qreal y2, qreal x3, qreal y3, qreal x4, qreal y4);
     void extrude(qreal x1, qreal y1, qreal x2, qreal y2);
+    QTimer *timer;
 
     QVector<QVector3D> vertices;
     QVector<QVector3D> normals;
@@ -102,7 +103,17 @@ private:
     int matrixUniform2;
     int textureUniform2;
     qreal aspectRatio;
+    QVector3D camera;
+    QVector3D player;
 
+    QMatrix4x4 mainModelView;
+    GLint gluUnProject(GLdouble winx, GLdouble winy, GLdouble winz,
+                 const GLdouble model[16], const GLdouble proj[16],
+                 const GLint viewport[4],
+                 GLdouble * objx, GLdouble * objy, GLdouble * objz);
+    GLboolean invert_matrix(const GLdouble * m, GLdouble * out);
+    void matmul(GLdouble * product, const GLdouble * a, const GLdouble * b);
+    void transform_point(GLdouble out[4], const GLdouble m[16], const GLdouble in[4]);
     QVector<QVector3D> convertToQVector(GLfloat* values, int size);
 
     GLMmodel *model;

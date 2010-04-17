@@ -43,6 +43,8 @@
 #include <QPainter>
 #include <QPaintEngine>
 #include <math.h>
+#include <stdio.h>
+#include <string.h>
 
 #include "bubble.h"
 
@@ -50,7 +52,7 @@ const qreal max_momentum = 40.0;
 const int bubbleNum = 8;
 
 GLWidget::GLWidget(QWidget *parent)
-        : QGLWidget(parent)
+    : QGLWidget(parent)
 {
     qtLogo = true;
     frames = 0;
@@ -58,9 +60,6 @@ GLWidget::GLWidget(QWidget *parent)
     setAttribute(Qt::WA_NoSystemBackground);
     setAutoBufferSwap(false);
     m_showBubbles = true;
-#ifndef Q_WS_QWS
-    setMinimumSize(300, 250);
-#endif
     model = glmReadOBJ("monkey1.obj");
     if(model->numtexcoords < 1) {
         qWarning() << "Missing UV map.";
@@ -106,6 +105,12 @@ GLWidget::GLWidget(QWidget *parent)
     rotation.setX(0);
     rotation.setY(0);
     rotation.setZ(0);
+    camera = QVector3D(0, -5, 5);
+    // timer
+    timer = new QTimer(this);
+    QObject::connect(timer, SIGNAL(timeout()), this, SLOT(updateGL()));
+    timer->setInterval(1);
+    timer->start();
 }
 
 GLWidget::~GLWidget()
@@ -349,7 +354,7 @@ void GLWidget::paintGL()
     rotation += QVector3D(momentum.x() * 0.1, 0,0);
     // end rotation
 
-//    createBubbles(bubbleNum - bubbles.count());
+    //    createBubbles(bubbleNum - bubbles.count());
 
     QPainter painter;
     painter.begin(this);
@@ -359,36 +364,35 @@ void GLWidget::paintGL()
     glClearColor(0.1f, 0.1f, 0.2f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-//    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR );
-//    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR );
+    //    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR );
+    //    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR );
 
     glFrontFace(GL_CW);
     glCullFace(GL_FRONT);
     glEnable(GL_CULL_FACE);
     glEnable(GL_DEPTH_TEST);
-
-    QMatrix4x4 mainModelView;
-//    glDepthMask(GL_TRUE);
+    //    glDepthMask(GL_TRUE);
+    mainModelView = QMatrix4x4(); // reset
     // set up the main view (affects all objects)
     mainModelView.perspective(60.0, aspectRatio, 1.0, 20.0);
-    mainModelView.lookAt(QVector3D(0.0,1.0,0.0),QVector3D(0.0,0.0,0.0),QVector3D(0.0,0.0,1.0));
-    mainModelView.translate(0, -5, 0);
-    mainModelView.rotate(rotation.x(), 1.0, 0.0, 0.0);
-    mainModelView.rotate(rotation.y(), 0.0, 1.0, 0.0);
-    mainModelView.rotate(rotation.z(), 0.0, 0.0, 1.0);
+    mainModelView.lookAt(camera,QVector3D(0.0,0.0,0.0),QVector3D(0.0,0.0,1.0));
+    //    mainModelView.rotate(rotation.z(), 0.0, 0.0, 1.0);
     // inherit the main view for each object
     QMatrix4x4 mvMonkey = mainModelView;
     QMatrix4x4 mvMonkey2 = mainModelView;
     QMatrix4x4 mvMonkey3 = mainModelView;
     QMatrix4x4 mvMonkey4 = mainModelView;
     QMatrix4x4 mvMonkey5 = mainModelView;
+    //    mvMonkey5.rotate(rotation.x(), 1.0, 0.0, 0.0);
+    //    mvMonkey5.rotate(rotation.y(), 0.0, 1.0, 0.0);
     // do whatever with each object
-//    mvMonkey.rotate(90, 1, 0, 0);
-//    mvMonkey.scale(m_fScale * 2.0);
+    //    mvMonkey.rotate(90, 1, 0, 0);
+    //    mvMonkey.scale(m_fScale * 2.0);
     mvMonkey.translate(-2.0,0,0);
     mvMonkey3.translate(2.0,0,0);
     mvMonkey4.translate(4.0,0,0);
-    mvMonkey5.translate(-4.0,0,0);
+    mvMonkey5.translate(player.x(),player.y(),player.z());
+    mvMonkey5.rotate(rotation.z(), 0.0, 0.0, 1.0);
     program1.bind();
     paintMonkey();
     program1.setUniformValue(matrixUniform1, mvMonkey);
@@ -422,6 +426,7 @@ void GLWidget::paintGL()
 
     painter.drawText(20, 40, framesPerSecond + " fps");
     painter.drawText(20, 50, "momentum: " + QString::number(momentum.x()) + ", " + QString::number(momentum.y()) + ", " + QString::number(momentum.z()));
+    painter.drawText(20, 60, "pos: " + QString::number(player.x()) + ", " + QString::number(player.y()) + ", " + QString::number(player.z()));
 
     painter.end();
 
@@ -541,11 +546,49 @@ void GLWidget::extrude(qreal x1, qreal y1, qreal x2, qreal y2)
     normals << n;
     normals << n;
 }
+
+
+
 void GLWidget::mousePressEvent(QMouseEvent *event)
 {
-    if (event->button() == Qt::LeftButton)
+    if (event->button() == Qt::LeftButton) {
         dragStartPosition = event->pos();
-    dragtime.start();
+        dragtime.start();
+
+        // project click down to plane
+        qDebug() << "widgetcoords" << event->x() << event->y();
+        // normalize
+        int viewport[4] = {0,0,width(),height()};
+        GLdouble dirx;
+        GLdouble diry;
+        GLdouble dirz;
+        GLfloat winX = event->x();
+        GLfloat winY = height() - event->y();
+        GLfloat winZ = 0.88;
+
+        //        glReadPixels( winX, winY, 1, 1, GL_DEPTH_COMPONENT, GL_FLOAT, &winZ );
+        qDebug() << "winz" << winZ;
+        gluUnProject(winX, winY, winZ, mainModelView.constData(), mainModelView.constData(), viewport, &dirx, &diry, &dirz);
+        QVector3D dir(dirx,diry,dirz);
+        dir.normalize();
+        dir -= camera;
+        qDebug() << "dir" << dir;
+        // line is r = camera + t * dir
+
+        if (dir.z()==0.0) // if we are looking in a flat direction
+            return;
+
+        qreal t = - camera.z() / dir.z(); // how long it is to the ground
+        qDebug() << "t" << t;
+        player.setX(camera.x() + dir.x() * t);
+        player.setY(camera.y() + dir.y() * t);
+        player.setZ(camera.z() + dir.z() * t); // should become zero
+        //        player.setX(dir.x());
+        //        player.setY(dir.y());
+        //        player.setZ(dir.z());
+
+        qDebug(QString("posx: %1 posy: %2").arg(player.x()).arg(player.y()).toLatin1());
+    }
 }
 // Dragging events
 void GLWidget::mouseMoveEvent(QMouseEvent* event) {
@@ -578,3 +621,280 @@ void GLWidget::mouseReleaseEvent(QMouseEvent *event) {
     dragging = false;
 
 }
+
+
+// GLU stuff
+
+
+/*
+ * Perform a 4x4 matrix multiplication  (product = a x b).
+ * Input:  a, b - matrices to multiply
+ * Output:  product - product of a and b
+ */
+void
+        GLWidget::matmul(GLdouble * product, const GLdouble * a, const GLdouble * b)
+{
+    /* This matmul was contributed by Thomas Malik */
+    GLdouble temp[16];
+    GLint i;
+
+#define A(row,col)  a[(col<<2)+row]
+#define B(row,col)  b[(col<<2)+row]
+#define T(row,col)  temp[(col<<2)+row]
+
+    /* i-te Zeile */
+    for (i = 0; i < 4; i++) {
+        T(i, 0) =
+                A(i, 0) * B(0, 0) + A(i, 1) * B(1, 0) + A(i, 2) * B(2, 0) + A(i,
+                                                                              3) *
+                B(3, 0);
+        T(i, 1) =
+                A(i, 0) * B(0, 1) + A(i, 1) * B(1, 1) + A(i, 2) * B(2, 1) + A(i,
+                                                                              3) *
+                B(3, 1);
+        T(i, 2) =
+                A(i, 0) * B(0, 2) + A(i, 1) * B(1, 2) + A(i, 2) * B(2, 2) + A(i,
+                                                                              3) *
+                B(3, 2);
+        T(i, 3) =
+                A(i, 0) * B(0, 3) + A(i, 1) * B(1, 3) + A(i, 2) * B(2, 3) + A(i,
+                                                                              3) *
+                B(3, 3);
+    }
+
+#undef A
+#undef B
+#undef T
+    memcpy(product, temp, 16 * sizeof(GLdouble));
+}
+
+
+
+/*
+ * Compute inverse of 4x4 transformation matrix.
+ * Code contributed by Jacques Leroy jle@star.be
+ * Return GL_TRUE for success, GL_FALSE for failure (singular matrix)
+ */
+GLboolean
+        GLWidget::invert_matrix(const GLdouble * m, GLdouble * out)
+{
+    /* NB. OpenGL Matrices are COLUMN major. */
+#define SWAP_ROWS(a, b) { GLdouble *_tmp = a; (a)=(b); (b)=_tmp; }
+#define MAT(m,r,c) (m)[(c)*4+(r)]
+
+    GLdouble wtmp[4][8];
+    GLdouble m0, m1, m2, m3, s;
+    GLdouble *r0, *r1, *r2, *r3;
+
+    r0 = wtmp[0], r1 = wtmp[1], r2 = wtmp[2], r3 = wtmp[3];
+
+    r0[0] = MAT(m, 0, 0), r0[1] = MAT(m, 0, 1),
+    r0[2] = MAT(m, 0, 2), r0[3] = MAT(m, 0, 3),
+    r0[4] = 1.0, r0[5] = r0[6] = r0[7] = 0.0,
+    r1[0] = MAT(m, 1, 0), r1[1] = MAT(m, 1, 1),
+    r1[2] = MAT(m, 1, 2), r1[3] = MAT(m, 1, 3),
+    r1[5] = 1.0, r1[4] = r1[6] = r1[7] = 0.0,
+    r2[0] = MAT(m, 2, 0), r2[1] = MAT(m, 2, 1),
+    r2[2] = MAT(m, 2, 2), r2[3] = MAT(m, 2, 3),
+    r2[6] = 1.0, r2[4] = r2[5] = r2[7] = 0.0,
+    r3[0] = MAT(m, 3, 0), r3[1] = MAT(m, 3, 1),
+    r3[2] = MAT(m, 3, 2), r3[3] = MAT(m, 3, 3),
+    r3[7] = 1.0, r3[4] = r3[5] = r3[6] = 0.0;
+
+    /* choose pivot - or die */
+    if (fabs(r3[0]) > fabs(r2[0]))
+        SWAP_ROWS(r3, r2);
+    if (fabs(r2[0]) > fabs(r1[0]))
+        SWAP_ROWS(r2, r1);
+    if (fabs(r1[0]) > fabs(r0[0]))
+        SWAP_ROWS(r1, r0);
+    if (0.0 == r0[0])
+        return GL_FALSE;
+
+    /* eliminate first variable     */
+    m1 = r1[0] / r0[0];
+    m2 = r2[0] / r0[0];
+    m3 = r3[0] / r0[0];
+    s = r0[1];
+    r1[1] -= m1 * s;
+    r2[1] -= m2 * s;
+    r3[1] -= m3 * s;
+    s = r0[2];
+    r1[2] -= m1 * s;
+    r2[2] -= m2 * s;
+    r3[2] -= m3 * s;
+    s = r0[3];
+    r1[3] -= m1 * s;
+    r2[3] -= m2 * s;
+    r3[3] -= m3 * s;
+    s = r0[4];
+    if (s != 0.0) {
+        r1[4] -= m1 * s;
+        r2[4] -= m2 * s;
+        r3[4] -= m3 * s;
+    }
+    s = r0[5];
+    if (s != 0.0) {
+        r1[5] -= m1 * s;
+        r2[5] -= m2 * s;
+        r3[5] -= m3 * s;
+    }
+    s = r0[6];
+    if (s != 0.0) {
+        r1[6] -= m1 * s;
+        r2[6] -= m2 * s;
+        r3[6] -= m3 * s;
+    }
+    s = r0[7];
+    if (s != 0.0) {
+        r1[7] -= m1 * s;
+        r2[7] -= m2 * s;
+        r3[7] -= m3 * s;
+    }
+
+    /* choose pivot - or die */
+    if (fabs(r3[1]) > fabs(r2[1]))
+        SWAP_ROWS(r3, r2);
+    if (fabs(r2[1]) > fabs(r1[1]))
+        SWAP_ROWS(r2, r1);
+    if (0.0 == r1[1])
+        return GL_FALSE;
+
+    /* eliminate second variable */
+    m2 = r2[1] / r1[1];
+    m3 = r3[1] / r1[1];
+    r2[2] -= m2 * r1[2];
+    r3[2] -= m3 * r1[2];
+    r2[3] -= m2 * r1[3];
+    r3[3] -= m3 * r1[3];
+    s = r1[4];
+    if (0.0 != s) {
+        r2[4] -= m2 * s;
+        r3[4] -= m3 * s;
+    }
+    s = r1[5];
+    if (0.0 != s) {
+        r2[5] -= m2 * s;
+        r3[5] -= m3 * s;
+    }
+    s = r1[6];
+    if (0.0 != s) {
+        r2[6] -= m2 * s;
+        r3[6] -= m3 * s;
+    }
+    s = r1[7];
+    if (0.0 != s) {
+        r2[7] -= m2 * s;
+        r3[7] -= m3 * s;
+    }
+
+    /* choose pivot - or die */
+    if (fabs(r3[2]) > fabs(r2[2]))
+        SWAP_ROWS(r3, r2);
+    if (0.0 == r2[2])
+        return GL_FALSE;
+
+    /* eliminate third variable */
+    m3 = r3[2] / r2[2];
+    r3[3] -= m3 * r2[3], r3[4] -= m3 * r2[4],
+    r3[5] -= m3 * r2[5], r3[6] -= m3 * r2[6], r3[7] -= m3 * r2[7];
+
+    /* last check */
+    if (0.0 == r3[3])
+        return GL_FALSE;
+
+    s = 1.0 / r3[3];		/* now back substitute row 3 */
+    r3[4] *= s;
+    r3[5] *= s;
+    r3[6] *= s;
+    r3[7] *= s;
+
+    m2 = r2[3];			/* now back substitute row 2 */
+    s = 1.0 / r2[2];
+    r2[4] = s * (r2[4] - r3[4] * m2), r2[5] = s * (r2[5] - r3[5] * m2),
+    r2[6] = s * (r2[6] - r3[6] * m2), r2[7] = s * (r2[7] - r3[7] * m2);
+    m1 = r1[3];
+    r1[4] -= r3[4] * m1, r1[5] -= r3[5] * m1,
+    r1[6] -= r3[6] * m1, r1[7] -= r3[7] * m1;
+    m0 = r0[3];
+    r0[4] -= r3[4] * m0, r0[5] -= r3[5] * m0,
+    r0[6] -= r3[6] * m0, r0[7] -= r3[7] * m0;
+
+    m1 = r1[2];			/* now back substitute row 1 */
+    s = 1.0 / r1[1];
+    r1[4] = s * (r1[4] - r2[4] * m1), r1[5] = s * (r1[5] - r2[5] * m1),
+    r1[6] = s * (r1[6] - r2[6] * m1), r1[7] = s * (r1[7] - r2[7] * m1);
+    m0 = r0[2];
+    r0[4] -= r2[4] * m0, r0[5] -= r2[5] * m0,
+    r0[6] -= r2[6] * m0, r0[7] -= r2[7] * m0;
+
+    m0 = r0[1];			/* now back substitute row 0 */
+    s = 1.0 / r0[0];
+    r0[4] = s * (r0[4] - r1[4] * m0), r0[5] = s * (r0[5] - r1[5] * m0),
+    r0[6] = s * (r0[6] - r1[6] * m0), r0[7] = s * (r0[7] - r1[7] * m0);
+
+    MAT(out, 0, 0) = r0[4];
+    MAT(out, 0, 1) = r0[5], MAT(out, 0, 2) = r0[6];
+    MAT(out, 0, 3) = r0[7], MAT(out, 1, 0) = r1[4];
+    MAT(out, 1, 1) = r1[5], MAT(out, 1, 2) = r1[6];
+    MAT(out, 1, 3) = r1[7], MAT(out, 2, 0) = r2[4];
+    MAT(out, 2, 1) = r2[5], MAT(out, 2, 2) = r2[6];
+    MAT(out, 2, 3) = r2[7], MAT(out, 3, 0) = r3[4];
+    MAT(out, 3, 1) = r3[5], MAT(out, 3, 2) = r3[6];
+    MAT(out, 3, 3) = r3[7];
+
+    return GL_TRUE;
+
+#undef MAT
+#undef SWAP_ROWS
+}
+
+/*
+ * Transform a point (column vector) by a 4x4 matrix.  I.e.  out = m * in
+ * Input:  m - the 4x4 matrix
+ *         in - the 4x1 vector
+ * Output:  out - the resulting 4x1 vector.
+ */
+void GLWidget::transform_point(GLdouble out[4], const GLdouble m[16], const GLdouble in[4])
+{
+#define M(row,col)  m[col*4+row]
+    out[0] =
+            M(0, 0) * in[0] + M(0, 1) * in[1] + M(0, 2) * in[2] + M(0, 3) * in[3];
+    out[1] =
+            M(1, 0) * in[0] + M(1, 1) * in[1] + M(1, 2) * in[2] + M(1, 3) * in[3];
+    out[2] =
+            M(2, 0) * in[0] + M(2, 1) * in[1] + M(2, 2) * in[2] + M(2, 3) * in[3];
+    out[3] =
+            M(3, 0) * in[0] + M(3, 1) * in[1] + M(3, 2) * in[2] + M(3, 3) * in[3];
+#undef M
+}
+/* transformation du point ecran (winx,winy,winz) en point objet */
+GLint GLWidget::gluUnProject(GLdouble winx, GLdouble winy, GLdouble winz,
+                             const GLdouble model[16], const GLdouble proj[16],
+                             const GLint viewport[4],
+                             GLdouble * objx, GLdouble * objy, GLdouble * objz)
+{
+    /* matrice de transformation */
+    GLdouble m[16], A[16];
+    GLdouble in[4], out[4];
+
+    /* transformation coordonnees normalisees entre -1 et 1 */
+    in[0] = (winx - viewport[0]) * 2 / viewport[2] - 1.0;
+    in[1] = (winy - viewport[1]) * 2 / viewport[3] - 1.0;
+    in[2] = 2 * winz - 1.0;
+    in[3] = 1.0;
+
+    /* calcul transformation inverse */
+    matmul(A, proj, model);
+    invert_matrix(A, m);
+
+    /* d'ou les coordonnees objets */
+    transform_point(out, m, in);
+    if (out[3] == 0.0)
+        return GL_FALSE;
+    *objx = out[0] / out[3];
+    *objy = out[1] / out[3];
+    *objz = out[2] / out[3];
+    return GL_TRUE;
+}
+
