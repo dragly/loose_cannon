@@ -46,7 +46,7 @@
 
 #include "bubble.h"
 
-
+const qreal max_momentum = 40.0;
 const int bubbleNum = 8;
 
 GLWidget::GLWidget(QWidget *parent)
@@ -62,6 +62,9 @@ GLWidget::GLWidget(QWidget *parent)
     setMinimumSize(300, 250);
 #endif
     model = glmReadOBJ("monkey1.obj");
+    if(model->numtexcoords < 1) {
+        qWarning() << "Missing UV map.";
+    }
     GLMgroup* group;
     group = model->groups;
     while (group) {
@@ -82,22 +85,27 @@ GLWidget::GLWidget(QWidget *parent)
                                  model->normals[3 * model->triangles[group->triangles[i]].nindices[j] + 2]);
                 norms.append(vector);
             }
-
-            QVector<QVector3D> texs;
-            for(int j = 0; j < 3; j++) {
-                QVector3D vector(model->texcoords[2 * model->triangles[group->triangles[i]].tindices[j] + 0],
-                                 model->texcoords[2 * model->triangles[group->triangles[i]].tindices[j] + 1],
-                                 model->texcoords[2 * model->triangles[group->triangles[i]].tindices[j] + 2]);
-                texs.append(vector);
+            if(model->numtexcoords > 0) {
+                QVector<QVector3D> texs;
+                for(int j = 0; j < 3; j++) {
+                    QVector3D vector(model->texcoords[2 * model->triangles[group->triangles[i]].tindices[j] + 0],
+                                     model->texcoords[2 * model->triangles[group->triangles[i]].tindices[j] + 1],
+                                     model->texcoords[2 * model->triangles[group->triangles[i]].tindices[j] + 2]);
+                    texs.append(vector);
+                }
+                triangle.texcoords = texs;
             }
             triangle.vertices = verts;
             triangle.normals = norms;
-            triangle.texcoords = texs;
             grp.triangles.append(triangle);
         }
         groups.append(grp);
         group = group->next;
     }
+    // initial values
+    rotation.setX(0);
+    rotation.setY(0);
+    rotation.setZ(0);
 }
 
 GLWidget::~GLWidget()
@@ -127,25 +135,6 @@ void GLWidget::showBubbles(bool bubbles)
     m_showBubbles = bubbles;
 }
 
-void GLWidget::paintQtLogo()
-{
-    glBindTexture(GL_TEXTURE_2D, m_uiTexture);
-    foreach(Group grp, groups) {
-        foreach(Triangle triangle, grp.triangles) {
-            program1.setUniformValue(textureUniform1, 0);    // use texture unit 0
-            program1.enableAttributeArray(normalAttr1);
-            program1.enableAttributeArray(vertexAttr1);
-            program1.enableAttributeArray(texCoordAttr1);
-            program1.setAttributeArray(vertexAttr1, triangle.vertices.constData());
-            program1.setAttributeArray(normalAttr1, triangle.normals.constData());
-            program1.setAttributeArray(texCoordAttr1, triangle.texcoords.constData());
-            glDrawArrays(GL_TRIANGLES, 0, triangle.vertices.size());
-            program1.disableAttributeArray(normalAttr1);
-            program1.disableAttributeArray(vertexAttr1);
-            program1.disableAttributeArray(texCoordAttr1);
-        }
-    }
-}
 
 void GLWidget::paintTexturedCube()
 {
@@ -216,6 +205,9 @@ void GLWidget::paintTexturedCube()
     program2.disableAttributeArray(vertexAttr2);
     program2.disableAttributeArray(normalAttr2);
     program2.disableAttributeArray(texCoordAttr2);
+}
+void GLWidget::resizeGL(int width, int height) {
+    aspectRatio = (qreal) width / (qreal) height;
 }
 
 void GLWidget::initializeGL ()
@@ -297,9 +289,67 @@ void GLWidget::initializeGL ()
     createBubbles(bubbleNum - bubbles.count());
 }
 
+void GLWidget::paintMonkey()
+{
+    glBindTexture(GL_TEXTURE_2D, m_uiTexture);
+    foreach(Group grp, groups) {
+        foreach(Triangle triangle, grp.triangles) {
+            program1.setUniformValue(textureUniform1, 0);    // use texture unit 0
+            program1.enableAttributeArray(normalAttr1);
+            program1.enableAttributeArray(vertexAttr1);
+            program1.enableAttributeArray(texCoordAttr1);
+            program1.setAttributeArray(vertexAttr1, triangle.vertices.constData());
+            program1.setAttributeArray(normalAttr1, triangle.normals.constData());
+            program1.setAttributeArray(texCoordAttr1, triangle.texcoords.constData());
+            glDrawArrays(GL_TRIANGLES, 0, triangle.vertices.size());
+            program1.disableAttributeArray(normalAttr1);
+            program1.disableAttributeArray(vertexAttr1);
+            program1.disableAttributeArray(texCoordAttr1);
+        }
+    }
+}
 void GLWidget::paintGL()
 {
-    createBubbles(bubbleNum - bubbles.count());
+    // do rotation - could we do this is one loop for xyz?
+    if (momentum.z() > max_momentum) {
+        momentum.setZ(max_momentum);
+    } else if (momentum.z() < -max_momentum) {
+        momentum.setZ(-max_momentum);
+    }
+    if(momentum.z() > 0) {
+        momentum -= QVector3D(0, 0, 0.2 * (qreal) time.elapsed() / 1000.0);
+        if(momentum.z() < 0) {
+            momentum.setZ(0);
+        }
+    }
+    else if(momentum.z() < 0) {
+        momentum += QVector3D(0, 0, 0.2 * (qreal) time.elapsed() / 1000.0);
+        if(momentum.z() > 0) {
+            momentum.setZ(0);
+        }
+    }
+    rotation += QVector3D(0,0,momentum.z() * 0.1);
+    if (momentum.x() > max_momentum) {
+        momentum.setX(max_momentum);
+    } else if (momentum.x() < -max_momentum) {
+        momentum.setX(-max_momentum);
+    }
+    if(momentum.x() > 0) {
+        momentum -= QVector3D(0.2 * (qreal) time.elapsed() / 1000.0, 0, 0);
+        if(momentum.x() < 0) {
+            momentum.setX(0);
+        }
+    }
+    else if(momentum.x() < 0) {
+        momentum += QVector3D(0.2 * (qreal) time.elapsed() / 1000.0, 0, 0);
+        if(momentum.x() > 0) {
+            momentum.setX(0);
+        }
+    }
+    rotation += QVector3D(momentum.x() * 0.1, 0,0);
+    // end rotation
+
+//    createBubbles(bubbleNum - bubbles.count());
 
     QPainter painter;
     painter.begin(this);
@@ -309,35 +359,56 @@ void GLWidget::paintGL()
     glClearColor(0.1f, 0.1f, 0.2f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR );
-    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR );
+//    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR );
+//    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR );
 
     glFrontFace(GL_CW);
     glCullFace(GL_FRONT);
     glEnable(GL_CULL_FACE);
     glEnable(GL_DEPTH_TEST);
 
-    QMatrix4x4 modelview;
-    modelview.perspective(60.0, 16.0/9.0, 1.0, 200.0);
-    modelview.lookAt(QVector3D(0.0,8.0,0.0),QVector3D(0.0,0.0,0.0),QVector3D(0.0,0.0,1.0));
-    modelview.rotate(m_fAngle, 0, 1, 0);
-    modelview.rotate(m_fAngle, 1, 0, 0);
-    modelview.rotate(m_fAngle, 0, 0, 1);
-    modelview.scale(m_fScale * 2.0);
-//    modelview.translate(0.0f, -2.0f, 0.0f);
-
-    glDepthMask(GL_TRUE);
-    if (qtLogo) {
-        program1.bind();
-        program1.setUniformValue(matrixUniform1, modelview);
-        paintQtLogo();
-        program1.release();
-    } else {
-        program2.bind();
-        program1.setUniformValue(matrixUniform2, modelview);
-        paintTexturedCube();
-        program2.release();
-    }
+    QMatrix4x4 mainModelView;
+//    glDepthMask(GL_TRUE);
+    // set up the main view (affects all objects)
+    mainModelView.perspective(60.0, aspectRatio, 1.0, 20.0);
+    mainModelView.lookAt(QVector3D(0.0,1.0,0.0),QVector3D(0.0,0.0,0.0),QVector3D(0.0,0.0,1.0));
+    mainModelView.translate(0, -5, 0);
+    mainModelView.rotate(rotation.x(), 1.0, 0.0, 0.0);
+    mainModelView.rotate(rotation.y(), 0.0, 1.0, 0.0);
+    mainModelView.rotate(rotation.z(), 0.0, 0.0, 1.0);
+    // inherit the main view for each object
+    QMatrix4x4 mvMonkey = mainModelView;
+    QMatrix4x4 mvMonkey2 = mainModelView;
+    QMatrix4x4 mvMonkey3 = mainModelView;
+    QMatrix4x4 mvMonkey4 = mainModelView;
+    QMatrix4x4 mvMonkey5 = mainModelView;
+    // do whatever with each object
+//    mvMonkey.rotate(90, 1, 0, 0);
+//    mvMonkey.scale(m_fScale * 2.0);
+    mvMonkey.translate(-2.0,0,0);
+    mvMonkey3.translate(2.0,0,0);
+    mvMonkey4.translate(4.0,0,0);
+    mvMonkey5.translate(-4.0,0,0);
+    program1.bind();
+    paintMonkey();
+    program1.setUniformValue(matrixUniform1, mvMonkey);
+    program1.release();
+    program1.bind();
+    paintMonkey();
+    program1.setUniformValue(matrixUniform1, mvMonkey2);
+    program1.release();
+    program1.bind();
+    paintMonkey();
+    program1.setUniformValue(matrixUniform1, mvMonkey3);
+    program1.release();
+    program1.bind();
+    paintMonkey();
+    program1.setUniformValue(matrixUniform1, mvMonkey4);
+    program1.release();
+    program1.bind();
+    paintMonkey();
+    program1.setUniformValue(matrixUniform1, mvMonkey5);
+    program1.release();
 
     glDisable(GL_DEPTH_TEST);
     glDisable(GL_CULL_FACE);
@@ -350,6 +421,7 @@ void GLWidget::paintGL()
     painter.setPen(Qt::white);
 
     painter.drawText(20, 40, framesPerSecond + " fps");
+    painter.drawText(20, 50, "momentum: " + QString::number(momentum.x()) + ", " + QString::number(momentum.y()) + ", " + QString::number(momentum.z()));
 
     painter.end();
 
@@ -359,7 +431,6 @@ void GLWidget::paintGL()
         time.start();
         frames = 0;
     }
-    m_fAngle += 1.0f;
     frames ++;
 }
 
@@ -469,4 +540,41 @@ void GLWidget::extrude(qreal x1, qreal y1, qreal x2, qreal y2)
     normals << n;
     normals << n;
     normals << n;
+}
+void GLWidget::mousePressEvent(QMouseEvent *event)
+{
+    if (event->button() == Qt::LeftButton)
+        dragStartPosition = event->pos();
+    dragtime.start();
+}
+// Dragging events
+void GLWidget::mouseMoveEvent(QMouseEvent* event) {
+    if(!(event->buttons() & Qt::LeftButton))
+        return;
+    if(dragging) {
+        int elapsed = dragtime.elapsed();
+        QVector3D oldvalue = momentum;
+        qreal relativey = (dragLastPosition.y() - event->pos().y()) / (qreal) height();
+        qreal relativex = (event->pos().x() - dragLastPosition.x()) / (qreal) width();
+        relativey *= 2500; // increase the factor
+        relativex *= 2500;
+        QVector3D vector = QVector3D(relativey / (qreal) elapsed, 0, relativex / (qreal) elapsed);
+        momentum += vector;
+        if (isinf(momentum.x()) || isnan(momentum.x())) {
+            momentum.setX(oldvalue.x());
+        }
+        if (isinf(momentum.y()) || isnan(momentum.y())) {
+            momentum.setY(oldvalue.y());
+        }
+        if (isinf(momentum.z()) || isnan(momentum.z())) {
+            momentum.setZ(oldvalue.z());
+        }
+    }
+    dragLastPosition = event->pos();
+    dragging = true;
+    dragtime.restart();
+}
+void GLWidget::mouseReleaseEvent(QMouseEvent *event) {
+    dragging = false;
+
 }

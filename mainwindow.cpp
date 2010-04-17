@@ -67,13 +67,16 @@ MainWindow::MainWindow()
 
     QGroupBox * groupBox = new QGroupBox(this);
     setCentralWidget(groupBox);
-    groupBox->setTitle("OpenGL ES Example");
 
     QGridLayout *layout = new QGridLayout(groupBox);
 
     layout->addWidget(glwidget,1,0,8,1);
-    layout->addWidget(label,9,0,1,1);
-    layout->addWidget(slider, 11,0,1,1);
+
+    this->showFullScreen();
+    glwidget->showFullScreen();
+
+//    layout->addWidget(label,9,0,1,1);
+//    layout->addWidget(slider, 11,0,1,1);
 
     groupBox->setLayout(layout);
 

@@ -67,13 +67,16 @@ public slots:
 protected:
     void paintGL ();
     void initializeGL ();
+    void resizeGL(int width, int height);
 private:
     GLuint  m_uiTexture;
     qreal   m_fAngle;
+    QVector3D rotation;
+    QVector3D momentum;
     qreal   m_fScale;
     bool m_showBubbles;
     void paintTexturedCube();
-    void paintQtLogo();
+    void paintMonkey();
     void createGeometry();
     void createBubbles(int number);
     void quad(qreal x1, qreal y1, qreal x2, qreal y2, qreal x3, qreal y3, qreal x4, qreal y4);
@@ -98,9 +101,19 @@ private:
     int texCoordAttr2;
     int matrixUniform2;
     int textureUniform2;
+    qreal aspectRatio;
 
     QVector<QVector3D> convertToQVector(GLfloat* values, int size);
 
     GLMmodel *model;
+
+    // mouse events
+    void mousePressEvent(QMouseEvent *event);
+    void mouseMoveEvent(QMouseEvent* event);
+    void mouseReleaseEvent(QMouseEvent *event);
+    QPoint dragLastPosition;
+    QPoint dragStartPosition;
+    bool dragging;
+    QTime dragtime;
 };
 #endif

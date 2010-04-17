@@ -1589,124 +1589,124 @@ GLvoid
  *            GLM_COLOR and GLM_MATERIAL should not both be specified.
  *            GLM_FLAT and GLM_SMOOTH should not both be specified.
  */
-GLvoid glmDraw(GLMmodel* model, GLuint mode)
-{
-  GLuint i;
-  GLMgroup* group;
-
-  assert(model);
-  assert(model->vertices);
-
-  /* do a bit of warning */
-  if (mode & GLM_FLAT && !model->facetnorms) {
-    printf("glmDraw() warning: flat render mode requested "
-           "with no facet normals defined.\n");
-    mode &= ~GLM_FLAT;
-  }
-  if (mode & GLM_SMOOTH && !model->normals) {
-    printf("glmDraw() warning: smooth render mode requested "
-           "with no normals defined.\n");
-    mode &= ~GLM_SMOOTH;
-  }
-  if (mode & GLM_TEXTURE && !model->texcoords) {
-    printf("glmDraw() warning: texture render mode requested "
-           "with no texture coordinates defined.\n");
-    mode &= ~GLM_TEXTURE;
-  }
-  if (mode & GLM_FLAT && mode & GLM_SMOOTH) {
-    printf("glmDraw() warning: flat render mode requested "
-           "and smooth render mode requested (using smooth).\n");
-    mode &= ~GLM_FLAT;
-  }
-  if (mode & GLM_COLOR && !model->materials) {
-    printf("glmDraw() warning: color render mode requested "
-           "with no materials defined.\n");
-    mode &= ~GLM_COLOR;
-  }
-  if (mode & GLM_MATERIAL && !model->materials) {
-    printf("glmDraw() warning: material render mode requested "
-           "with no materials defined.\n");
-    mode &= ~GLM_MATERIAL;
-  }
-  if (mode & GLM_COLOR && mode & GLM_MATERIAL) {
-    printf("glmDraw() warning: color and material render mode requested "
-           "using only material mode\n");
-    mode &= ~GLM_COLOR;
-  }
-  if (mode & GLM_COLOR)
-    glEnable(GL_COLOR_MATERIAL);
-  if (mode & GLM_MATERIAL)
-    glDisable(GL_COLOR_MATERIAL);
-
-  glPushMatrix();
-  glTranslatef(model->position[0], model->position[1], model->position[2]);
-
-  glBegin(GL_TRIANGLES);
-  group = model->groups;
-  while (group) {
-    if (mode & GLM_MATERIAL) {
-      glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT,
-                   model->materials[group->material].ambient);
-      glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE,
-                   model->materials[group->material].diffuse);
-      glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR,
-                   model->materials[group->material].specular);
-       glMaterialf(GL_FRONT_AND_BACK, GL_SHININESS,
-                  model->materials[group->material].shininess);
-    }
-
-    if (mode & GLM_COLOR) {
-      glColor3fv(model->materials[group->material].diffuse);
-    }
-
-    for (i = 0; i < group->numtriangles; i++) {
-      if (mode & GLM_FLAT)
-        glNormal3fv(&model->facetnorms[3 * T(group->triangles[i]).findex]);
-
-      if (mode & GLM_SMOOTH)
-        glNormal3fv(&model->normals[3 * T(group->triangles[i]).nindices[0]]);
-      if (mode & GLM_TEXTURE)
-        glTexCoord2fv(&model->texcoords[2*T(group->triangles[i]).tindices[0]]);
-      glVertex3fv(&model->vertices[3 * T(group->triangles[i]).vindices[0]]);
-#if 0
-      printf("%f %f %f\n",
-             model->vertices[3 * T(group->triangles[i]).vindices[0] + X],
-             model->vertices[3 * T(group->triangles[i]).vindices[0] + Y],
-             model->vertices[3 * T(group->triangles[i]).vindices[0] + Z]);
-#endif
-
-      if (mode & GLM_SMOOTH)
-        glNormal3fv(&model->normals[3 * T(group->triangles[i]).nindices[1]]);
-      if (mode & GLM_TEXTURE)
-        glTexCoord2fv(&model->texcoords[2*T(group->triangles[i]).tindices[1]]);
-      glVertex3fv(&model->vertices[3 * T(group->triangles[i]).vindices[1]]);
-#if 0
-      printf("%f %f %f\n",
-             model->vertices[3 * T(group->triangles[i]).vindices[1] + X],
-             model->vertices[3 * T(group->triangles[i]).vindices[1] + Y],
-             model->vertices[3 * T(group->triangles[i]).vindices[1] + Z]);
-#endif
-
-      if (mode & GLM_SMOOTH)
-        glNormal3fv(&model->normals[3 * T(group->triangles[i]).nindices[2]]);
-      if (mode & GLM_TEXTURE)
-        glTexCoord2fv(&model->texcoords[2*T(group->triangles[i]).tindices[2]]);
-      glVertex3fv(&model->vertices[3 * T(group->triangles[i]).vindices[2]]);
-#if 0
-      printf("%f %f %f\n",
-             model->vertices[3 * T(group->triangles[i]).vindices[2] + X],
-             model->vertices[3 * T(group->triangles[i]).vindices[2] + Y],
-             model->vertices[3 * T(group->triangles[i]).vindices[2] + Z]);
-#endif
-
-    }
-
-    group = group->next;
-  }
-  glEnd();
-
-  glPopMatrix();
-}
+//GLvoid glmDraw(GLMmodel* model, GLuint mode)
+//{
+//  GLuint i;
+//  GLMgroup* group;
+//
+//  assert(model);
+//  assert(model->vertices);
+//
+//  /* do a bit of warning */
+//  if (mode & GLM_FLAT && !model->facetnorms) {
+//    printf("glmDraw() warning: flat render mode requested "
+//           "with no facet normals defined.\n");
+//    mode &= ~GLM_FLAT;
+//  }
+//  if (mode & GLM_SMOOTH && !model->normals) {
+//    printf("glmDraw() warning: smooth render mode requested "
+//           "with no normals defined.\n");
+//    mode &= ~GLM_SMOOTH;
+//  }
+//  if (mode & GLM_TEXTURE && !model->texcoords) {
+//    printf("glmDraw() warning: texture render mode requested "
+//           "with no texture coordinates defined.\n");
+//    mode &= ~GLM_TEXTURE;
+//  }
+//  if (mode & GLM_FLAT && mode & GLM_SMOOTH) {
+//    printf("glmDraw() warning: flat render mode requested "
+//           "and smooth render mode requested (using smooth).\n");
+//    mode &= ~GLM_FLAT;
+//  }
+//  if (mode & GLM_COLOR && !model->materials) {
+//    printf("glmDraw() warning: color render mode requested "
+//           "with no materials defined.\n");
+//    mode &= ~GLM_COLOR;
+//  }
+//  if (mode & GLM_MATERIAL && !model->materials) {
+//    printf("glmDraw() warning: material render mode requested "
+//           "with no materials defined.\n");
+//    mode &= ~GLM_MATERIAL;
+//  }
+//  if (mode & GLM_COLOR && mode & GLM_MATERIAL) {
+//    printf("glmDraw() warning: color and material render mode requested "
+//           "using only material mode\n");
+//    mode &= ~GLM_COLOR;
+//  }
+//  if (mode & GLM_COLOR)
+//    glEnable(GL_COLOR_MATERIAL);
+//  if (mode & GLM_MATERIAL)
+//    glDisable(GL_COLOR_MATERIAL);
+//
+//  glPushMatrix();
+//  glTranslatef(model->position[0], model->position[1], model->position[2]);
+//
+//  glBegin(GL_TRIANGLES);
+//  group = model->groups;
+//  while (group) {
+//    if (mode & GLM_MATERIAL) {
+//      glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT,
+//                   model->materials[group->material].ambient);
+//      glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE,
+//                   model->materials[group->material].diffuse);
+//      glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR,
+//                   model->materials[group->material].specular);
+//       glMaterialf(GL_FRONT_AND_BACK, GL_SHININESS,
+//                  model->materials[group->material].shininess);
+//    }
+//
+//    if (mode & GLM_COLOR) {
+//      glColor3fv(model->materials[group->material].diffuse);
+//    }
+//
+//    for (i = 0; i < group->numtriangles; i++) {
+//      if (mode & GLM_FLAT)
+//        glNormal3fv(&model->facetnorms[3 * T(group->triangles[i]).findex]);
+//
+//      if (mode & GLM_SMOOTH)
+//        glNormal3fv(&model->normals[3 * T(group->triangles[i]).nindices[0]]);
+//      if (mode & GLM_TEXTURE)
+//        glTexCoord2fv(&model->texcoords[2*T(group->triangles[i]).tindices[0]]);
+//      glVertex3fv(&model->vertices[3 * T(group->triangles[i]).vindices[0]]);
+//#if 0
+//      printf("%f %f %f\n",
+//             model->vertices[3 * T(group->triangles[i]).vindices[0] + X],
+//             model->vertices[3 * T(group->triangles[i]).vindices[0] + Y],
+//             model->vertices[3 * T(group->triangles[i]).vindices[0] + Z]);
+//#endif
+//
+//      if (mode & GLM_SMOOTH)
+//        glNormal3fv(&model->normals[3 * T(group->triangles[i]).nindices[1]]);
+//      if (mode & GLM_TEXTURE)
+//        glTexCoord2fv(&model->texcoords[2*T(group->triangles[i]).tindices[1]]);
+//      glVertex3fv(&model->vertices[3 * T(group->triangles[i]).vindices[1]]);
+//#if 0
+//      printf("%f %f %f\n",
+//             model->vertices[3 * T(group->triangles[i]).vindices[1] + X],
+//             model->vertices[3 * T(group->triangles[i]).vindices[1] + Y],
+//             model->vertices[3 * T(group->triangles[i]).vindices[1] + Z]);
+//#endif
+//
+//      if (mode & GLM_SMOOTH)
+//        glNormal3fv(&model->normals[3 * T(group->triangles[i]).nindices[2]]);
+//      if (mode & GLM_TEXTURE)
+//        glTexCoord2fv(&model->texcoords[2*T(group->triangles[i]).tindices[2]]);
+//      glVertex3fv(&model->vertices[3 * T(group->triangles[i]).vindices[2]]);
+//#if 0
+//      printf("%f %f %f\n",
+//             model->vertices[3 * T(group->triangles[i]).vindices[2] + X],
+//             model->vertices[3 * T(group->triangles[i]).vindices[2] + Y],
+//             model->vertices[3 * T(group->triangles[i]).vindices[2] + Z]);
+//#endif
+//
+//    }
+//
+//    group = group->next;
+//  }
+//  glEnd();
+//
+//  glPopMatrix();
+//}
 
 /* glmList: Generates and returns a display list for the model using
  * the mode specified.
@@ -1722,18 +1722,18 @@ GLvoid glmDraw(GLMmodel* model, GLuint mode)
  *            GLM_COLOR and GLM_MATERIAL should not both be specified.
  *            GLM_FLAT and GLM_SMOOTH should not both be specified.
  */
-GLuint
-glmList(GLMmodel* model, GLuint mode)
-{
-  GLuint list;
-
-  list = glGenLists(1);
-  glNewList(list, GL_COMPILE);
-  glmDraw(model, mode);
-  glEndList();
-
-  return list;
-}
+//GLuint
+//glmList(GLMmodel* model, GLuint mode)
+//{
+//  GLuint list;
+//
+//  list = glGenLists(1);
+//  glNewList(list, GL_COMPILE);
+//  glmDraw(model, mode);
+//  glEndList();
+//
+//  return list;
+//}
 
 /* glmWeld: eliminate (weld) vectors that are within an epsilon of
  * each other.
