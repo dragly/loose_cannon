@@ -564,14 +564,15 @@ void GLWidget::mousePressEvent(QMouseEvent *event)
         GLdouble dirz;
         GLfloat winX = event->x();
         GLfloat winY = height() - event->y();
-        GLfloat winZ = 0.88;
+        GLfloat winZ = 0.78; // this value should not matter (but it does!)
 
         //        glReadPixels( winX, winY, 1, 1, GL_DEPTH_COMPONENT, GL_FLOAT, &winZ );
         qDebug() << "winz" << winZ;
         gluUnProject(winX, winY, winZ, mainModelView.constData(), mainModelView.constData(), viewport, &dirx, &diry, &dirz);
         QVector3D dir(dirx,diry,dirz);
-        dir.normalize();
-        dir -= camera;
+//        dir.normalize();
+        qDebug() << "dir" << dir;
+        dir -= camera; // get the direction
         qDebug() << "dir" << dir;
         // line is r = camera + t * dir
 
