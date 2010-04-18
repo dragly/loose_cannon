@@ -48,9 +48,7 @@
 #include <QtOpenGL/qglshaderprogram.h>
 #include <QTime>
 #include <QVector>
-#include "group.h"
-
-#include "glm.h"
+#include "model.h"
 
 class Bubble;
 class GLWidget : public QGLWidget {
@@ -64,18 +62,13 @@ protected:
     void initializeGL ();
     void resizeGL(int width, int height);
 private:
-    GLuint  m_uiTexture;
     QVector3D rotation;
     QVector3D momentum;
-    void paintMonkey();
     void createGeometry();
     void quad(qreal x1, qreal y1, qreal x2, qreal y2, qreal x3, qreal y3, qreal x4, qreal y4);
     void extrude(qreal x1, qreal y1, qreal x2, qreal y2);
     QTimer *timer;
 
-    QVector<QVector3D> vertices;
-    QVector<QVector3D> normals;
-    QVector<Group> groups;
     bool qtLogo;
     QList<Bubble*> bubbles;
     int frames;
@@ -105,8 +98,7 @@ private:
 //    void matmul(GLdouble * product, const GLdouble * a, const GLdouble * b);
 //    void transform_point(GLdouble out[4], const GLdouble m[16], const GLdouble in[4]);
     QVector<QVector3D> convertToQVector(GLfloat* values, int size);
-
-    GLMmodel *model;
+    Model *model;
 
     // mouse events
     void mousePressEvent(QMouseEvent *event);

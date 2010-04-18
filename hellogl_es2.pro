@@ -8,18 +8,14 @@ INCLUDEPATH += .
 
 # Input
 SOURCES += main.cpp \
-    triangle.cpp \
-    group.cpp
+    model.cpp
 SOURCES += glwidget.cpp
 SOURCES += mainwindow.cpp
-SOURCES += bubble.cpp \
-    glm.cpp
+SOURCES += glm.cpp
 HEADERS += glwidget.h \
-    triangle.h \
-    group.h
+    model.h
 HEADERS += mainwindow.h
-HEADERS += bubble.h \
-    glm.h
+HEADERS += glm.h
 RESOURCES += texture.qrc
 QT += opengl
 

@@ -40,67 +40,29 @@
 ****************************************************************************/
 
 #include "glwidget.h"
+#include "model.h"
 #include <QPainter>
 #include <QPaintEngine>
 #include <math.h>
 #include <stdio.h>
 #include <string.h>
 
-#include "bubble.h"
-
 const qreal max_momentum = 40.0;
 const qreal momentum_slowdown = 0.5;
 const int bubbleNum = 8;
 
-GLWidget::GLWidget(QWidget *parent)
-    : QGLWidget(parent)
+GLWidget::~GLWidget()
+{
+}
+
+GLWidget::GLWidget(QWidget *parent) : QGLWidget(parent)
 {
     qtLogo = true;
     frames = 0;
     setAttribute(Qt::WA_PaintOnScreen);
     setAttribute(Qt::WA_NoSystemBackground);
     setAutoBufferSwap(false);
-    model = glmReadOBJ("monkey1.obj");
-    if(model->numtexcoords < 1) {
-        qWarning() << "Missing UV map.";
-    }
-    GLMgroup* group;
-    group = model->groups;
-    while (group) {
-        Group grp;
-        for(int i = 0; i < group->numtriangles; i++) {
-            Triangle triangle;
-            QVector<QVector3D> verts;
-            for(int j = 0; j < 3; j++) {
-                QVector3D vector(model->vertices[3 * model->triangles[group->triangles[i]].vindices[j] + 0],
-                                 model->vertices[3 * model->triangles[group->triangles[i]].vindices[j] + 1],
-                                 model->vertices[3 * model->triangles[group->triangles[i]].vindices[j] + 2]);
-                verts.append(vector);
-            }
-            QVector<QVector3D> norms;
-            for(int j = 0; j < 3; j++) {
-                QVector3D vector(model->normals[3 * model->triangles[group->triangles[i]].nindices[j] + 0],
-                                 model->normals[3 * model->triangles[group->triangles[i]].nindices[j] + 1],
-                                 model->normals[3 * model->triangles[group->triangles[i]].nindices[j] + 2]);
-                norms.append(vector);
-            }
-            if(model->numtexcoords > 0) {
-                QVector<QVector3D> texs;
-                for(int j = 0; j < 3; j++) {
-                    QVector3D vector(model->texcoords[2 * model->triangles[group->triangles[i]].tindices[j] + 0],
-                                     model->texcoords[2 * model->triangles[group->triangles[i]].tindices[j] + 1],
-                                     model->texcoords[2 * model->triangles[group->triangles[i]].tindices[j] + 2]);
-                    texs.append(vector);
-                }
-                triangle.texcoords = texs;
-            }
-            triangle.vertices = verts;
-            triangle.normals = norms;
-            grp.triangles.append(triangle);
-        }
-        groups.append(grp);
-        group = group->next;
-    }
+    model = new Model("monkey1.obj");
     // initial values
     rotation.setX(0);
     rotation.setY(0);
@@ -113,10 +75,6 @@ GLWidget::GLWidget(QWidget *parent)
     timer->start();
 }
 
-GLWidget::~GLWidget()
-{
-}
-
 void GLWidget::resizeGL(int width, int height) {
     aspectRatio = (qreal) width / (qreal) height;
 }
@@ -124,96 +82,19 @@ void GLWidget::resizeGL(int width, int height) {
 void GLWidget::initializeGL ()
 {
     glClearColor(0.1f, 0.1f, 0.2f, 1.0f);
-    glGenTextures(1, &m_uiTexture);
-    m_uiTexture = bindTexture(QImage(":/fur.resized.jpg"));
-    QFile vfile("vshader.glsl");
-    if(!vfile.open(QIODevice::ReadOnly)) return;
-    QString vsrc1 = vfile.readAll();
-    QGLShader *vshader1 = new QGLShader(QGLShader::Vertex, this);
-    vshader1->compileSourceCode(vsrc1.toAscii());
-    vfile.close();
-
-    QFile ffile("fshader.glsl");
-    if(!ffile.open(QIODevice::ReadOnly)) return;
-    QString fsrc1 = ffile.readAll();
-    qDebug() << "Output:\n" << fsrc1;
-    QGLShader *fshader1 = new QGLShader(QGLShader::Fragment, this);
-    fshader1->compileSourceCode(fsrc1.toAscii());
-    ffile.close();
-
-    program1.addShader(vshader1);
-    program1.addShader(fshader1);
-    program1.link();
-
-    vertexAttr1 = program1.attributeLocation("vertex");
-    normalAttr1 = program1.attributeLocation("normal");
-    texCoordAttr1 = program1.attributeLocation("texCoord");
-    matrixUniform1 = program1.uniformLocation("matrix");
-    textureUniform1 = program1.uniformLocation("tex");
-
-    QGLShader *vshader2 = new QGLShader(QGLShader::Vertex);
-    const char *vsrc2 =
-            "attribute highp vec4 vertex;\n"
-            "attribute highp vec4 texCoord;\n"
-            "attribute mediump vec3 normal;\n"
-            "uniform mediump mat4 matrix;\n"
-            "varying highp vec4 texc;\n"
-            "varying mediump float angle;\n"
-            "void main(void)\n"
-            "{\n"
-            "    vec3 toLight = normalize(vec3(0.0, 0.3, 1.0));\n"
-            "    angle = max(dot(normal, toLight), 0.0);\n"
-            "    gl_Position = matrix * vertex;\n"
-            "    texc = texCoord;\n"
-            "}\n";
-    vshader2->compileSourceCode(vsrc2);
-
-    QGLShader *fshader2 = new QGLShader(QGLShader::Fragment);
-    const char *fsrc2 =
-            "varying highp vec4 texc;\n"
-            "uniform sampler2D tex;\n"
-            "varying mediump float angle;\n"
-            "void main(void)\n"
-            "{\n"
-            "    highp vec3 color = texture2D(tex, texc.st).rgb;\n"
-            "    color = color * 0.2 + color * 0.8 * angle;\n"
-            "    gl_FragColor = vec4(clamp(color, 0.0, 1.0), 1.0);\n"
-            "}\n";
-    fshader2->compileSourceCode(fsrc2);
-
-    program2.addShader(vshader2);
-    program2.addShader(fshader2);
-    program2.link();
-
-    vertexAttr2 = program2.attributeLocation("vertex");
-    normalAttr2 = program2.attributeLocation("normal");
-    texCoordAttr2 = program2.attributeLocation("texCoord");
-    matrixUniform2 = program2.uniformLocation("matrix");
-    textureUniform2 = program2.uniformLocation("tex");
+    model->setFragmentShaderFile("fshader.glsl");
+    model->setVertexShaderFile("vshader.glsl");
+    model->linkShaderProgram();
+    model->initShaderProgram();
+    GLuint texture;
+    glGenTextures(1, &texture);
+    texture = bindTexture(QImage(":/fur.resized.jpg"));
+    model->setTexture(texture);
 
     glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR );
     glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR );
 }
 
-void GLWidget::paintMonkey()
-{
-    glBindTexture(GL_TEXTURE_2D, m_uiTexture);
-    foreach(Group grp, groups) {
-        foreach(Triangle triangle, grp.triangles) {
-            program1.setUniformValue(textureUniform1, 0);    // use texture unit 0
-            program1.enableAttributeArray(normalAttr1);
-            program1.enableAttributeArray(vertexAttr1);
-            program1.enableAttributeArray(texCoordAttr1);
-            program1.setAttributeArray(vertexAttr1, triangle.vertices.constData());
-            program1.setAttributeArray(normalAttr1, triangle.normals.constData());
-            program1.setAttributeArray(texCoordAttr1, triangle.texcoords.constData());
-            glDrawArrays(GL_TRIANGLES, 0, triangle.vertices.size());
-            program1.disableAttributeArray(normalAttr1);
-            program1.disableAttributeArray(vertexAttr1);
-            program1.disableAttributeArray(texCoordAttr1);
-        }
-    }
-}
 void GLWidget::paintGL()
 {
     // do rotation - could we do this is one loop for xyz?
@@ -294,26 +175,11 @@ void GLWidget::paintGL()
     mvMonkey4.translate(4.0,0,0);
     mvMonkey5.translate(player.x(),player.y(),player.z());
     mvMonkey5.rotate(rotation.z(), 0.0, 0.0, 1.0);
-    program1.bind();
-    paintMonkey();
-    program1.setUniformValue(matrixUniform1, mvMonkey);
-    program1.release();
-    program1.bind();
-    paintMonkey();
-    program1.setUniformValue(matrixUniform1, mvMonkey2);
-    program1.release();
-    program1.bind();
-    paintMonkey();
-    program1.setUniformValue(matrixUniform1, mvMonkey3);
-    program1.release();
-    program1.bind();
-    paintMonkey();
-    program1.setUniformValue(matrixUniform1, mvMonkey4);
-    program1.release();
-    program1.bind();
-    paintMonkey();
-    program1.setUniformValue(matrixUniform1, mvMonkey5);
-    program1.release();
+    model->draw(mvMonkey);
+    model->draw(mvMonkey2);
+    model->draw(mvMonkey3);
+    model->draw(mvMonkey4);
+    model->draw(mvMonkey5);
 
     glDisable(GL_DEPTH_TEST);
     glDisable(GL_CULL_FACE);
