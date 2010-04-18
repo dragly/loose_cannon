@@ -48,7 +48,7 @@ int main( int argc, char ** argv )
 {
     Q_INIT_RESOURCE(texture);
     QApplication a( argc, argv );
-    MainWindow *mw = new MainWindow();
-//    mw.showMaximized();
+    MainWindow mw;
+    mw.showMaximized();
     return a.exec();
 }

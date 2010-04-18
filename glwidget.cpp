@@ -565,10 +565,13 @@ void GLWidget::mousePressEvent(QMouseEvent *event)
         qDebug() << "center" << center;
         qreal coordx = (qreal) event->x() / (qreal) width();
         qreal coordy = (qreal) (height() - event->y()) / (qreal) height();
+        // alright, we are supposed to do reverse projection division, but I don't know how
+        // however, this is a workaround which works!
         coordx *= -2.0;
         coordx += 1.0;
         coordy *= -2.0;
         coordy += 1.0;
+        // end workaround - one day we should fix this :)
         QVector3D screen = inv * QVector3D(coordx,coordy,-1);
         qDebug() << "screen" << screen;
         QVector3D dir = center - screen;
