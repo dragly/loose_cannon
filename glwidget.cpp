@@ -60,7 +60,6 @@ GLWidget::GLWidget(QWidget *parent)
     setAttribute(Qt::WA_PaintOnScreen);
     setAttribute(Qt::WA_NoSystemBackground);
     setAutoBufferSwap(false);
-    m_showBubbles = true;
     model = glmReadOBJ("monkey1.obj");
     if(model->numtexcoords < 1) {
         qWarning() << "Missing UV map.";
@@ -106,7 +105,7 @@ GLWidget::GLWidget(QWidget *parent)
     rotation.setX(0);
     rotation.setY(0);
     rotation.setZ(0);
-    camera = QVector3D(-5, -3, 7);
+    camera = QVector3D(-5, -3, 20);
     // timer
     timer = new QTimer(this);
     QObject::connect(timer, SIGNAL(timeout()), this, SLOT(updateGL()));
@@ -118,100 +117,6 @@ GLWidget::~GLWidget()
 {
 }
 
-void GLWidget::setScaling(int scale) {
-
-    if (scale > 50)
-        m_fScale = 1 + qreal(scale -50) / 50 * 0.5;
-    else if (scale < 50)
-        m_fScale =  1- (qreal(50 - scale) / 50 * 1/2);
-    else
-        m_fScale = 1;
-}
-
-void GLWidget::setLogo() {
-    qtLogo = true;
-}
-
-void GLWidget::setTexture() {
-    qtLogo = false;
-}
-
-void GLWidget::showBubbles(bool bubbles)
-{
-    m_showBubbles = bubbles;
-}
-
-
-void GLWidget::paintTexturedCube()
-{
-    glBindTexture(GL_TEXTURE_2D, m_uiTexture);
-    GLfloat afVertices[] = {
-        -0.5, 0.5, 0.5, 0.5,-0.5,0.5,-0.5,-0.5,0.5,
-        0.5, -0.5, 0.5, -0.5,0.5,0.5,0.5,0.5,0.5,
-        -0.5, -0.5, -0.5, 0.5,-0.5,-0.5,-0.5,0.5,-0.5,
-        0.5, 0.5, -0.5, -0.5,0.5,-0.5,0.5,-0.5,-0.5,
-
-        0.5, -0.5, -0.5, 0.5,-0.5,0.5,0.5,0.5,-0.5,
-        0.5, 0.5, 0.5, 0.5,0.5,-0.5,0.5,-0.5,0.5,
-        -0.5, 0.5, -0.5, -0.5,-0.5,0.5,-0.5,-0.5,-0.5,
-        -0.5, -0.5, 0.5, -0.5,0.5,-0.5,-0.5,0.5,0.5,
-
-        0.5, 0.5,  -0.5, -0.5, 0.5,  0.5,  -0.5,  0.5,  -0.5,
-        -0.5,  0.5,  0.5,  0.5,  0.5,  -0.5, 0.5, 0.5,  0.5,
-        -0.5,  -0.5, -0.5, -0.5, -0.5, 0.5,  0.5, -0.5, -0.5,
-        0.5, -0.5, 0.5,  0.5,  -0.5, -0.5, -0.5,  -0.5, 0.5
-    };
-    program2.setAttributeArray(vertexAttr2, afVertices, 3);
-
-    GLfloat afTexCoord[] = {
-        0.0f,0.0f, 1.0f,1.0f, 1.0f,0.0f,
-        1.0f,1.0f, 0.0f,0.0f, 0.0f,1.0f,
-        1.0f,1.0f, 1.0f,0.0f, 0.0f,1.0f,
-        0.0f,0.0f, 0.0f,1.0f, 1.0f,0.0f,
-
-        1.0f,1.0f, 1.0f,0.0f, 0.0f,1.0f,
-        0.0f,0.0f, 0.0f,1.0f, 1.0f,0.0f,
-        0.0f,0.0f, 1.0f,1.0f, 1.0f,0.0f,
-        1.0f,1.0f, 0.0f,0.0f, 0.0f,1.0f,
-
-        0.0f,1.0f, 1.0f,0.0f, 1.0f,1.0f,
-        1.0f,0.0f, 0.0f,1.0f, 0.0f,0.0f,
-        1.0f,0.0f, 1.0f,1.0f, 0.0f,0.0f,
-        0.0f,1.0f, 0.0f,0.0f, 1.0f,1.0f
-    };
-    program2.setAttributeArray(texCoordAttr2, afTexCoord, 2);
-
-    GLfloat afNormals[] = {
-
-        0,0,-1, 0,0,-1, 0,0,-1,
-        0,0,-1, 0,0,-1, 0,0,-1,
-        0,0,1, 0,0,1, 0,0,1,
-        0,0,1, 0,0,1, 0,0,1,
-
-        -1,0,0, -1,0,0, -1,0,0,
-        -1,0,0, -1,0,0, -1,0,0,
-        1,0,0, 1,0,0, 1,0,0,
-        1,0,0, 1,0,0, 1,0,0,
-
-        0,-1,0, 0,-1,0, 0,-1,0,
-        0,-1,0, 0,-1,0, 0,-1,0,
-        0,1,0, 0,1,0, 0,1,0,
-        0,1,0, 0,1,0, 0,1,0
-    };
-    program2.setAttributeArray(normalAttr2, afNormals, 3);
-
-    program2.setUniformValue(textureUniform2, 0);    // use texture unit 0
-
-    program2.enableAttributeArray(vertexAttr2);
-    program2.enableAttributeArray(normalAttr2);
-    program2.enableAttributeArray(texCoordAttr2);
-
-    glDrawArrays(GL_TRIANGLES, 0, 36);
-
-    program2.disableAttributeArray(vertexAttr2);
-    program2.disableAttributeArray(normalAttr2);
-    program2.disableAttributeArray(texCoordAttr2);
-}
 void GLWidget::resizeGL(int width, int height) {
     aspectRatio = (qreal) width / (qreal) height;
 }
@@ -288,11 +193,6 @@ void GLWidget::initializeGL ()
 
     glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR );
     glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR );
-
-    m_fAngle = 0;
-    m_fScale = 1;
-    createGeometry();
-    createBubbles(bubbleNum - bubbles.count());
 }
 
 void GLWidget::paintMonkey()
@@ -375,8 +275,8 @@ void GLWidget::paintGL()
     //    glDepthMask(GL_TRUE);
     mainModelView = QMatrix4x4(); // reset
     // set up the main view (affects all objects)
-    mainModelView.perspective(60.0, aspectRatio, 1.0, 20.0);
-    mainModelView.lookAt(camera,QVector3D(0.0,0.0,0.0),QVector3D(0.0,0.0,1.0));
+    mainModelView.perspective(60.0, aspectRatio, 1.0, 50.0);
+    mainModelView.lookAt(camera,QVector3D(0,0,0),QVector3D(0.0,0.0,1.0));
     //    mainModelView.rotate(rotation.z(), 0.0, 0.0, 1.0);
     // inherit the main view for each object
     QMatrix4x4 mvMonkey = mainModelView;
@@ -440,116 +340,6 @@ void GLWidget::paintGL()
     frames ++;
 }
 
-
-void GLWidget::createBubbles(int number)
-{
-    for (int i = 0; i < number; ++i) {
-        QPointF position(width()*(0.1 + (0.8*qrand()/(RAND_MAX+1.0))),
-                         height()*(0.1 + (0.8*qrand()/(RAND_MAX+1.0))));
-        qreal radius = qMin(width(), height())*(0.0175 + 0.0875*qrand()/(RAND_MAX+1.0));
-        QPointF velocity(width()*0.0175*(-0.5 + qrand()/(RAND_MAX+1.0)),
-                         height()*0.0175*(-0.5 + qrand()/(RAND_MAX+1.0)));
-
-        bubbles.append(new Bubble(position, radius, velocity));
-    }
-}
-
-QVector<QVector3D> GLWidget::convertToQVector(GLfloat *values, int size) {
-    QVector<QVector3D> vectors;
-    QVector3D vector;
-    int num = 0;
-    for(int i = 0; i < size; i++) {
-        //        qDebug() << values[i];
-        if(num == 0) {
-            vector.setX(values[i]);
-        } else if(num == 1) {
-            vector.setY(values[i]);
-        } else if(num == 2) {
-            vector.setZ(values[i]);
-            vectors.append(vector);
-            //            qDebug() << "--";
-            num = -1;
-        }
-        num++;
-    }
-    return vectors;
-}
-
-void GLWidget::createGeometry()
-{
-    vertices.clear();
-    normals.clear();
-    qDebug() << "Creating vertices";
-    vertices = convertToQVector(model->vertices, model->numvertices);
-    qDebug() << "Creating normals";
-    normals = convertToQVector(model->normals, model->numnormals);
-}
-
-void GLWidget::quad(qreal x1, qreal y1, qreal x2, qreal y2, qreal x3, qreal y3, qreal x4, qreal y4)
-{
-    vertices << QVector3D(x1, y1, -0.05f);
-    vertices << QVector3D(x2, y2, -0.05f);
-    vertices << QVector3D(x4, y4, -0.05f);
-
-    vertices << QVector3D(x3, y3, -0.05f);
-    vertices << QVector3D(x4, y4, -0.05f);
-    vertices << QVector3D(x2, y2, -0.05f);
-
-    QVector3D n = QVector3D::normal
-                  (QVector3D(x2 - x1, y2 - y1, 0.0f), QVector3D(x4 - x1, y4 - y1, 0.0f));
-
-    normals << n;
-    normals << n;
-    normals << n;
-
-    normals << n;
-    normals << n;
-    normals << n;
-
-    vertices << QVector3D(x4, y4, 0.05f);
-    vertices << QVector3D(x2, y2, 0.05f);
-    vertices << QVector3D(x1, y1, 0.05f);
-
-    vertices << QVector3D(x2, y2, 0.05f);
-    vertices << QVector3D(x4, y4, 0.05f);
-    vertices << QVector3D(x3, y3, 0.05f);
-
-    n = QVector3D::normal
-        (QVector3D(x2 - x4, y2 - y4, 0.0f), QVector3D(x1 - x4, y1 - y4, 0.0f));
-
-    normals << n;
-    normals << n;
-    normals << n;
-
-    normals << n;
-    normals << n;
-    normals << n;
-}
-
-void GLWidget::extrude(qreal x1, qreal y1, qreal x2, qreal y2)
-{
-    vertices << QVector3D(x1, y1, +0.05f);
-    vertices << QVector3D(x2, y2, +0.05f);
-    vertices << QVector3D(x1, y1, -0.05f);
-
-    vertices << QVector3D(x2, y2, -0.05f);
-    vertices << QVector3D(x1, y1, -0.05f);
-    vertices << QVector3D(x2, y2, +0.05f);
-
-    QVector3D n = QVector3D::normal
-                  (QVector3D(x2 - x1, y2 - y1, 0.0f), QVector3D(0.0f, 0.0f, -0.1f));
-
-    normals << n;
-    normals << n;
-    normals << n;
-
-    normals << n;
-    normals << n;
-    normals << n;
-}
-
-
-
 void GLWidget::mousePressEvent(QMouseEvent *event)
 {
     if (event->button() == Qt::LeftButton) {
@@ -563,8 +353,7 @@ void GLWidget::mousePressEvent(QMouseEvent *event)
         qDebug() << "inv" << inv;
         qreal coordx = (qreal) event->x() / (qreal) width();
         qreal coordy = (qreal) (height() - event->y()) / (qreal) height();
-        // alright, we are supposed to do reverse projection division, but I don't know how
-        // however, this is a workaround which works!
+        // alright, don't ask me why, but we need to do this get the right position on screen
         coordx *= -2.0;
         coordx += 1.0;
         coordy *= -2.0;

@@ -59,26 +59,16 @@ class GLWidget : public QGLWidget {
 public:
     GLWidget(QWidget *parent = 0);
     ~GLWidget();
-public slots:
-    void setScaling(int scale);
-    void setLogo();
-    void setTexture();
-    void showBubbles(bool);
 protected:
     void paintGL ();
     void initializeGL ();
     void resizeGL(int width, int height);
 private:
     GLuint  m_uiTexture;
-    qreal   m_fAngle;
     QVector3D rotation;
     QVector3D momentum;
-    qreal   m_fScale;
-    bool m_showBubbles;
-    void paintTexturedCube();
     void paintMonkey();
     void createGeometry();
-    void createBubbles(int number);
     void quad(qreal x1, qreal y1, qreal x2, qreal y2, qreal x3, qreal y3, qreal x4, qreal y4);
     void extrude(qreal x1, qreal y1, qreal x2, qreal y2);
     QTimer *timer;
