@@ -561,8 +561,6 @@ void GLWidget::mousePressEvent(QMouseEvent *event)
         // mainModelView should be our modelview projection matrix
         QMatrix4x4 inv = mainModelView.inverted();
         qDebug() << "inv" << inv;
-        QVector3D center = inv * QVector3D(0.0,0.0,0.0);
-        qDebug() << "center" << center;
         qreal coordx = (qreal) event->x() / (qreal) width();
         qreal coordy = (qreal) (height() - event->y()) / (qreal) height();
         // alright, we are supposed to do reverse projection division, but I don't know how
@@ -574,6 +572,8 @@ void GLWidget::mousePressEvent(QMouseEvent *event)
         // end workaround - one day we should fix this :)
         QVector3D screen = inv * QVector3D(coordx,coordy,-1);
         qDebug() << "screen" << screen;
+        QVector3D center = inv * QVector3D(0, 0, 0);
+        qDebug() << "center" << center;
         QVector3D dir = center - screen;
         qDebug() << "direction" << dir;
         // line is r = camera + t * dir
@@ -581,7 +581,7 @@ void GLWidget::mousePressEvent(QMouseEvent *event)
         if (dir.z()==0.0) // if we are looking in a flat direction
             return;
 
-        qreal t = - (camera.z() - 0.2) / dir.z(); // how long it is to the ground
+        qreal t = - (camera.z()) / dir.z(); // how long it is to the ground
         qDebug() << "t" << t;
         player.setX(camera.x() + dir.x() * t);
         player.setY(camera.y() + dir.y() * t);
