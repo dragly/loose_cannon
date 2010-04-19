@@ -74,8 +74,9 @@ GLWidget::GLWidget(QWidget *parent) : QGLWidget(parent)
     // timer
     timer = new QTimer(this);
     QObject::connect(timer, SIGNAL(timeout()), this, SLOT(updateGL()));
-    timer->setInterval(10);
+    timer->setInterval(1);
     timer->start();
+    time.start();
 }
 
 void GLWidget::resizeGL(int width, int height) {
@@ -98,75 +99,81 @@ void GLWidget::initializeGL ()
     glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR );
     glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR );
 }
-
+qreal currentTime = 0.0;
 void GLWidget::paintGL()
 {
-    qreal realTime = (qreal) time.elapsed() / 1000.0;
-    qreal rotateSpeed = 90 * realTime;
+    qreal newTime = time.elapsed() / 1000.0;
+    qreal dt = 0.001; // the timestep
+    qreal rotateSpeed = 90 * dt;
     qreal bulletSpeed = 10;
     qreal enemySpeed = 3;
-    QVector3D gravity(0, 0, -0.8);
+    QVector3D gravity(0, 0, -20);
 
     QPainter painter;
     painter.begin(this);
-    qreal difference = stopAngle - cannon->rotation.z();
-    while(difference > 180) difference -= 360;
-    while(difference < -180) difference += 360;
-    if(difference > 0) {
-        cannon->rotation.setZ(cannon->rotation.z() + rotateSpeed);
-        if(difference - rotateSpeed < 0) {
-            cannon->rotation.setZ(stopAngle);
-        }
-    } else if(difference < 0) {
-        cannon->rotation.setZ(cannon->rotation.z() - rotateSpeed);
-        if(difference + rotateSpeed > 0) {
-            cannon->rotation.setZ(stopAngle);
-        }
-    }
-    // Bullet calculations
-    if(bulletFired) {
-        bullet->velocity += gravity * realTime;
-        bullet->position += bullet->velocity * realTime;
-        if(bullet->position.z() < 0) {
-            qDebug() << "Boom!";
-            QVector3D distance = bullet->position - enemy->position;
-            if(distance.length() < 2) {
-                qDebug() << "Blast!";
-                enemy->velocity += QVector3D(0,0,40);
-            }
-            bulletFired = false;
-            bulletTarget = cannon->position;
-            bullet->position = cannon->position;
-        }
-    } else {
-        if(bulletTarget != cannon->position && difference < 1 && difference > -1) {
-            QVector3D direction;
-            bulletFired = true;
-            bullet->position = cannon->position + QVector3D(0,0,4);
-            direction = bulletTarget - bullet->position;
-            bullet->velocity = direction.normalized() * bulletSpeed;
-            qreal bulletTime = direction.length() / bulletSpeed;
-            qreal startSpeed = -gravity.z() * bulletTime; // from v = v0 + at
-            qDebug() << "startspeed" << startSpeed;
-            bullet->velocity += QVector3D(0, 0, startSpeed * 0.5);
-            qDebug() << "startpos" << bullet->position;
-            qDebug() << "direction" << direction;
-            QVector3D enemydir= cannon->position - enemy->position;
-            enemy->velocity = enemydir.normalized() * enemySpeed;
-            qDebug() << "enemydir" << enemydir;
-            qreal enemyAngle = atan2(enemydir.y(),enemydir.x()) * 180 / M_PI + 90;
-            enemy->rotation.setZ(enemyAngle);
-        }
-    }
-    // Enemy movement
-    enemy->position += enemy->velocity * realTime;
-    if(enemy->position.z() > 0) {
-        enemy->velocity += gravity;
-    } else {
-        enemy->velocity.setZ(0);
-        enemy->position.setZ(0);
-    }
 
+    // do physics
+    // the physics are calculated without being affected by framerates
+    while(currentTime <= newTime) { // let the physics catch up with the current time
+        currentTime += dt; // next timestep
+        qreal difference = stopAngle - cannon->rotation.z();
+        while(difference > 180) difference -= 360;
+        while(difference < -180) difference += 360;
+        if(difference > 0) {
+            cannon->rotation.setZ(cannon->rotation.z() + rotateSpeed);
+            if(difference - rotateSpeed < 0) {
+                cannon->rotation.setZ(stopAngle);
+            }
+        } else if(difference < 0) {
+            cannon->rotation.setZ(cannon->rotation.z() - rotateSpeed);
+            if(difference + rotateSpeed > 0) {
+                cannon->rotation.setZ(stopAngle);
+            }
+        }
+        // Bullet calculations
+        if(bulletFired) {
+            bullet->velocity += gravity * dt;
+            bullet->position += bullet->velocity * dt;
+            if(bullet->position.z() < 0) {
+                qDebug() << "Boom!";
+                QVector3D distance = bullet->position - enemy->position;
+                if(distance.length() < 2) {
+                    qDebug() << "Blast!";
+                    enemy->velocity += QVector3D(0,0,10);
+                }
+                bulletFired = false;
+                bulletTarget = cannon->position;
+                bullet->position = cannon->position;
+            }
+        } else {
+            if(bulletTarget != cannon->position && difference < 1 && difference > -1) {
+                QVector3D direction;
+                bulletFired = true;
+                bullet->position = cannon->position + QVector3D(0,0,0.01);
+                direction = bulletTarget - bullet->position;
+                bullet->velocity = direction.normalized() * bulletSpeed;
+                qreal bulletTime = direction.length() / bulletSpeed;
+                qreal startSpeed = -gravity.z() * bulletTime; // from v = v0 + at
+                qDebug() << "startspeed" << startSpeed;
+                bullet->velocity += QVector3D(0, 0, startSpeed * 0.5);
+                qDebug() << "startpos" << bullet->position;
+                qDebug() << "direction" << direction;
+                QVector3D enemydir= cannon->position - enemy->position;
+                enemy->velocity = enemydir.normalized() * enemySpeed;
+                qDebug() << "enemydir" << enemydir;
+                qreal enemyAngle = atan2(enemydir.y(),enemydir.x()) * 180 / M_PI + 90;
+                enemy->rotation.setZ(enemyAngle);
+            }
+        }
+        // Enemy movement
+        enemy->position += enemy->velocity * dt;
+        if(enemy->position.z() > 0) {
+            enemy->velocity += gravity * dt;
+        } else {
+            enemy->velocity.setZ(0);
+            enemy->position.setZ(0);
+        }
+    }
     painter.beginNativePainting();
 
     glClearColor(0.9f, 0.85f, 0.9f, 1.0f);
@@ -190,23 +197,15 @@ void GLWidget::paintGL()
 
     painter.endNativePainting();
 
-    QString framesPerSecond;
-    framesPerSecond.setNum(frames /(time.elapsed() / 1000.0), 'f', 2);
 
     painter.setPen(Qt::white);
 
-    painter.drawText(20, 40, framesPerSecond + " fps");
     painter.drawText(20, 50, "momentum: " + QString::number(momentum.x()) + ", " + QString::number(momentum.y()) + ", " + QString::number(momentum.z()));
     painter.drawText(20, 60, "pos: " + QString::number(cursor.x()) + ", " + QString::number(cursor.y()) + ", " + QString::number(cursor.z()));
 
     painter.end();
 
     swapBuffers();
-    time.restart();
-    if (!(frames % 100)) {
-        time.start();
-        frames = 0;
-    }
     frames ++;
 }
 
