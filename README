@@ -1,3 +1,7 @@
-This project merges the GLM library and the hellogl_es2 example 
-from Nokia. This is an initial move to make a library for importing 
-obj files to Qt's OpenGL ES implementation.
+Loose Cannon is a tower defense game written in Qt and OpenGL.
+
+The goal is to eliminate all enemies by firing a range of different weapons
+from the cannon located in the center of the screen. By clicking on different
+positions on the ground, you select where the cannon should fire.
+
+More info to come.

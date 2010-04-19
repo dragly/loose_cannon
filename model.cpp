@@ -1,3 +1,21 @@
+//    Copyright (C) 2010 Svenn-Arne Dragly <s@dragly.com>
+//
+//    This program is free software: you can redistribute it and/or modify
+//    it under the terms of the GNU General Public License as published by
+//    the Free Software Foundation, either version 2 of the License, or
+//    (at your option) any later version.
+//
+//    This program is distributed in the hope that it will be useful,
+//    but WITHOUT ANY WARRANTY; without even the implied warranty of
+//    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+//    GNU General Public License for more details.
+//
+//    You should have received a copy of the GNU General Public License
+//    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+//
+//    Some parts of the code might still be from Nokia's Qt examples
+//    and are of course Copyright (C) Nokia and/or its subsidiary(-ies).
+
 #include "model.h"
 
 Model::Model() {
@@ -96,7 +114,11 @@ void Model::draw(QMatrix4x4 modelview) {
     modelview.rotate(rotation.y(), 0, 1, 0);
     modelview.rotate(rotation.z(), 0, 0, 1);
     modelview.scale(scale);
-    program.bind();
+    if(!program.bind()) {
+        qDebug() << "Failed to bind program"; // Warning! If qDebug is removed from here, nothing is drawn on
+        // screens of embedded devices. I have no idea why.
+        // It is the strangest bug I have seen.
+    }
     glBindTexture(GL_TEXTURE_2D, texture);
     foreach(ModelGroup grp, groups) {
         foreach(ModelTriangle triangle, grp.triangles) {
@@ -115,7 +137,6 @@ void Model::draw(QMatrix4x4 modelview) {
     }
     program.setUniformValue(matrixUniform, modelview);
     program.release();
-    program.bind();
 }
 void Model::setTexture(GLuint texture) {
     this->texture = texture;

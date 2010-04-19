@@ -1,43 +1,20 @@
-/****************************************************************************
-**
-** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
-** All rights reserved.
-** Contact: Nokia Corporation (qt-info@nokia.com)
-**
-** This file is part of the examples of the Qt Toolkit.
-**
-** $QT_BEGIN_LICENSE:LGPL$
-** No Commercial Usage
-** This file contains pre-release code and may not be distributed.
-** You may use this file in accordance with the terms and conditions
-** contained in the Technology Preview License Agreement accompanying
-** this package.
-**
-** GNU Lesser General Public License Usage
-** Alternatively, this file may be used under the terms of the GNU Lesser
-** General Public License version 2.1 as published by the Free Software
-** Foundation and appearing in the file LICENSE.LGPL included in the
-** packaging of this file.  Please review the following information to
-** ensure the GNU Lesser General Public License version 2.1 requirements
-** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
-**
-** In addition, as a special exception, Nokia gives you certain additional
-** rights.  These rights are described in the Nokia Qt LGPL Exception
-** version 1.1, included in the file LGPL_EXCEPTION.txt in this package.
-**
-** If you have questions regarding the use of this file, please contact
-** Nokia at qt-info@nokia.com.
-**
-**
-**
-**
-**
-**
-**
-**
-** $QT_END_LICENSE$
-**
-****************************************************************************/
+//    Copyright (C) 2010 Svenn-Arne Dragly <s@dragly.com>
+//
+//    This program is free software: you can redistribute it and/or modify
+//    it under the terms of the GNU General Public License as published by
+//    the Free Software Foundation, either version 2 of the License, or
+//    (at your option) any later version.
+//
+//    This program is distributed in the hope that it will be useful,
+//    but WITHOUT ANY WARRANTY; without even the implied warranty of
+//    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+//    GNU General Public License for more details.
+//
+//    You should have received a copy of the GNU General Public License
+//    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+//
+//    Some parts of the code might still be from Nokia's Qt examples
+//    and are of course Copyright (C) Nokia and/or its subsidiary(-ies).
 
 #include "glwidget.h"
 #include "model.h"
@@ -70,7 +47,7 @@ GLWidget::GLWidget(QWidget *parent) : QGLWidget(parent)
     rotation.setX(0);
     rotation.setY(0);
     rotation.setZ(0);
-    camera = QVector3D(5, -12, 30);
+    camera = QVector3D(5, -7, 20);
     // timer
     timer = new QTimer(this);
     QObject::connect(timer, SIGNAL(timeout()), this, SLOT(updateGL()));
@@ -179,7 +156,7 @@ void GLWidget::paintGL()
     }
     painter.beginNativePainting();
 
-    glClearColor(0.9f, 0.85f, 0.9f, 1.0f);
+    glClearColor(0.88f, 0.88f, 0.9f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     glFrontFace(GL_CW);
@@ -202,13 +179,21 @@ void GLWidget::paintGL()
 
 
     painter.setPen(Qt::white);
-
-    painter.drawText(20, 50, "momentum: " + QString::number(momentum.x()) + ", " + QString::number(momentum.y()) + ", " + QString::number(momentum.z()));
-    painter.drawText(20, 60, "pos: " + QString::number(cursor.x()) + ", " + QString::number(cursor.y()) + ", " + QString::number(cursor.z()));
-
+    QString framesPerSecond;
+    framesPerSecond.setNum(frames /(frametime.elapsed() / 1000.0), 'f', 2);
+    painter.drawText(20, 40, framesPerSecond + " fps");
+    painter.drawText(20, 60, "cursor: " + QString::number(cursor.x()) + ", " + QString::number(cursor.y()) + ", " + QString::number(cursor.z()));
+    painter.drawText(20, 80, "rotation: " + QString::number(cannon->rotation.x()) + ", " + QString::number(cannon->rotation.y()) + ", " + QString::number(cannon->rotation.z()));
+//    painter.drawText(20,80,"Verts: " + QString::number(cannon->model->vertices[20]));
+    //    painter.drawText(20, 80, "Verts: " + QString::number(cannon->vertices.first().x()));
     painter.end();
 
     swapBuffers();
+
+    if (!(frames % 100)) {
+        frametime.start();
+        frames = 0;
+    }
     frames ++;
 }
 
