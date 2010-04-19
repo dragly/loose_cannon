@@ -104,10 +104,10 @@ void GLWidget::paintGL()
 {
     qreal newTime = time.elapsed() / 1000.0;
     qreal dt = 0.001; // the timestep
-    qreal rotateSpeed = 90 * dt;
-    qreal bulletSpeed = 10;
-    qreal enemySpeed = 3;
-    QVector3D gravity(0, 0, -20);
+    qreal rotateSpeed = 180; // degrees/s
+    qreal bulletSpeed = 10; // units/s
+    qreal enemySpeed = 3; // units/s
+    QVector3D gravity(0, 0, -20); // units/s^2
 
     QPainter painter;
     painter.begin(this);
@@ -123,13 +123,13 @@ void GLWidget::paintGL()
         while(difference > 180) difference -= 360;
         while(difference < -180) difference += 360;
         if(difference > 0) {
-            cannon->rotation.setZ(cannon->rotation.z() + rotateSpeed);
-            if(difference - rotateSpeed < 0) {
+            cannon->rotation.setZ(cannon->rotation.z() + rotateSpeed * dt);
+            if(difference - rotateSpeed * dt < 0) {
                 cannon->rotation.setZ(stopAngle);
             }
         } else if(difference < 0) {
-            cannon->rotation.setZ(cannon->rotation.z() - rotateSpeed);
-            if(difference + rotateSpeed > 0) {
+            cannon->rotation.setZ(cannon->rotation.z() - rotateSpeed * dt);
+            if(difference + rotateSpeed * dt > 0) {
                 cannon->rotation.setZ(stopAngle);
             }
         }
