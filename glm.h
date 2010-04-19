@@ -12,6 +12,7 @@
       preservation of edges, welding redundant vertices & texture
       coordinate generation (spheremap and planar projections) + more.
 
+      Some changes Copyright (C) 2010 Svenn-Arne Dragly <s@dragly.com>
  */
 
 

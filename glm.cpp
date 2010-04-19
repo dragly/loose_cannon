@@ -4,6 +4,8 @@
  *  Written by Nate Robins, 1997.
  *  email: ndr@pobox.com
  *  www: http://www.pobox.com/~ndr
+
+      Some changes Copyright (C) 2010 Svenn-Arne Dragly <s@dragly.com>
  */
 
 /* includes */
