@@ -41,9 +41,7 @@ protected:
 private:
     QVector3D rotation;
     QVector3D momentum;
-    void createGeometry();
-    void quad(qreal x1, qreal y1, qreal x2, qreal y2, qreal x3, qreal y3, qreal x4, qreal y4);
-    void extrude(qreal x1, qreal y1, qreal x2, qreal y2);
+    void resetEnemy();
     QTimer *timer;
 
     bool qtLogo;
@@ -78,8 +76,10 @@ private:
     Model *cannon;
     Model *bullet;
     Model *enemy;
+    qreal enemyHealth;
     qreal startAngle;
     qreal stopAngle;
+    bool gameOver;
 
     bool bulletFired;
     QVector3D bulletTarget;
