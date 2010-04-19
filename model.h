@@ -40,11 +40,18 @@ public:
     void load(QString filename);
     void draw(QMatrix4x4 modelview);
     void setTexture(GLuint texture);
+    void setProgram(QGLShaderProgram *program);
+    bool setShaderFiles(QString fragmentShader, QString vertexShader);
     bool setVertexShaderFile(QString filename);
     bool setFragmentShaderFile(QString filename);
-    void setProgram(QGLShaderProgram *program);
     bool linkShaderProgram();
-    void initShaderProgram();
+    bool initShaderProgram();
+
+    // variables
+    QVector3D position;
+    QVector3D velocity;
+    QVector3D rotation;
+    QVector3D scale;
 private:
     // variables
     GLMmodel *model;

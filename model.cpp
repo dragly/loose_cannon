@@ -1,9 +1,11 @@
 #include "model.h"
 
 Model::Model() {
+    scale = QVector3D(1,1,1);
 }
 
 Model::Model(QString objectFile) {
+    scale = QVector3D(1,1,1);
     load(objectFile);
 }
 void Model::load(QString filename) {
@@ -50,6 +52,9 @@ void Model::load(QString filename) {
     }
     qDebug() << "loading file";
 }
+bool Model::setShaderFiles(QString fragmentShader, QString vertexShader) {
+    return setFragmentShaderFile(fragmentShader) && setVertexShaderFile(vertexShader) && linkShaderProgram() && initShaderProgram();;
+}
 bool Model::setFragmentShaderFile(QString filename) {
     if(!program.addShaderFromSourceFile(QGLShader::Fragment, filename)) {
         qDebug() << "Could not load shader file " + filename + ": " << program.log();
@@ -76,15 +81,21 @@ bool Model::linkShaderProgram() {
     }
 }
 
-void Model::initShaderProgram() {
+bool Model::initShaderProgram() {
     vertexAttr = program.attributeLocation("vertex");
     normalAttr = program.attributeLocation("normal");
     texCoordAttr = program.attributeLocation("texCoord");
     matrixUniform = program.uniformLocation("matrix");
     textureUniform = program.uniformLocation("tex");
+    return true;
 }
 
 void Model::draw(QMatrix4x4 modelview) {
+    modelview.translate(position);
+    modelview.rotate(rotation.x(), 1, 0, 0);
+    modelview.rotate(rotation.y(), 0, 1, 0);
+    modelview.rotate(rotation.z(), 0, 0, 1);
+    modelview.scale(scale);
     program.bind();
     glBindTexture(GL_TEXTURE_2D, texture);
     foreach(ModelGroup grp, groups) {

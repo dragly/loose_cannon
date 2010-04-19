@@ -70,7 +70,6 @@ private:
     QTimer *timer;
 
     bool qtLogo;
-    QList<Bubble*> bubbles;
     int frames;
     QTime time;
     QGLShaderProgram program1;
@@ -87,7 +86,7 @@ private:
     int textureUniform2;
     qreal aspectRatio;
     QVector3D camera;
-    QVector3D player;
+    QVector3D cursor;
 
     QMatrix4x4 mainModelView;
 //    GLint gluUnProject(GLdouble winx, GLdouble winy, GLdouble winz,
@@ -98,7 +97,14 @@ private:
 //    void matmul(GLdouble * product, const GLdouble * a, const GLdouble * b);
 //    void transform_point(GLdouble out[4], const GLdouble m[16], const GLdouble in[4]);
     QVector<QVector3D> convertToQVector(GLfloat* values, int size);
-    Model *model;
+    Model *cannon;
+    Model *bullet;
+    Model *enemy;
+    qreal startAngle;
+    qreal stopAngle;
+
+    bool bulletFired;
+    QVector3D bulletTarget;
 
     // mouse events
     void mousePressEvent(QMouseEvent *event);
