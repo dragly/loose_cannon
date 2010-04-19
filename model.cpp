@@ -91,11 +91,11 @@ bool Model::initShaderProgram() {
 }
 
 void Model::draw(QMatrix4x4 modelview) {
-    modelview.translate(position);
-    modelview.rotate(rotation.x(), 1, 0, 0);
-    modelview.rotate(rotation.y(), 0, 1, 0);
-    modelview.rotate(rotation.z(), 0, 0, 1);
-    modelview.scale(scale);
+//    modelview.translate(position);
+//    modelview.rotate(rotation.x(), 1, 0, 0);
+//    modelview.rotate(rotation.y(), 0, 1, 0);
+//    modelview.rotate(rotation.z(), 0, 0, 1);
+//    modelview.scale(scale);
     program.bind();
     glBindTexture(GL_TEXTURE_2D, texture);
     foreach(ModelGroup grp, groups) {
