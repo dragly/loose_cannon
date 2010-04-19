@@ -72,6 +72,7 @@ private:
     bool qtLogo;
     int frames;
     QTime time;
+    QTime frametime;
     QGLShaderProgram program1;
     QGLShaderProgram program2;
     int vertexAttr1;

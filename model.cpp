@@ -91,12 +91,16 @@ bool Model::initShaderProgram() {
 }
 
 void Model::draw(QMatrix4x4 modelview) {
-//    modelview.translate(position);
-//    modelview.rotate(rotation.x(), 1, 0, 0);
-//    modelview.rotate(rotation.y(), 0, 1, 0);
-//    modelview.rotate(rotation.z(), 0, 0, 1);
-//    modelview.scale(scale);
-    program.bind();
+    modelview.translate(position);
+    modelview.rotate(rotation.x(), 1, 0, 0);
+    modelview.rotate(rotation.y(), 0, 1, 0);
+    modelview.rotate(rotation.z(), 0, 0, 1);
+    modelview.scale(scale);
+    if(!program.bind()) {
+        qDebug() << "Failed to bind program"; // Warning! If qDebug is removed from here, nothing is drawn on
+        // screens of embedded devices. I have no idea why.
+        // It is the strangest bug I have seen.
+    }
     glBindTexture(GL_TEXTURE_2D, texture);
     foreach(ModelGroup grp, groups) {
         foreach(ModelTriangle triangle, grp.triangles) {
@@ -115,7 +119,6 @@ void Model::draw(QMatrix4x4 modelview) {
     }
     program.setUniformValue(matrixUniform, modelview);
     program.release();
-    program.bind();
 }
 void Model::setTexture(GLuint texture) {
     this->texture = texture;

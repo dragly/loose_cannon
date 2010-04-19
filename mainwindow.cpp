@@ -55,6 +55,6 @@ MainWindow::MainWindow()
 {
     // we crash with segfault if we try to do this from main.cpp... so this is an ugly workaround
     GLWidget *glwidget = new GLWidget();
-    glwidget->showFullScreen();
-    close();
+//    glwidget->showFullScreen();
+    this->setCentralWidget(glwidget);
 }

@@ -70,7 +70,7 @@ GLWidget::GLWidget(QWidget *parent) : QGLWidget(parent)
     rotation.setX(0);
     rotation.setY(0);
     rotation.setZ(0);
-    camera = QVector3D(5, -12, 30);
+    camera = QVector3D(5, -7, 20);
     // timer
     timer = new QTimer(this);
     QObject::connect(timer, SIGNAL(timeout()), this, SLOT(updateGL()));
@@ -186,10 +186,10 @@ void GLWidget::paintGL()
     glCullFace(GL_FRONT);
     glEnable(GL_CULL_FACE);
     glEnable(GL_DEPTH_TEST);
-//    glDepthMask(GL_TRUE);
+    glDepthMask(GL_TRUE);
     mainModelView = QMatrix4x4(); // reset
     // set up the main view (affects all objects)
-    mainModelView.perspective(60.0, aspectRatio, 1.0, 60.0);
+    mainModelView.perspective(40.0, aspectRatio, 1.0, 60.0);
     mainModelView.lookAt(camera,QVector3D(0,0,0),QVector3D(0.0,0.0,1.0));
     cannon->draw(mainModelView);
     bullet->draw(mainModelView);
@@ -202,13 +202,21 @@ void GLWidget::paintGL()
 
 
     painter.setPen(Qt::white);
-
-    painter.drawText(20, 60, "pos: " + QString::number(cursor.x()) + ", " + QString::number(cursor.y()) + ", " + QString::number(cursor.z()));
-    painter.drawText(20,80,"Verts: " + QString::number(cannon->model->vertices[20]));
+    QString framesPerSecond;
+    framesPerSecond.setNum(frames /(frametime.elapsed() / 1000.0), 'f', 2);
+    painter.drawText(20, 40, framesPerSecond + " fps");
+    painter.drawText(20, 60, "cursor: " + QString::number(cursor.x()) + ", " + QString::number(cursor.y()) + ", " + QString::number(cursor.z()));
+    painter.drawText(20, 80, "rotation: " + QString::number(cannon->rotation.x()) + ", " + QString::number(cannon->rotation.y()) + ", " + QString::number(cannon->rotation.z()));
+//    painter.drawText(20,80,"Verts: " + QString::number(cannon->model->vertices[20]));
     //    painter.drawText(20, 80, "Verts: " + QString::number(cannon->vertices.first().x()));
     painter.end();
 
     swapBuffers();
+
+    if (!(frames % 100)) {
+        frametime.start();
+        frames = 0;
+    }
     frames ++;
 }
 

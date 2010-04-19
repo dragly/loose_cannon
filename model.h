@@ -52,14 +52,14 @@ public:
     QVector3D velocity;
     QVector3D rotation;
     QVector3D scale;
-    QVector<QVector3D> vertices;
-    QVector<QVector3D> normals;
-    QVector<ModelGroup> groups;
-//private:
+private:
     // variables
     GLMmodel *model;
     GLuint texture;
     QGLShaderProgram program;
+    QVector<QVector3D> vertices;
+    QVector<QVector3D> normals;
+    QVector<ModelGroup> groups;
     int vertexAttr;
     int normalAttr;
     int matrixUniform;
