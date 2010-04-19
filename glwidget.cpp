@@ -112,8 +112,11 @@ void GLWidget::paintGL()
     QPainter painter;
     painter.begin(this);
 
-    // do physics
-    // the physics are calculated without being affected by framerates
+    // Let's do physics!
+    // The physics are calculated without being affected by framerates.
+    // First we check the time to see wether or not we need to recalculate physics.
+    // If we do, we iterate through each timestep until we have caught up with the framerate.
+    // This avoids missed collisions due to bad framerates, but causes the CPU to work a bit more
     while(currentTime <= newTime) { // let the physics catch up with the current time
         currentTime += dt; // next timestep
         qreal difference = stopAngle - cannon->rotation.z();
