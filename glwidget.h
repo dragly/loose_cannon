@@ -73,9 +73,10 @@ private:
 //    void matmul(GLdouble * product, const GLdouble * a, const GLdouble * b);
 //    void transform_point(GLdouble out[4], const GLdouble m[16], const GLdouble in[4]);
     QVector<QVector3D> convertToQVector(GLfloat* values, int size);
-    Model *cannon;
-    Model *bullet;
-    Model *enemy;
+    Entity *cannon;
+    Entity *bullet;
+    Entity *enemy;
+    Model *monkey;
     qreal enemyHealth;
     qreal startAngle;
     qreal stopAngle;

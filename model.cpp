@@ -18,14 +18,36 @@
 
 #include "model.h"
 
-Model::Model() {
+Entity::Entity() {
     scale = QVector3D(1,1,1);
 }
 
-Model::Model(QString objectFile) {
+Entity::Entity(Model *model) {
     scale = QVector3D(1,1,1);
+    this->model = model;
+}
+
+void Entity::setModel(Model *model) {
+    this->model = model;
+}
+
+void Entity::draw(QMatrix4x4 modelview) {
+    modelview.translate(position);
+    modelview.rotate(rotation.x(), 1, 0, 0);
+    modelview.rotate(rotation.y(), 0, 1, 0);
+    modelview.rotate(rotation.z(), 0, 0, 1);
+    modelview.scale(scale);
+    model->draw(modelview);
+}
+
+Model::Model() {
+}
+
+Model::Model(QString objectFile) {
     load(objectFile);
 }
+
+// Model functions
 void Model::load(QString filename) {
     model = glmReadOBJ(filename.toLatin1().data());
     if(model->numtexcoords < 1) {
@@ -109,11 +131,6 @@ bool Model::initShaderProgram() {
 }
 
 void Model::draw(QMatrix4x4 modelview) {
-    modelview.translate(position);
-    modelview.rotate(rotation.x(), 1, 0, 0);
-    modelview.rotate(rotation.y(), 0, 1, 0);
-    modelview.rotate(rotation.z(), 0, 0, 1);
-    modelview.scale(scale);
     if(!program.bind()) {
         qDebug() << "Failed to bind program"; // Warning! If qDebug is removed from here, nothing is drawn on
         // screens of embedded devices. I have no idea why.

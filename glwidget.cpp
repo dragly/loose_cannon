@@ -38,9 +38,10 @@ GLWidget::GLWidget(QWidget *parent) : QGLWidget(parent)
     setAttribute(Qt::WA_PaintOnScreen);
     setAttribute(Qt::WA_NoSystemBackground);
     setAutoBufferSwap(false);
-    cannon = new Model("monkey1.obj");
-    bullet = new Model("monkey1.obj");
-    enemy = new Model("monkey1.obj");
+    monkey = new Model("monkey1.obj");
+    cannon = new Entity(monkey);
+    bullet = new Entity(monkey);
+    enemy = new Entity(monkey);
     bullet->scale *= 0.1;
     resetEnemy();
     // initial values
@@ -72,12 +73,8 @@ void GLWidget::initializeGL ()
     GLuint texture;
     glGenTextures(1, &texture);
     texture = bindTexture(QImage(":/fur.resized.jpg"));
-    cannon->setShaderFiles("fshader.glsl","vshader.glsl");
-    cannon->setTexture(texture);
-    bullet->setShaderFiles("fshader.glsl","vshader.glsl");
-    bullet->setTexture(texture);
-    enemy->setShaderFiles("fshader.glsl","vshader.glsl");
-    enemy->setTexture(texture);
+    monkey->setShaderFiles("fshader.glsl","vshader.glsl");
+    monkey->setTexture(texture);
 
     glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR );
     glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR );

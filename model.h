@@ -47,29 +47,20 @@ signals:
 public slots:
 
 };
-
 class Model
 {
 public:
     Model();
     Model(QString filename);
 
-    // functions
     void load(QString filename);
     void draw(QMatrix4x4 modelview);
     void setTexture(GLuint texture);
-    void setProgram(QGLShaderProgram *program);
     bool setShaderFiles(QString fragmentShader, QString vertexShader);
     bool setVertexShaderFile(QString filename);
     bool setFragmentShaderFile(QString filename);
     bool linkShaderProgram();
     bool initShaderProgram();
-
-    // variables
-    QVector3D position;
-    QVector3D velocity;
-    QVector3D rotation;
-    QVector3D scale;
 private:
     // variables
     GLMmodel *model;
@@ -83,6 +74,32 @@ private:
     int matrixUniform;
     int texCoordAttr;
     int textureUniform;
+};
+
+class Entity
+{
+public:
+    Entity();
+    Entity(Model *model);
+
+    // functions
+
+    void draw(QMatrix4x4 modelview);
+//    void setTexture(GLuint texture);
+//    bool setShaderFiles(QString fragmentShader, QString vertexShader);
+//    bool setVertexShaderFile(QString filename);
+//    bool setFragmentShaderFile(QString filename);
+//    bool linkShaderProgram();
+//    bool initShaderProgram();
+    void setModel(Model *model);
+
+    // variables
+    QVector3D position;
+    QVector3D velocity;
+    QVector3D rotation;
+    QVector3D scale;
+private:
+    Model *model;
 };
 
 #endif // MODEL_H
