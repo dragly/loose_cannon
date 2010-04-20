@@ -119,30 +119,24 @@ bool Model::setShaderFiles(QString fragmentShader, QString vertexShader) {
 }
 bool Model::setFragmentShaderFile(QString filename) {
     if(!program.addShaderFromSourceFile(QGLShader::Fragment, filename)) {
-        qDebug() << "Could not load shader file " + filename + ": " << program.log();
+        qWarning() << "Could not load shader file " + filename + ": " << program.log();
         return false;
-    } else {
-        qDebug() << "Loaded " + filename + " successfully";
-        return true;
     }
+    return true;
 }
 bool Model::setVertexShaderFile(QString filename) {
     if(!program.addShaderFromSourceFile(QGLShader::Vertex, filename)) {
-        qDebug() << "Could not load shader file " + filename + ": " << program.log();
+        qWarning() << "Could not load shader file " + filename + ": " << program.log();
         return false;
-    } else {
-        qDebug() << "Loaded " + filename + " successfully";
-        return true;
     }
+    return true;
 }
 bool Model::linkShaderProgram() {
-    if(program.link()) {
-        qDebug() << "Program linked";
-        return true;
-    } else {
-        qDebug() << "Failed to link program:" << program.log();
+    if(!program.link()) {
+        qWarning() << "Failed to link program:" << program.log();
         return false;
     }
+    return true;
 }
 
 bool Model::initShaderProgram() {
