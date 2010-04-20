@@ -38,11 +38,12 @@ GLWidget::GLWidget(QWidget *parent) : QGLWidget(parent)
     setAttribute(Qt::WA_PaintOnScreen);
     setAttribute(Qt::WA_NoSystemBackground);
     setAutoBufferSwap(false);
-    cannon = new Model("monkey1.obj");
-    bullet = new Model("monkey1.obj");
-    enemy = new Model("monkey1.obj");
+    monkey = new Model("monkey1.obj");
+    cannon = new Entity(monkey);
+    bullet = new Entity(monkey);
+    enemy = new Entity(monkey);
     bullet->scale *= 0.1;
-    enemy->position = QVector3D(12,15,0);
+    resetEnemy();
     // initial values
     rotation.setX(0);
     rotation.setY(0);
@@ -60,18 +61,20 @@ void GLWidget::resizeGL(int width, int height) {
     aspectRatio = (qreal) width / (qreal) height;
 }
 
+void GLWidget::resetEnemy() {
+    qreal randomAngle = qrand() * 360;
+    enemy->position = QVector3D(cos(randomAngle * M_PI / 180) * 20, sin(randomAngle * M_PI / 180) * 20, 0);
+    enemyHealth = 100;
+}
+
 void GLWidget::initializeGL ()
 {
     glClearColor(0.8f, 0.7f, 0.8f, 1.0f);
     GLuint texture;
     glGenTextures(1, &texture);
     texture = bindTexture(QImage(":/fur.resized.jpg"));
-    cannon->setShaderFiles("fshader.glsl","vshader.glsl");
-    cannon->setTexture(texture);
-    bullet->setShaderFiles("fshader.glsl","vshader.glsl");
-    bullet->setTexture(texture);
-    enemy->setShaderFiles("fshader.glsl","vshader.glsl");
-    enemy->setTexture(texture);
+    monkey->setShaderFiles("fshader.glsl","vshader.glsl");
+    monkey->setTexture(texture);
 
     glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR );
     glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR );
@@ -81,10 +84,10 @@ void GLWidget::paintGL()
 {
     qreal newTime = time.elapsed() / 1000.0;
     qreal dt = 0.001; // the timestep
-    qreal rotateSpeed = 90 * dt;
-    qreal bulletSpeed = 10;
-    qreal enemySpeed = 3;
-    QVector3D gravity(0, 0, -20);
+    qreal rotateSpeed = 180; // degrees/s
+    qreal bulletSpeed = 15; // units/s
+    qreal enemySpeed = 2; // units/s
+    QVector3D gravity(0, 0, -20); // units/s^2
 
     QPainter painter;
     painter.begin(this);
@@ -100,13 +103,13 @@ void GLWidget::paintGL()
         while(difference > 180) difference -= 360;
         while(difference < -180) difference += 360;
         if(difference > 0) {
-            cannon->rotation.setZ(cannon->rotation.z() + rotateSpeed);
-            if(difference - rotateSpeed < 0) {
+            cannon->rotation.setZ(cannon->rotation.z() + rotateSpeed * dt);
+            if(difference - rotateSpeed * dt < 0) {
                 cannon->rotation.setZ(stopAngle);
             }
         } else if(difference < 0) {
-            cannon->rotation.setZ(cannon->rotation.z() - rotateSpeed);
-            if(difference + rotateSpeed > 0) {
+            cannon->rotation.setZ(cannon->rotation.z() - rotateSpeed * dt);
+            if(difference + rotateSpeed * dt > 0) {
                 cannon->rotation.setZ(stopAngle);
             }
         }
@@ -119,7 +122,12 @@ void GLWidget::paintGL()
                 QVector3D distance = bullet->position - enemy->position;
                 if(distance.length() < 2) {
                     qDebug() << "Blast!";
-                    enemy->velocity += QVector3D(0,0,10);
+                    enemyHealth -= 40;
+                    if(enemyHealth < 0) {
+                        resetEnemy();
+                    } else {
+                        enemy->velocity += QVector3D(0,0,10);
+                    }
                 }
                 bulletFired = false;
                 bulletTarget = cannon->position;
@@ -146,7 +154,11 @@ void GLWidget::paintGL()
             }
         }
         // Enemy movement
-        enemy->position += enemy->velocity * dt;
+        if((enemy->position - cannon->position).length() < 1.5) {
+            gameOver = true;
+        } else {
+            enemy->position += enemy->velocity * dt;
+        }
         if(enemy->position.z() > 0) {
             enemy->velocity += gravity * dt;
         } else {
@@ -184,7 +196,13 @@ void GLWidget::paintGL()
     painter.drawText(20, 40, framesPerSecond + " fps");
     painter.drawText(20, 60, "cursor: " + QString::number(cursor.x()) + ", " + QString::number(cursor.y()) + ", " + QString::number(cursor.z()));
     painter.drawText(20, 80, "rotation: " + QString::number(cannon->rotation.x()) + ", " + QString::number(cannon->rotation.y()) + ", " + QString::number(cannon->rotation.z()));
-//    painter.drawText(20,80,"Verts: " + QString::number(cannon->model->vertices[20]));
+    if(gameOver) {
+        QFont font;
+        font.setPixelSize(height() / 4);
+        painter.setFont(font);
+        painter.drawText(QRectF(width() / 4, height() / 4, width() / 2, height() / 2),Qt::AlignCenter,tr("Game\nOver!"));
+    }
+    //    painter.drawText(20,80,"Verts: " + QString::number(cannon->model->vertices[20]));
     //    painter.drawText(20, 80, "Verts: " + QString::number(cannon->vertices.first().x()));
     painter.end();
 
