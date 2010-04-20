@@ -114,6 +114,7 @@ void Model::draw(QMatrix4x4 modelview) {
     modelview.rotate(rotation.y(), 0, 1, 0);
     modelview.rotate(rotation.z(), 0, 0, 1);
     modelview.scale(scale);
+//    program.bind();
     if(!program.bind()) {
         qDebug() << "Failed to bind program"; // Warning! If qDebug is removed from here, nothing is drawn on
         // screens of embedded devices. I have no idea why.

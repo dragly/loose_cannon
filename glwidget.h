@@ -74,7 +74,6 @@ private:
 //    GLboolean invert_matrix(const GLdouble * m, GLdouble * out);
 //    void matmul(GLdouble * product, const GLdouble * a, const GLdouble * b);
 //    void transform_point(GLdouble out[4], const GLdouble m[16], const GLdouble in[4]);
-    QVector<QVector3D> convertToQVector(GLfloat* values, int size);
     Model *cannon;
     Model *bullet;
     Model *enemy;
