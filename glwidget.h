@@ -41,25 +41,13 @@ protected:
 private:
     QVector3D rotation;
     QVector3D momentum;
-    void resetEnemy();
+    void createEnemy();
+    void resetEnemy(Entity* enemy);
     QTimer *timer;
 
-    bool qtLogo;
     int frames;
     QTime time;
     QTime frametime;
-    QGLShaderProgram program1;
-    QGLShaderProgram program2;
-    int vertexAttr1;
-    int normalAttr1;
-    int matrixUniform1;
-    int texCoordAttr1;
-    int textureUniform1;
-    int vertexAttr2;
-    int normalAttr2;
-    int texCoordAttr2;
-    int matrixUniform2;
-    int textureUniform2;
     qreal aspectRatio;
     QVector3D camera;
     QVector3D cursor;
@@ -72,26 +60,24 @@ private:
 //    GLboolean invert_matrix(const GLdouble * m, GLdouble * out);
 //    void matmul(GLdouble * product, const GLdouble * a, const GLdouble * b);
 //    void transform_point(GLdouble out[4], const GLdouble m[16], const GLdouble in[4]);
-    QVector<QVector3D> convertToQVector(GLfloat* values, int size);
     Entity *cannon;
     Entity *bullet;
-    Entity *enemy;
-    Model *monkey;
-    qreal enemyHealth;
+    QList<Entity*> enemies;
+    Model *modelMonkey;
+    QHash<Entity*, qreal> enemyHealth;
     qreal startAngle;
     qreal stopAngle;
     bool gameOver;
-
     bool bulletFired;
     QVector3D bulletTarget;
+    QPoint dragLastPosition;
+    QPoint dragStartPosition;
+    bool dragging;
+    QTime dragtime;
 
     // mouse events
     void mousePressEvent(QMouseEvent *event);
     void mouseMoveEvent(QMouseEvent* event);
     void mouseReleaseEvent(QMouseEvent *event);
-    QPoint dragLastPosition;
-    QPoint dragStartPosition;
-    bool dragging;
-    QTime dragtime;
 };
 #endif

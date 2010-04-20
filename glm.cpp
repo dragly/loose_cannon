@@ -1349,7 +1349,7 @@ GLMmodel*
 #endif
     
     /* allocate a new model */
-    model = (GLMmodel*)malloc(sizeof(GLMmodel));
+    model = new GLMmodel();
     model->pathname      = strdup(filename);
     model->mtllibname    = NULL;
     model->numvertices   = 0;

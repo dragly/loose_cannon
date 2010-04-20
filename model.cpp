@@ -17,13 +17,14 @@
 //    and are of course Copyright (C) Nokia and/or its subsidiary(-ies).
 
 #include "model.h"
-
-Entity::Entity() {
-    scale = QVector3D(1,1,1);
-}
+#include <QtOpenGL>
+#include <QPainter>
 
 Entity::Entity(Model *model) {
     scale = QVector3D(1,1,1);
+    position = QVector3D(0,0,0);
+    velocity = QVector3D(0,0,0);
+    rotation = QVector3D(0,0,0);
     this->model = model;
 }
 
@@ -40,11 +41,14 @@ void Entity::draw(QMatrix4x4 modelview) {
     model->draw(modelview);
 }
 
-Model::Model() {
-}
-
-Model::Model(QString objectFile) {
-    load(objectFile);
+Model::Model(QString filename) {
+    texture = 0;
+    vertexAttr = 0;
+    normalAttr = 0;
+    matrixUniform = 0;
+    texCoordAttr = 0;
+    textureUniform = 0;
+    load(filename);
 }
 
 // Model functions
@@ -55,8 +59,10 @@ void Model::load(QString filename) {
     }
     GLMgroup* group;
     group = model->groups;
+    groups.clear();
     while (group) {
-        ModelGroup grp;
+        ModelGroup modelGroup;
+        modelGroup.triangles.clear();
         for(int i = 0; i < group->numtriangles; i++) {
             ModelTriangle triangle;
             QVector<QVector3D> verts;
@@ -85,15 +91,31 @@ void Model::load(QString filename) {
             }
             triangle.vertices = verts;
             triangle.normals = norms;
-            grp.triangles.append(triangle);
+            modelGroup.triangles.append(triangle);
         }
-        groups.append(grp);
+        groups.append(modelGroup);
         group = group->next;
     }
     qDebug() << "loading file";
 }
 bool Model::setShaderFiles(QString fragmentShader, QString vertexShader) {
-    return setFragmentShaderFile(fragmentShader) && setVertexShaderFile(vertexShader) && linkShaderProgram() && initShaderProgram();;
+    if(!setFragmentShaderFile(fragmentShader)) {
+        qDebug() << "Model::setShaderFiles(): Failed to set fragment shader" << fragmentShader;
+        return false;
+    }
+    if(!setVertexShaderFile(vertexShader)) {
+        qDebug() << "Model::setShaderFiles(): Failed to set vertex shader" << vertexShader;
+        return false;
+    }
+    if(!linkShaderProgram()) {
+        qDebug() << "Model::setShaderFiles(): Failed to link shader program";
+        return false;
+    }
+    if(!initShaderProgram()) {
+        qDebug() << "Model::setShaderFiles(): Failed to init shader program";
+        return false;
+    }
+    return  true;
 }
 bool Model::setFragmentShaderFile(QString filename) {
     if(!program.addShaderFromSourceFile(QGLShader::Fragment, filename)) {
@@ -116,8 +138,10 @@ bool Model::setVertexShaderFile(QString filename) {
 bool Model::linkShaderProgram() {
     if(program.link()) {
         qDebug() << "Program linked";
+        return true;
     } else {
         qDebug() << "Failed to link program:" << program.log();
+        return false;
     }
 }
 
@@ -127,33 +151,36 @@ bool Model::initShaderProgram() {
     texCoordAttr = program.attributeLocation("texCoord");
     matrixUniform = program.uniformLocation("matrix");
     textureUniform = program.uniformLocation("tex");
+    if(!texCoordAttr) {
+        qDebug() << "Failed to find texCoordAttr";
+        return false;
+    }
+    if(!normalAttr) {
+        qDebug() << "Failed to find normalAttr";
+        return false;
+    }
     return true;
 }
 
 void Model::draw(QMatrix4x4 modelview) {
-//    program.bind();
-    if(!program.bind()) {
-        qDebug() << "Failed to bind program"; // Warning! If qDebug is removed from here, nothing is drawn on
-        // screens of embedded devices. I have no idea why.
-        // It is the strangest bug I have seen.
-    }
+    program.bind();
+    program.setUniformValue(matrixUniform, modelview);
     glBindTexture(GL_TEXTURE_2D, texture);
     foreach(ModelGroup grp, groups) {
         foreach(ModelTriangle triangle, grp.triangles) {
-            program.setUniformValue(textureUniform, 0);    // use texture unit 0
-            program.enableAttributeArray(normalAttr);
-            program.enableAttributeArray(vertexAttr);
-            program.enableAttributeArray(texCoordAttr);
             program.setAttributeArray(vertexAttr, triangle.vertices.constData());
-            program.setAttributeArray(normalAttr, triangle.normals.constData());
             program.setAttributeArray(texCoordAttr, triangle.texcoords.constData());
+            program.setAttributeArray(normalAttr, triangle.normals.constData());
+            program.setUniformValue(textureUniform, 0);    // use texture unit 0
+            program.enableAttributeArray(vertexAttr);
+            program.enableAttributeArray(normalAttr);
+            program.enableAttributeArray(texCoordAttr);
             glDrawArrays(GL_TRIANGLES, 0, triangle.vertices.size());
-            program.disableAttributeArray(normalAttr);
             program.disableAttributeArray(vertexAttr);
+            program.disableAttributeArray(normalAttr);
             program.disableAttributeArray(texCoordAttr);
         }
     }
-    program.setUniformValue(matrixUniform, modelview);
     program.release();
 }
 void Model::setTexture(GLuint texture) {

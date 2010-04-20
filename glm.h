@@ -64,7 +64,8 @@ typedef struct _GLMgroup {
 
 /* GLMmodel: Structure that defines a model.
  */
-typedef struct _GLMmodel {
+class GLMmodel {
+public:
     char*    pathname;            /* path to this model */
     char*    mtllibname;          /* name of the material library */
 
@@ -90,8 +91,16 @@ typedef struct _GLMmodel {
     GLMgroup*    groups;          /* linked list of groups */
 
     GLfloat position[3];          /* position of the model */
-
-} GLMmodel;
+    GLMmodel() {
+        numvertices = 0;
+        numnormals = 0;
+        numtexcoords = 0;
+        numfacetnorms = 0;
+        numtriangles = 0;
+        nummaterials = 0;
+        numgroups = 0;
+    }
+};
 
 
 /* glmUnitize: "unitize" a model by translating it to the origin and

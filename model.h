@@ -50,7 +50,6 @@ public slots:
 class Model
 {
 public:
-    Model();
     Model(QString filename);
 
     void load(QString filename);
@@ -79,7 +78,6 @@ private:
 class Entity
 {
 public:
-    Entity();
     Entity(Model *model);
 
     // functions
