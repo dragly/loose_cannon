@@ -161,20 +161,20 @@ void Model::draw(QMatrix4x4 modelview) {
     program.setUniformValue(matrixUniform, modelview);
 ////    program.setUniformValue(textureUniform, 0);    // use texture unit 0 - causes performance hit - doesn't appear to do anything
     glBindTexture(GL_TEXTURE_2D, texture);
+    program.enableAttributeArray(vertexAttr);
+    program.enableAttributeArray(normalAttr);
+    program.enableAttributeArray(texCoordAttr);
     foreach(const ModelGroup grp, groups) {
         foreach(ModelTriangle *triangle, grp.triangles) {
             program.setAttributeArray(vertexAttr, triangle->vertices.constData());
             program.setAttributeArray(texCoordAttr, triangle->texcoords.constData());
             program.setAttributeArray(normalAttr, triangle->normals.constData());
-            program.enableAttributeArray(vertexAttr);
-            program.enableAttributeArray(normalAttr);
-            program.enableAttributeArray(texCoordAttr);
             glDrawArrays(GL_TRIANGLES, 0, triangle->vertices.size());
-            program.disableAttributeArray(vertexAttr);
-            program.disableAttributeArray(normalAttr);
-            program.disableAttributeArray(texCoordAttr);
         }
     }
+    program.disableAttributeArray(vertexAttr);
+    program.disableAttributeArray(normalAttr);
+    program.disableAttributeArray(texCoordAttr);
     program.release();
 }
 void Model::setTexture(GLuint texture) {
