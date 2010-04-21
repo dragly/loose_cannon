@@ -41,7 +41,7 @@ public slots:
 class ModelGroup
 {
 public:
-    QVector<ModelTriangle> triangles;
+    QVector<ModelTriangle*> triangles;
 signals:
 
 public slots:

@@ -64,7 +64,7 @@ void Model::load(QString filename) {
         ModelGroup modelGroup;
         modelGroup.triangles.clear();
         for(int i = 0; i < group->numtriangles; i++) {
-            ModelTriangle triangle;
+            ModelTriangle *triangle = new ModelTriangle();
             QVector<QVector3D> verts;
             for(int j = 0; j < 3; j++) {
                 QVector3D vector(model->vertices[3 * model->triangles[group->triangles[i]].vindices[j] + 0],
@@ -87,10 +87,10 @@ void Model::load(QString filename) {
                                      model->texcoords[2 * model->triangles[group->triangles[i]].tindices[j] + 2]);
                     texs.append(vector);
                 }
-                triangle.texcoords = texs;
+                triangle->texcoords = texs;
             }
-            triangle.vertices = verts;
-            triangle.normals = norms;
+            triangle->vertices = verts;
+            triangle->normals = norms;
             modelGroup.triangles.append(triangle);
         }
         groups.append(modelGroup);
@@ -159,17 +159,17 @@ bool Model::initShaderProgram() {
 void Model::draw(QMatrix4x4 modelview) {
     program.bind();
     program.setUniformValue(matrixUniform, modelview);
+////    program.setUniformValue(textureUniform, 0);    // use texture unit 0 - causes performance hit - doesn't appear to do anything
     glBindTexture(GL_TEXTURE_2D, texture);
-    foreach(ModelGroup grp, groups) {
-        foreach(ModelTriangle triangle, grp.triangles) {
-            program.setAttributeArray(vertexAttr, triangle.vertices.constData());
-            program.setAttributeArray(texCoordAttr, triangle.texcoords.constData());
-            program.setAttributeArray(normalAttr, triangle.normals.constData());
-            program.setUniformValue(textureUniform, 0);    // use texture unit 0
+    foreach(const ModelGroup grp, groups) {
+        foreach(ModelTriangle *triangle, grp.triangles) {
+            program.setAttributeArray(vertexAttr, triangle->vertices.constData());
+            program.setAttributeArray(texCoordAttr, triangle->texcoords.constData());
+            program.setAttributeArray(normalAttr, triangle->normals.constData());
             program.enableAttributeArray(vertexAttr);
             program.enableAttributeArray(normalAttr);
             program.enableAttributeArray(texCoordAttr);
-            glDrawArrays(GL_TRIANGLES, 0, triangle.vertices.size());
+            glDrawArrays(GL_TRIANGLES, 0, triangle->vertices.size());
             program.disableAttributeArray(vertexAttr);
             program.disableAttributeArray(normalAttr);
             program.disableAttributeArray(texCoordAttr);

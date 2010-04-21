@@ -72,7 +72,7 @@ void GLWidget::resetGame() {
 }
 
 void GLWidget::initEnemies() {
-    for(int i = 0; i < 3; i++) {
+    for(int i = 0; i < 100; i++) {
         createEnemy();
     }
 }
