@@ -80,7 +80,8 @@ void GLWidget::initEnemies() {
 
 void GLWidget::resetEnemy(Entity* enemy) {
     qreal randomAngle = qrand() * 360; // set random position
-    enemy->position = QVector3D(cos(randomAngle * M_PI / 180) * 20, sin(randomAngle * M_PI / 180) * 20, 0); // set random position
+    enemy->position = QVector3D(cos(randomAngle * M_PI / 180) * 20, sin(randomAngle * M_PI / 180) * 20, 0.0); // set random position
+    qDebug() << "Position enemy:" << enemy->position;
     enemyHealth[enemy] = 100; // reset health
     // set the enemy to attack the cannon (rotate/direction)
     QVector3D enemydir= cannon->position - enemy->position;
@@ -93,8 +94,8 @@ void GLWidget::resetEnemy(Entity* enemy) {
 void GLWidget::createEnemy() {
     qDebug() << "Creating enemy";
     Entity *enemy = new Entity(cannonModel);
-    resetEnemy(enemy);
     enemies.append(enemy);
+    resetEnemy(enemy);
 }
 
 void GLWidget::initializeGL ()
@@ -176,7 +177,7 @@ void GLWidget::paintGL()
                             enemyHealth[enemy] -= 40;
                             score += 100;
                             if(enemyHealth[enemy] < 0) {
-                                enemy->position = QVector3D(20,20,20);
+                                resetEnemy(enemy); // reuse the one we've already got
                                 createEnemy();
                             } else {
                                 enemy->velocity += QVector3D(0,0,10);
@@ -217,6 +218,10 @@ void GLWidget::paintGL()
                     enemy->velocity.setZ(0);
                     enemy->position.setZ(0);
                 }
+                QVector3D enemydir= cannon->position - enemy->position;
+                enemy->velocity = enemydir.normalized() * enemySpeed;
+                qreal enemyAngle = atan2(enemydir.y(),enemydir.x()) * 180 / M_PI + 90;
+                enemy->rotation.setZ(enemyAngle);
             }
         }
     }
