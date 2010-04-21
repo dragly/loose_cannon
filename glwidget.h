@@ -42,8 +42,12 @@ private:
     QVector3D rotation;
     QVector3D momentum;
     void createEnemy();
+    void initEnemies();
+    void resetGame();
     void resetEnemy(Entity* enemy);
     QTimer *timer;
+
+    int score;
 
     int frames;
     QTime time;
@@ -63,7 +67,9 @@ private:
     Entity *cannon;
     Entity *bullet;
     QList<Entity*> enemies;
-    Model *modelMonkey;
+    Model *monkeyModel;
+    Model *cannonModel;
+    Model *bulletModel;
     QHash<Entity*, qreal> enemyHealth;
     qreal startAngle;
     qreal stopAngle;
