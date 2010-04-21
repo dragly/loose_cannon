@@ -91,7 +91,7 @@ void GLWidget::resetEnemy(Entity* enemy) {
 
 void GLWidget::createEnemy() {
     qDebug() << "Creating enemy";
-    Entity *enemy = new Entity(monkeyModel);
+    Entity *enemy = new Entity(cannonModel);
     resetEnemy(enemy);
     enemies.append(enemy);
 }
