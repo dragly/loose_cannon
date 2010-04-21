@@ -65,32 +65,26 @@ void Model::load(QString filename) {
         modelGroup.triangles.clear();
         for(int i = 0; i < group->numtriangles; i++) {
             ModelTriangle *triangle = new ModelTriangle();
-            QVector<QVector3D> verts;
             for(int j = 0; j < 3; j++) {
                 QVector3D vector(model->vertices[3 * model->triangles[group->triangles[i]].vindices[j] + 0],
                                  model->vertices[3 * model->triangles[group->triangles[i]].vindices[j] + 1],
                                  model->vertices[3 * model->triangles[group->triangles[i]].vindices[j] + 2]);
-                verts.append(vector);
+                triangle->vertices[j] = vector;
             }
-            QVector<QVector3D> norms;
             for(int j = 0; j < 3; j++) {
                 QVector3D vector(model->normals[3 * model->triangles[group->triangles[i]].nindices[j] + 0],
                                  model->normals[3 * model->triangles[group->triangles[i]].nindices[j] + 1],
                                  model->normals[3 * model->triangles[group->triangles[i]].nindices[j] + 2]);
-                norms.append(vector);
+                triangle->normals[j] = vector;
             }
             if(model->numtexcoords > 0) {
-                QVector<QVector3D> texs;
                 for(int j = 0; j < 3; j++) {
                     QVector3D vector(model->texcoords[2 * model->triangles[group->triangles[i]].tindices[j] + 0],
                                      model->texcoords[2 * model->triangles[group->triangles[i]].tindices[j] + 1],
                                      model->texcoords[2 * model->triangles[group->triangles[i]].tindices[j] + 2]);
-                    texs.append(vector);
+                    triangle->texcoords[j] = vector;
                 }
-                triangle->texcoords = texs;
             }
-            triangle->vertices = verts;
-            triangle->normals = norms;
             modelGroup.triangles.append(triangle);
         }
         groups.append(modelGroup);
@@ -166,10 +160,10 @@ void Model::draw(QMatrix4x4 modelview) {
     program.enableAttributeArray(texCoordAttr);
     foreach(const ModelGroup grp, groups) {
         foreach(ModelTriangle *triangle, grp.triangles) {
-            program.setAttributeArray(vertexAttr, triangle->vertices.constData());
-            program.setAttributeArray(texCoordAttr, triangle->texcoords.constData());
-            program.setAttributeArray(normalAttr, triangle->normals.constData());
-            glDrawArrays(GL_TRIANGLES, 0, triangle->vertices.size());
+            program.setAttributeArray(vertexAttr, triangle->vertices);
+            program.setAttributeArray(texCoordAttr, triangle->texcoords);
+            program.setAttributeArray(normalAttr, triangle->normals);
+            glDrawArrays(GL_TRIANGLES, 0, 3); // only 3 vertices per triangle
         }
     }
     program.disableAttributeArray(vertexAttr);

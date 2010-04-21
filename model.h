@@ -29,9 +29,9 @@
 class ModelTriangle
 {
 public:
-    QVector<QVector3D> vertices;
-    QVector<QVector3D> normals;
-    QVector<QVector3D> texcoords;
+    QVector3D vertices[3];
+    QVector3D normals[3];
+    QVector3D texcoords[3];
 signals:
 
 public slots:
