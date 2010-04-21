@@ -180,7 +180,7 @@ void GLWidget::paintGL()
                                 resetEnemy(enemy); // reuse the one we've already got
                                 createEnemy();
                             } else {
-                                enemy->velocity += QVector3D(0,0,10);
+                                enemy->velocity += QVector3D(0,0,30);
                             }
                         }
                     }
@@ -219,7 +219,6 @@ void GLWidget::paintGL()
                     enemy->position.setZ(0);
                 }
                 QVector3D enemydir= cannon->position - enemy->position;
-                enemy->velocity = enemydir.normalized() * enemySpeed;
                 qreal enemyAngle = atan2(enemydir.y(),enemydir.x()) * 180 / M_PI + 90;
                 enemy->rotation.setZ(enemyAngle);
             }
