@@ -11,7 +11,7 @@
 //    GNU General Public License for more details.
 //
 //    You should have received a copy of the GNU General Public License
-//    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+//    along with this program->  If not, see <http://www.gnu.org/licenses/>.
 //
 //    Some parts of the code might still be from Nokia's Qt examples
 //    and are of course Copyright (C) Nokia and/or its subsidiary(-ies).
@@ -48,7 +48,12 @@ Model::Model(QString filename) {
     matrixUniform = 0;
     texCoordAttr = 0;
     textureUniform = 0;
+    program = new QGLShaderProgram();
     load(filename);
+}
+void Model::setShaderProgram(QGLShaderProgram *program) {
+    this->program = program;
+    initShaderProgram();
 }
 
 // Model functions
@@ -112,33 +117,33 @@ bool Model::setShaderFiles(QString fragmentShader, QString vertexShader) {
     return  true;
 }
 bool Model::setFragmentShaderFile(QString filename) {
-    if(!program.addShaderFromSourceFile(QGLShader::Fragment, filename)) {
-        qWarning() << "Could not load shader file " + filename + ": " << program.log();
+    if(!program->addShaderFromSourceFile(QGLShader::Fragment, filename)) {
+        qWarning() << "Could not load shader file " + filename + ": " << program->log();
         return false;
     }
     return true;
 }
 bool Model::setVertexShaderFile(QString filename) {
-    if(!program.addShaderFromSourceFile(QGLShader::Vertex, filename)) {
-        qWarning() << "Could not load shader file " + filename + ": " << program.log();
+    if(!program->addShaderFromSourceFile(QGLShader::Vertex, filename)) {
+        qWarning() << "Could not load shader file " + filename + ": " << program->log();
         return false;
     }
     return true;
 }
 bool Model::linkShaderProgram() {
-    if(!program.link()) {
-        qWarning() << "Failed to link program:" << program.log();
+    if(!program->link()) {
+        qWarning() << "Failed to link program:" << program->log();
         return false;
     }
     return true;
 }
 
 bool Model::initShaderProgram() {
-    vertexAttr = program.attributeLocation("vertex");
-    normalAttr = program.attributeLocation("normal");
-    texCoordAttr = program.attributeLocation("texCoord");
-    matrixUniform = program.uniformLocation("matrix");
-    textureUniform = program.uniformLocation("tex");
+    vertexAttr = program->attributeLocation("vertex");
+    normalAttr = program->attributeLocation("normal");
+    texCoordAttr = program->attributeLocation("texCoord");
+    matrixUniform = program->uniformLocation("matrix");
+    textureUniform = program->uniformLocation("tex");
     if(!texCoordAttr) {
         qDebug() << "Failed to find texCoordAttr";
         return false;
@@ -151,25 +156,25 @@ bool Model::initShaderProgram() {
 }
 
 void Model::draw(QMatrix4x4 modelview) {
-    program.bind();
-    program.setUniformValue(matrixUniform, modelview);
-////    program.setUniformValue(textureUniform, 0);    // use texture unit 0 - causes performance hit - doesn't appear to do anything
+    program->bind();
+    program->setUniformValue(matrixUniform, modelview);
+////    program->setUniformValue(textureUniform, 0);    // use texture unit 0 - causes performance hit - doesn't appear to do anything
     glBindTexture(GL_TEXTURE_2D, texture);
-    program.enableAttributeArray(vertexAttr);
-    program.enableAttributeArray(normalAttr);
-    program.enableAttributeArray(texCoordAttr);
+    program->enableAttributeArray(vertexAttr);
+    program->enableAttributeArray(normalAttr);
+    program->enableAttributeArray(texCoordAttr);
     foreach(const ModelGroup grp, groups) {
         foreach(ModelTriangle *triangle, grp.triangles) {
-            program.setAttributeArray(vertexAttr, triangle->vertices);
-            program.setAttributeArray(texCoordAttr, triangle->texcoords);
-            program.setAttributeArray(normalAttr, triangle->normals);
+            program->setAttributeArray(vertexAttr, triangle->vertices);
+            program->setAttributeArray(texCoordAttr, triangle->texcoords);
+            program->setAttributeArray(normalAttr, triangle->normals);
             glDrawArrays(GL_TRIANGLES, 0, 3); // only 3 vertices per triangle
         }
     }
-    program.disableAttributeArray(vertexAttr);
-    program.disableAttributeArray(normalAttr);
-    program.disableAttributeArray(texCoordAttr);
-    program.release();
+    program->disableAttributeArray(vertexAttr);
+    program->disableAttributeArray(normalAttr);
+    program->disableAttributeArray(texCoordAttr);
+    program->release();
 }
 void Model::setTexture(GLuint texture) {
     this->texture = texture;

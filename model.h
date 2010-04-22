@@ -60,11 +60,12 @@ public:
     bool setFragmentShaderFile(QString filename);
     bool linkShaderProgram();
     bool initShaderProgram();
+    void setShaderProgram(QGLShaderProgram *program);
 private:
     // variables
     GLMmodel *model;
     GLuint texture;
-    QGLShaderProgram program;
+    QGLShaderProgram *program;
     QVector<QVector3D> vertices;
     QVector<QVector3D> normals;
     QVector<ModelGroup> groups;

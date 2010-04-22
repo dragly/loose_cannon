@@ -101,28 +101,40 @@ void GLWidget::createEnemy() {
 void GLWidget::initializeGL ()
 {
     glClearColor(0.8f, 0.7f, 0.8f, 1.0f);
+    // create and set shaders
+    QGLShaderProgram *program = new QGLShaderProgram(this);
+    program->addShaderFromSourceFile(QGLShader::Fragment, "fshader.glsl");
+    program->addShaderFromSourceFile(QGLShader::Vertex, "vshader.glsl");
+    program->link();
+    monkeyModel->setShaderProgram(program);
+    cannonModel->setShaderProgram(program);
+    bulletModel->setShaderProgram(program);
+    boxModel->setShaderProgram(program);
+//    if(!monkeyModel->setShaderFiles("fshader.glsl","vshader.glsl")) {
+//        qDebug() << "Failed to set shader files.";
+//    }
+//    if(!cannonModel->setShaderFiles("fshader.glsl","vshader.glsl")) {
+//        qDebug() << "Failed to set shader files.";
+//    }
+//    if(!bulletModel->setShaderFiles("fshader.glsl","vshader.glsl")) {
+//        qDebug() << "Failed to set shader files.";
+//    }
+//    if(!boxModel->setShaderFiles("fshader.glsl","vshader.glsl")) {
+//        qDebug() << "Failed to set shader files.";
+//    }
+    // end shaders
+    // create and set textures
     GLuint furTexture;
     glGenTextures(1, &furTexture);
     furTexture = bindTexture(QImage("fur.resized.jpg"));
     GLuint metalTexture;
     glGenTextures(1, &metalTexture);
     metalTexture = bindTexture(QImage("metal.small.jpg"));
-    if(!monkeyModel->setShaderFiles("fshader.glsl","vshader.glsl")) {
-        qDebug() << "Failed to set shader files.";
-    }
-    if(!cannonModel->setShaderFiles("fshader.glsl","vshader.glsl")) {
-        qDebug() << "Failed to set shader files.";
-    }
-    if(!bulletModel->setShaderFiles("fshader.glsl","vshader.glsl")) {
-        qDebug() << "Failed to set shader files.";
-    }
-    if(!boxModel->setShaderFiles("fshader.glsl","vshader.glsl")) {
-        qDebug() << "Failed to set shader files.";
-    }
     boxModel->setTexture(furTexture);
     monkeyModel->setTexture(furTexture);
     cannonModel->setTexture(metalTexture);
     bulletModel->setTexture(metalTexture);
+    // end textures
 
     glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR );
     glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR );
