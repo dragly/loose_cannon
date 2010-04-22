@@ -42,6 +42,7 @@ GLWidget::GLWidget(QWidget *parent) : QGLWidget(parent)
     setAttribute(Qt::WA_NoSystemBackground);
     setAutoBufferSwap(false);
     monkeyModel = new Model("monkey1.obj");
+    boxModel = new Model("box.obj");
     cannonModel = new Model("cannon.obj");
     bulletModel = new Model("bullet.obj");
     cannon = new Entity(cannonModel);
@@ -79,7 +80,8 @@ void GLWidget::initEnemies() {
 
 void GLWidget::resetEnemy(Entity* enemy) {
     qreal randomAngle = qrand() * 360; // set random position
-    enemy->position = QVector3D(cos(randomAngle * M_PI / 180) * 20, sin(randomAngle * M_PI / 180) * 20, 0); // set random position
+    enemy->position = QVector3D(cos(randomAngle * M_PI / 180) * 20, sin(randomAngle * M_PI / 180) * 20, 0.0); // set random position
+    qDebug() << "Position enemy:" << enemy->position;
     enemyHealth[enemy] = 100; // reset health
     // set the enemy to attack the cannon (rotate/direction)
     QVector3D enemydir= cannon->position - enemy->position;
@@ -91,17 +93,17 @@ void GLWidget::resetEnemy(Entity* enemy) {
 
 void GLWidget::createEnemy() {
     qDebug() << "Creating enemy";
-    Entity *enemy = new Entity(monkeyModel);
-    resetEnemy(enemy);
+    Entity *enemy = new Entity(cannonModel);
     enemies.append(enemy);
+    resetEnemy(enemy);
 }
 
 void GLWidget::initializeGL ()
 {
     glClearColor(0.8f, 0.7f, 0.8f, 1.0f);
-    GLuint texture;
-    glGenTextures(1, &texture);
-    texture = bindTexture(QImage("fur.resized.jpg"));
+    GLuint furTexture;
+    glGenTextures(1, &furTexture);
+    furTexture = bindTexture(QImage("fur.resized.jpg"));
     GLuint metalTexture;
     glGenTextures(1, &metalTexture);
     metalTexture = bindTexture(QImage("metal.small.jpg"));
@@ -114,17 +116,16 @@ void GLWidget::initializeGL ()
     if(!bulletModel->setShaderFiles("fshader.glsl","vshader.glsl")) {
         qDebug() << "Failed to set shader files.";
     }
-    monkeyModel->setTexture(texture);
+    if(!boxModel->setShaderFiles("fshader.glsl","vshader.glsl")) {
+        qDebug() << "Failed to set shader files.";
+    }
+    boxModel->setTexture(furTexture);
+    monkeyModel->setTexture(furTexture);
     cannonModel->setTexture(metalTexture);
     bulletModel->setTexture(metalTexture);
 
     glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR );
     glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR );
-    glEnable (GL_LINE_SMOOTH);
-    glEnable (GL_BLEND);
-    glBlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-    glHint (GL_LINE_SMOOTH_HINT, GL_DONT_CARE);
-
 }
 void GLWidget::paintGL()
 {
@@ -176,10 +177,10 @@ void GLWidget::paintGL()
                             enemyHealth[enemy] -= 40;
                             score += 100;
                             if(enemyHealth[enemy] < 0) {
-                                enemy->position = QVector3D(20,20,20);
+                                resetEnemy(enemy); // reuse the one we've already got
                                 createEnemy();
                             } else {
-                                enemy->velocity += QVector3D(0,0,10);
+                                enemy->velocity += QVector3D(0,0,30);
                             }
                         }
                     }
@@ -217,6 +218,9 @@ void GLWidget::paintGL()
                     enemy->velocity.setZ(0);
                     enemy->position.setZ(0);
                 }
+                QVector3D enemydir= cannon->position - enemy->position;
+                qreal enemyAngle = atan2(enemydir.y(),enemydir.x()) * 180 / M_PI + 90;
+                enemy->rotation.setZ(enemyAngle);
             }
         }
     }
@@ -258,6 +262,7 @@ void GLWidget::paintGL()
     painter.drawText(20, 60, "cursor: " + QString::number(cursor.x()) + ", " + QString::number(cursor.y()) + ", " + QString::number(cursor.z()));
     painter.drawText(20, 80, "rotation: " + QString::number(cannon->rotation.x()) + ", " + QString::number(cannon->rotation.y()) + ", " + QString::number(cannon->rotation.z()));
     painter.drawText(width() - 200, 60, "score: " + QString::number(score));
+    painter.drawText(width() - 200, 80, "enemies: " + QString::number(enemies.count()));
     if(gameOver) {
         QFont font;
         font.setPixelSize(height() / 4);

@@ -30,6 +30,9 @@
 
 MainWindow::MainWindow()
 {
+//#ifdef Q_OS_MAEMO // not the right global
+//    setAttribute(Qt::WA_Maemo5PortraitOrientation, true);
+//#endif
     // we crash with segfault if we try to do this from main.cpp... so this is an ugly workaround
     GLWidget *glwidget = new GLWidget();
 //    glwidget->showFullScreen();

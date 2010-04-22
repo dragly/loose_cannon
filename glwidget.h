@@ -68,6 +68,7 @@ private:
     Entity *bullet;
     QList<Entity*> enemies;
     Model *monkeyModel;
+    Model *boxModel;
     Model *cannonModel;
     Model *bulletModel;
     QHash<Entity*, qreal> enemyHealth;
