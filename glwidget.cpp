@@ -31,6 +31,7 @@ const qreal dt = 0.01; // the timestep
 const qreal rotateSpeed = 180; // degrees/s
 const qreal bulletSpeed = 15; // units/s
 QVector3D gravity(0, 0, -30); // units/s^2
+const qreal explosionRadius = 3;
 
 GLWidget::~GLWidget()
 {
@@ -75,7 +76,7 @@ void GLWidget::resetGame() {
 }
 
 void GLWidget::initEnemies() {
-    for(int i = 0; i < 15; i++) {
+    for(int i = 0; i < 3; i++) {
         createEnemy();
     }
 }
@@ -188,15 +189,17 @@ void GLWidget::paintGL()
                         // TODO: Animate explosion with sprites as seen here: http://news.developer.nvidia.com/2007/01/tips_strategies.html
                         foreach(Entity *enemy, enemies) {
                             QVector3D distance = bullet->position - enemy->position;
-                            if(distance.length() < 3) { // in explosion radius
+                            if(distance.length() < explosionRadius) { // in explosion radius
                                 qDebug() << "Blast!";
-                                enemyHealth[enemy] -= 40;
-                                score += 100;
+                                qreal damage = 40 * distance.length() / explosionRadius;
+                                enemyHealth[enemy] -= damage;
+                                score += damage;
                                 if(enemyHealth[enemy] < 0) {
                                     resetEnemy(enemy); // reuse the one we've already got
                                     createEnemy();
                                 } else {
-                                    enemy->velocity += QVector3D(0,0,7);
+                                    qreal velocityUp = damage * 2 / 100;
+                                    enemy->velocity += QVector3D(0,0,7 * velocityUp);
                                 }
                             }
                         }
@@ -204,7 +207,7 @@ void GLWidget::paintGL()
                     } // if hit
                 } // foreach bullets
             } // bulletfired
-            if(currentBulletTarget != cannon->position && difference < 1 && difference > -1 && currentTime - lastBulletFired > 0.3) {
+            if(currentBulletTarget != cannon->position && difference < 1 && difference > -1 && currentTime - lastBulletFired > 0.5) {
                 bulletFired = true;
                 QVector3D direction;
                 Entity *bullet = new Entity(bulletModel);
