@@ -45,6 +45,7 @@ private:
     void initEnemies();
     void resetGame();
     void resetEnemy(Entity* enemy);
+    void fireBullet();
     QTimer *timer;
 
     int score;
@@ -65,8 +66,12 @@ private:
 //    void matmul(GLdouble * product, const GLdouble * a, const GLdouble * b);
 //    void transform_point(GLdouble out[4], const GLdouble m[16], const GLdouble in[4]);
     Entity *cannon;
-    Entity *bullet;
     QList<Entity*> enemies;
+    QList<Entity*> bullets;
+//    QHash<Entity*, QVector3D> bulletTargets;
+    QVector3D currentBulletTarget;
+    bool bulletFired;
+    qreal lastBulletFired;
     Model *monkeyModel;
     Model *boxModel;
     Model *cannonModel;
@@ -75,8 +80,8 @@ private:
     qreal startAngle;
     qreal stopAngle;
     bool gameOver;
-    bool bulletFired;
-    QVector3D bulletTarget;
+    qreal gameOverTime;
+    qreal currentTime;
     QPoint dragLastPosition;
     QPoint dragStartPosition;
     bool dragging;

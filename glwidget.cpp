@@ -26,11 +26,11 @@
 
 const qreal max_momentum = 40.0;
 const qreal momentum_slowdown = 0.5;
-qreal currentTime = 0.0;
 const qreal enemySpeed = 1.2; // units/s
 const qreal dt = 0.01; // the timestep
 const qreal rotateSpeed = 180; // degrees/s
 const qreal bulletSpeed = 15; // units/s
+QVector3D gravity(0, 0, -30); // units/s^2
 
 GLWidget::~GLWidget()
 {
@@ -38,6 +38,8 @@ GLWidget::~GLWidget()
 
 GLWidget::GLWidget(QWidget *parent) : QGLWidget(parent)
 {
+    startAngle = 0;
+    stopAngle = 0;
     setAttribute(Qt::WA_PaintOnScreen);
     setAttribute(Qt::WA_NoSystemBackground);
     setAutoBufferSwap(false);
@@ -46,11 +48,8 @@ GLWidget::GLWidget(QWidget *parent) : QGLWidget(parent)
     cannonModel = new Model("cannon.obj");
     bulletModel = new Model("bullet.obj");
     cannon = new Entity(cannonModel);
-    bullet = new Entity(bulletModel);
-    bullet->scale *= 0.5;
     // initial values
     camera = QVector3D(5, -7, 20);
-    time.start();
     resetGame();
     // timer, should be set last, just in case
     timer = new QTimer(this);
@@ -59,15 +58,18 @@ GLWidget::GLWidget(QWidget *parent) : QGLWidget(parent)
     timer->start();
 }
 void GLWidget::resetGame() {
-    // init all to zero (to avoid memory failures)
+    // init all to zero (also avoids memory failures)
+    currentTime = 0.0;
     gameOver = false;
     bulletFired = false;
     dragging = false;
-    startAngle = 0;
-    stopAngle = 0;
     frames = 0;
     score = 0;
+    lastBulletFired = 0;
+    gameOverTime = 0.0;
     // end init all to zero
+    time.start();
+    bullets.clear();
     enemies.clear();
     initEnemies();
 }
@@ -110,18 +112,18 @@ void GLWidget::initializeGL ()
     cannonModel->setShaderProgram(program);
     bulletModel->setShaderProgram(program);
     boxModel->setShaderProgram(program);
-//    if(!monkeyModel->setShaderFiles("fshader.glsl","vshader.glsl")) {
-//        qDebug() << "Failed to set shader files.";
-//    }
-//    if(!cannonModel->setShaderFiles("fshader.glsl","vshader.glsl")) {
-//        qDebug() << "Failed to set shader files.";
-//    }
-//    if(!bulletModel->setShaderFiles("fshader.glsl","vshader.glsl")) {
-//        qDebug() << "Failed to set shader files.";
-//    }
-//    if(!boxModel->setShaderFiles("fshader.glsl","vshader.glsl")) {
-//        qDebug() << "Failed to set shader files.";
-//    }
+    //    if(!monkeyModel->setShaderFiles("fshader.glsl","vshader.glsl")) {
+    //        qDebug() << "Failed to set shader files.";
+    //    }
+    //    if(!cannonModel->setShaderFiles("fshader.glsl","vshader.glsl")) {
+    //        qDebug() << "Failed to set shader files.";
+    //    }
+    //    if(!bulletModel->setShaderFiles("fshader.glsl","vshader.glsl")) {
+    //        qDebug() << "Failed to set shader files.";
+    //    }
+    //    if(!boxModel->setShaderFiles("fshader.glsl","vshader.glsl")) {
+    //        qDebug() << "Failed to set shader files.";
+    //    }
     // end shaders
     // create and set textures
     GLuint furTexture;
@@ -139,18 +141,18 @@ void GLWidget::initializeGL ()
     glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR );
     glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR );
 }
+
 void GLWidget::paintGL()
 {
     qreal newTime = time.elapsed() / 1000.0;
-    QVector3D gravity(0, 0, -30); // units/s^2
     // Let's do physics!
     // The physics are calculated without being affected by framerates (100 calculations per second).
     // First we check the time to see wether or not we need to recalculate physics.
     // If we do, we iterate through each timestep until we have caught up with the framerate.
     // This avoids missed collisions due to bad framerates, but causes the CPU to work a bit more
-    if(!gameOver) {
-        while(currentTime <= newTime) { // let the physics catch up with the current time
-            currentTime += dt; // next timestep
+    while(currentTime <= newTime) { // let the physics catch up with the current time
+        currentTime += dt; // next timestep
+        if(!gameOver) {
             qreal difference = stopAngle - cannon->rotation.z();
             while(difference > 180) difference -= 360;
             while(difference < -180) difference += 360;
@@ -167,75 +169,83 @@ void GLWidget::paintGL()
             }
             // Bullet calculations
             if(bulletFired) {
-                bool hitOtherEnemy = false;
-                bullet->velocity += gravity * dt;
-                bullet->position += bullet->velocity * dt;
-                qreal bulletAngleZ = atan2(bullet->velocity.y(),bullet->velocity.x()) * 180 / M_PI + 90;
-                bullet->rotation.setZ(bulletAngleZ);
-    //            qreal bulletAngleX = atan2(bullet->velocity.y(),bullet->velocity.z()) * 180 / M_PI + 90;
-    //            bullet->rotation.setY(bulletAngleX);
-                foreach(Entity *enemy, enemies) {
-                    QVector3D distance = bullet->position - enemy->position;
-                    if(distance.length() < 1.5) {
-                        hitOtherEnemy = true;
-                    }
-                }
-                if(bullet->position.z() < 0 || hitOtherEnemy) {
-                    qDebug() << "Boom!";
+                foreach(Entity* bullet, bullets) {
+                    bool hitOtherEnemy = false;
+                    bullet->velocity += gravity * dt;
+                    bullet->position += bullet->velocity * dt;
+                    qreal bulletAngleZ = atan2(bullet->velocity.y(),bullet->velocity.x()) * 180 / M_PI + 90;
+                    bullet->rotation.setZ(bulletAngleZ);
+                    //            qreal bulletAngleX = atan2(bullet->velocity.y(),bullet->velocity.z()) * 180 / M_PI + 90;
+                    //            bullet->rotation.setY(bulletAngleX);
                     foreach(Entity *enemy, enemies) {
                         QVector3D distance = bullet->position - enemy->position;
-                        if(distance.length() < 3) { // in explosion radius
-                            qDebug() << "Blast!";
-                            enemyHealth[enemy] -= 40;
-                            score += 100;
-                            if(enemyHealth[enemy] < 0) {
-                                resetEnemy(enemy); // reuse the one we've already got
-                                createEnemy();
-                            } else {
-                                enemy->velocity += QVector3D(0,0,7);
+                        if(distance.length() < 1.5) {
+                            hitOtherEnemy = true;
+                        }
+                    } // foreach enemy
+                    if(bullet->position.z() < 0 || hitOtherEnemy) {
+                        qDebug() << "Boom!";
+                        // TODO: Animate explosion with sprites as seen here: http://news.developer.nvidia.com/2007/01/tips_strategies.html
+                        foreach(Entity *enemy, enemies) {
+                            QVector3D distance = bullet->position - enemy->position;
+                            if(distance.length() < 3) { // in explosion radius
+                                qDebug() << "Blast!";
+                                enemyHealth[enemy] -= 40;
+                                score += 100;
+                                if(enemyHealth[enemy] < 0) {
+                                    resetEnemy(enemy); // reuse the one we've already got
+                                    createEnemy();
+                                } else {
+                                    enemy->velocity += QVector3D(0,0,7);
+                                }
                             }
                         }
-                    }
-                    bulletFired = false;
-                    bulletTarget = cannon->position;
-                    bullet->position = cannon->position;
+                        bullets.removeOne(bullet);
+                    } // if hit
+                } // foreach bullets
+            } // bulletfired
+            if(currentBulletTarget != cannon->position && difference < 1 && difference > -1 && currentTime - lastBulletFired > 0.3) {
+                bulletFired = true;
+                QVector3D direction;
+                Entity *bullet = new Entity(bulletModel);
+                bullet->scale *= 0.3;
+                bullet->position = cannon->position + QVector3D(0,0,0.4);
+                direction = currentBulletTarget - bullet->position;
+                bullet->velocity = direction.normalized() * bulletSpeed;
+                qreal bulletTime = direction.length() / bulletSpeed;
+                qreal startSpeed = -gravity.z() * bulletTime; // from v = v0 + at
+                qDebug() << "startspeed" << startSpeed;
+                bullet->velocity += QVector3D(0, 0, startSpeed * 0.5);
+                qDebug() << "startpos" << bullet->position;
+                qDebug() << "direction" << direction;
+                lastBulletFired = currentTime;
+                //                bulletTargets.insert(bullet, currentBulletTarget);
+                bullets.append(bullet);
+            } // bullettarget
+        } // gameover
+        // Enemy movement
+        foreach(Entity *enemy, enemies) {
+            if((enemy->position - cannon->position).length() < 1.5) {
+                if(!gameOver) { // makes sure we print this only once
+                    qDebug() << "Game over!";
+                    gameOver = true;
+                    gameOverTime = currentTime;
                 }
             } else {
-                if(bulletTarget != cannon->position && difference < 1 && difference > -1) {
-                    QVector3D direction;
-                    bulletFired = true;
-                    bullet->position = cannon->position + QVector3D(0,0,0.4);
-                    direction = bulletTarget - bullet->position;
-                    bullet->velocity = direction.normalized() * bulletSpeed;
-                    qreal bulletTime = direction.length() / bulletSpeed;
-                    qreal startSpeed = -gravity.z() * bulletTime; // from v = v0 + at
-                    qDebug() << "startspeed" << startSpeed;
-                    bullet->velocity += QVector3D(0, 0, startSpeed * 0.5);
-                    qDebug() << "startpos" << bullet->position;
-                    qDebug() << "direction" << direction;
-                }
+                enemy->position += enemy->velocity * dt;
             }
-            // Enemy movement
-            foreach(Entity *enemy, enemies) {
-                if((enemy->position - cannon->position).length() < 1.5) {
-                    if(!gameOver) // makes sure we print this only once
-                        qDebug() << "Game over!";
-                    gameOver = true;
-                } else {
-                    enemy->position += enemy->velocity * dt;
-                }
-                if(enemy->position.z() > 0) {
-                    enemy->velocity += gravity * dt;
-                } else {
-                    enemy->velocity.setZ(0);
-                    enemy->position.setZ(0);
-                }
-                QVector3D enemydir= cannon->position - enemy->position;
-                qreal enemyAngle = atan2(enemydir.y(),enemydir.x()) * 180 / M_PI + 90;
-                enemy->rotation.setZ(enemyAngle);
+            if(enemy->position.z() > 0) {
+                enemy->velocity += gravity * dt;
+            } else {
+                enemy->velocity.setZ(0);
+                enemy->position.setZ(0);
             }
+            QVector3D enemydir= cannon->position - enemy->position;
+            qreal enemyAngle = atan2(enemydir.y(),enemydir.x()) * 180 / M_PI + 90;
+            enemy->rotation.setZ(enemyAngle);
         }
     }
+
 
     QPainter painter;
     painter.begin(this);
@@ -257,7 +267,9 @@ void GLWidget::paintGL()
     mainModelView.perspective(40.0, aspectRatio, 1.0, 60.0);
     mainModelView.lookAt(camera,QVector3D(0,0,0),QVector3D(0.0,0.0,1.0));
     cannon->draw(mainModelView);
-    bullet->draw(mainModelView);
+    foreach(Entity *bullet, bullets) {
+        bullet->draw(mainModelView);
+    }
     foreach(Entity *enemy, enemies) {
         enemy->draw(mainModelView);
     }
@@ -293,12 +305,20 @@ void GLWidget::paintGL()
     }
     frames ++;
 }
-
+// Suggested mouse/finger interactions:
+//        select several units: Press and hold for one second, then drag
+//        select unit: tap (less than one second)
+//        move or attack: tap (after selecting own unit(s)) on ground or enemy
+//        move map: drag and drop anywhere, just don't hold finger down first
+//        deselect: press and hold for one second
 void GLWidget::mousePressEvent(QMouseEvent *event)
 {
     if (event->button() == Qt::LeftButton) {
-        if(gameOver) {
-            resetGame();
+        if(gameOver) { // make sure we have had the game over text shown for 1.5 seconds
+            qDebug() << currentTime - gameOverTime;
+            if(currentTime - gameOverTime > 1.5) {
+                resetGame();
+            }
             return;
         }
         dragStartPosition = event->pos();
@@ -331,7 +351,8 @@ void GLWidget::mousePressEvent(QMouseEvent *event)
         cursor.setZ(camera.z() + dir.z() * t); // should become zero
 
         //        if(!bulletFired) {
-        bulletTarget = cursor;
+        currentBulletTarget = cursor;
+        bulletFired = true;
         //        }
         // rotate towards the pointer
         QVector3D rcursor = cursor - cannon->position;

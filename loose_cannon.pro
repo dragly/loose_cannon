@@ -17,5 +17,6 @@ HEADERS += glwidget.h \
 HEADERS += mainwindow.h
 HEADERS += glm.h
 RESOURCES += texture.qrc
-QT += opengl
+QT += opengl \
+    phonon
 
