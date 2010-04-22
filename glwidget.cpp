@@ -73,7 +73,7 @@ void GLWidget::resetGame() {
 }
 
 void GLWidget::initEnemies() {
-    for(int i = 0; i < 3; i++) {
+    for(int i = 0; i < 15; i++) {
         createEnemy();
     }
 }
@@ -180,7 +180,7 @@ void GLWidget::paintGL()
                                 resetEnemy(enemy); // reuse the one we've already got
                                 createEnemy();
                             } else {
-                                enemy->velocity += QVector3D(0,0,30);
+                                enemy->velocity += QVector3D(0,0,7);
                             }
                         }
                     }
