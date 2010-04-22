@@ -51,6 +51,10 @@ Model::Model(QString filename) {
     program = new QGLShaderProgram();
     load(filename);
 }
+void Model::setShaderProgram(QGLShaderProgram *program) {
+    this->program = program;
+    initShaderProgram();
+}
 
 // Model functions
 void Model::load(QString filename) {

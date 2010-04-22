@@ -60,6 +60,7 @@ public:
     bool setFragmentShaderFile(QString filename);
     bool linkShaderProgram();
     bool initShaderProgram();
+    void setShaderProgram(QGLShaderProgram *program);
 private:
     // variables
     GLMmodel *model;
