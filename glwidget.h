@@ -34,6 +34,8 @@ class GLWidget : public QGLWidget {
 public:
     GLWidget(QWidget *parent = 0);
     ~GLWidget();
+
+    enum Team {TeamHumans, TeamEnemies};
 protected:
     void paintGL ();
     void initializeGL ();
@@ -51,7 +53,7 @@ private:
     int score;
 
     int frames;
-    QTime time;
+    QTime gametime;
     QTime frametime;
     qreal aspectRatio;
     QVector3D camera;
@@ -65,20 +67,17 @@ private:
 //    GLboolean invert_matrix(const GLdouble * m, GLdouble * out);
 //    void matmul(GLdouble * product, const GLdouble * a, const GLdouble * b);
 //    void transform_point(GLdouble out[4], const GLdouble m[16], const GLdouble in[4]);
-    Entity *cannon;
     QList<Entity*> enemies;
+    QList<Entity*> units;
     QList<Entity*> bullets;
+
+    QHash<Entity*, Entity*> bulletOwner;
 //    QHash<Entity*, QVector3D> bulletTargets;
-    QVector3D currentBulletTarget;
-    bool bulletFired;
-    qreal lastBulletFired;
+    Entity* selectedUnit;
     Model *monkeyModel;
     Model *boxModel;
     Model *cannonModel;
     Model *bulletModel;
-    QHash<Entity*, qreal> enemyHealth;
-    qreal startAngle;
-    qreal stopAngle;
     bool gameOver;
     qreal gameOverTime;
     qreal currentTime;

@@ -97,6 +97,14 @@ public:
     QVector3D velocity;
     QVector3D rotation;
     QVector3D scale;
+
+    qreal health;
+    Entity* currentTarget;
+    QVector3D moveTarget;
+    bool moveToTarget; // shall we move to a target? Often set to false after currentTarget has been set.
+    qreal lastBulletFired;
+
+    int team;
 private:
     Model *model;
 };

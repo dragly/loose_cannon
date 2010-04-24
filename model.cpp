@@ -19,12 +19,17 @@
 #include "model.h"
 #include <QtOpenGL>
 #include <QPainter>
+#include "glwidget.h"
 
 Entity::Entity(Model *model) {
     scale = QVector3D(1,1,1);
     position = QVector3D(0,0,0);
     velocity = QVector3D(0,0,0);
     rotation = QVector3D(0,0,0);
+    health = 100;
+    moveToTarget = false;
+    currentTarget = NULL;
+    team = GLWidget::TeamHumans;
     this->model = model;
 }
 
@@ -34,9 +39,9 @@ void Entity::setModel(Model *model) {
 
 void Entity::draw(QMatrix4x4 modelview) {
     modelview.translate(position);
-    modelview.rotate(rotation.x(), 1, 0, 0);
-    modelview.rotate(rotation.y(), 0, 1, 0);
     modelview.rotate(rotation.z(), 0, 0, 1);
+    modelview.rotate(rotation.y(), 0, 1, 0); // do x and y last
+    modelview.rotate(rotation.x(), 1, 0, 0);
     modelview.scale(scale);
     model->draw(modelview);
 }

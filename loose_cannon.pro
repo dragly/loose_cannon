@@ -19,4 +19,3 @@ HEADERS += glm.h
 RESOURCES += texture.qrc
 QT += opengl \
     phonon
-
