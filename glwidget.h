@@ -36,6 +36,7 @@ public:
     ~GLWidget();
 
     enum Team {TeamHumans, TeamEnemies};
+    QVector3D project(int x, int y);
 protected:
     void paintGL ();
     void initializeGL ();
@@ -48,6 +49,7 @@ private:
     void resetGame();
     void resetEnemy(Entity* enemy);
     void fireBullet();
+    void regenerateNodes();
     QTimer *timer;
 
     int score;
@@ -57,8 +59,9 @@ private:
     QTime frametime;
     qreal aspectRatio;
     QVector3D camera;
-    QVector3D cursor;
-
+    QVector3D pressCursor;
+    QVector3D dragCursor;
+    QVector3D offset;
     QMatrix4x4 mainModelView;
 //    GLint gluUnProject(GLdouble winx, GLdouble winy, GLdouble winz,
 //                 const GLdouble model[16], const GLdouble proj[16],
@@ -69,7 +72,10 @@ private:
 //    void transform_point(GLdouble out[4], const GLdouble m[16], const GLdouble in[4]);
     QList<Entity*> enemies;
     QList<Entity*> units;
+    QList<Entity*> buildings;
     QList<Entity*> bullets;
+
+    QList<QVector3D> nodes;
 
     QHash<Entity*, Entity*> bulletOwner;
 //    QHash<Entity*, QVector3D> bulletTargets;
@@ -78,6 +84,7 @@ private:
     Model *boxModel;
     Model *cannonModel;
     Model *bulletModel;
+    Model *nodeModel;
     bool gameOver;
     qreal gameOverTime;
     qreal currentTime;

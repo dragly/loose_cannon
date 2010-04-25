@@ -22,6 +22,16 @@
 #include "glwidget.h"
 
 Entity::Entity(Model *model) {
+    initEntity(model);
+    type = TypeUnit;
+}
+
+Entity::Entity(Model *model, int type) {
+    initEntity(model);
+    this->type = type;
+}
+
+void Entity::initEntity(Model *model) {
     scale = QVector3D(1,1,1);
     position = QVector3D(0,0,0);
     velocity = QVector3D(0,0,0);

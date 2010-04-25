@@ -79,8 +79,11 @@ private:
 class Entity
 {
 public:
+    enum Type {TypeUnit, TypeBuilding, TypeBullet};
     Entity(Model *model);
+    Entity(Model *model, int type);
 
+    void initEntity(Model *model);
     // functions
 
     void draw(QMatrix4x4 modelview);
@@ -105,6 +108,8 @@ public:
     qreal lastBulletFired;
 
     int team;
+    int type;
+
 private:
     Model *model;
 };
