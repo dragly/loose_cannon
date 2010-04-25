@@ -27,7 +27,7 @@
 
 const qreal ENEMY_SPEED = 3.0; // units/s
 const qreal ENEMY_ACCELERATION = 10.0; // units/s^2
-const qreal ENEMY_FRICTION_SIDE = 30.0;
+const qreal ENEMY_FRICTION_SIDE = 6.0;
 const qreal ENEMY_FRICTION_ALL = 2.0;
 const qreal ENEMY_SPAWNDISTANCE = 15; // units
 const qreal DT = 0.01; // the timestep
@@ -43,7 +43,7 @@ const qreal DRAG_DROP_TRESHOLD = 20;
 // weapon constants
 const qreal EXPLOSION_RADIUS = 3;
 const qreal EXPLOSION_DAMAGE = 30;
-const qreal EXPLOSION_FORCE = 25;
+const qreal EXPLOSION_FORCE = 20;
 const qreal FIRE_DISTANCE = 7;
 const qreal BULLET_SPAWNTIME = 2;
 
@@ -262,17 +262,17 @@ void GLWidget::paintGL()
                 // set the unit to attack its target (rotate/direction)
                 QVector3D aunitdir;
                 bool shallMove = false;
-                if(aunit->currentTarget != NULL) {
-                    aunitdir = aunit->currentTarget->position - aunit->position;
-                    shallMove = true;
-                } else if(aunit->useMoveTarget) {
+                if(aunit->useMoveTarget) {
                     aunitdir = aunit->moveTarget - aunit->position;
+                    shallMove = true;
+                } else if(aunit->currentTarget != NULL) {
+                    aunitdir = aunit->currentTarget->position - aunit->position;
                     shallMove = true;
                 }
                 qreal aunitAngle = atan2(aunitdir.y(),aunitdir.x()) * 180 / M_PI + 90;
                 qreal difference = aunitAngle - aunit->rotation.z();
                 if(shallMove) {
-                    bool doMovement = false;
+                    bool doMovement = true;
                     while(difference > 180) difference -= 360;
                     while(difference < -180) difference += 360;
                     if(difference > 0) {
@@ -292,19 +292,26 @@ void GLWidget::paintGL()
                         if((aunit->currentTarget->position - aunit->position).length() < FIRE_DISTANCE) {
 //                            aunit->velocity *= 0;
                             doMovement = false;
-                        }
-                    } else {
-                        doMovement = true; // we are most likely going to do movement
-                        if((aunit->position - aunit->moveTarget).length() < 0.5) {
-                            if(aunit->waypoints.count() > 0) {
+                            aunit->useMoveTarget = false;
+                            aunit->waypoints.clear();
+                        } else {
+                            if(!aunit->useMoveTarget) {
+                                aunit->waypoints = findPath(aunit->position, aunit->currentTarget->position);
                                 aunit->moveTarget = aunit->waypoints.first();
-                                aunit->waypoints.removeFirst();
-                                qDebug() << "Going to:" << aunit->moveTarget;
-                            } else { // we are too close and we have no more places to go - lets stop!
-//                                aunit->velocity *= 0;
-                                aunit->useMoveTarget = false; // we are no longer to move towards a target since we are already there!
-                                doMovement = false;
+                                aunit->useMoveTarget = true;
                             }
+                        }
+                    }
+                    if((aunit->position - aunit->moveTarget).length() < 0.5) {
+                        if(aunit->waypoints.count() > 0) {
+                            aunit->moveTarget = aunit->waypoints.first();
+                            aunit->waypoints.removeFirst();
+                            qDebug() << "Going to:" << aunit->moveTarget;
+                            doMovement = true;
+                        } else { // we are too close and we have no more places to go - lets stop!
+//                                aunit->velocity *= 0;
+                            aunit->useMoveTarget = false; // we are no longer to move towards a target since we are already there!
+                            doMovement = false;
                         }
                     }
                     QVector3D vectorAcceleration;
@@ -372,6 +379,10 @@ void GLWidget::paintGL()
     // set up the main view (affects all objects)
     mainModelView.perspective(40.0, aspectRatio, 1.0, 60.0);
     mainModelView.lookAt(camera + offset,QVector3D(0,0,0) + offset,QVector3D(0.0,0.0,1.0));
+
+    QList<Entity*> allUnits; // all units, including enemies and our own
+    allUnits.append(enemies);
+    allUnits.append(units);
     foreach(Entity *unit, units) {
         unit->draw(mainModelView);
     }
@@ -386,8 +397,8 @@ void GLWidget::paintGL()
     }
     foreach(Entity* node, nodes) {
         bool drawNode = false;
-        foreach(Entity* unit, units) {
-            foreach(QVector3D waypoint, unit->waypoints) {
+        foreach(Entity* aunit, allUnits) {
+            foreach(QVector3D waypoint, aunit->waypoints) {
                 if(waypoint == node->position) {
                     drawNode = true;
                 }
