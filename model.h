@@ -101,6 +101,7 @@ public:
     QVector3D rotation;
     QVector3D scale;
 
+    QList<QVector3D> waypoints;
     qreal health;
     Entity* currentTarget;
     QVector3D moveTarget;

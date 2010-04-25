@@ -37,6 +37,7 @@ public:
 
     enum Team {TeamHumans, TeamEnemies};
     QVector3D project(int x, int y);
+    QVector3D project(int x, int y, QVector3D oldOffset);
 protected:
     void paintGL ();
     void initializeGL ();
@@ -50,6 +51,9 @@ private:
     void resetEnemy(Entity* enemy);
     void fireBullet();
     void regenerateNodes();
+    QList<QVector3D> findPath(QVector3D startPosition, QVector3D endPosition);
+
+
     QTimer *timer;
 
     int score;
@@ -62,6 +66,7 @@ private:
     QVector3D pressCursor;
     QVector3D dragCursor;
     QVector3D offset;
+    QVector3D pressOffset;
     QMatrix4x4 mainModelView;
 //    GLint gluUnProject(GLdouble winx, GLdouble winy, GLdouble winz,
 //                 const GLdouble model[16], const GLdouble proj[16],
@@ -75,7 +80,8 @@ private:
     QList<Entity*> buildings;
     QList<Entity*> bullets;
 
-    QList<QVector3D> nodes;
+    QList<Entity*> nodes; // should probably have their own class - using Entity for convenience
+    QHash<Entity*, QList<Entity*> > nodeNeighbors;
 
     QHash<Entity*, Entity*> bulletOwner;
 //    QHash<Entity*, QVector3D> bulletTargets;

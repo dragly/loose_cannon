@@ -181,7 +181,7 @@ void GLWidget::paintGL()
         allDestructibles.append(allUnits);
         allDestructibles.append(buildings);
         currentTime += DT; // next timestep
-        if(!gameOver) {
+        if(!gameOver) { // do logic
             foreach(Entity* enemy, enemies) {
                 if(enemy->currentTarget != NULL) {
                     qreal currentDistance = (enemy->currentTarget->position - enemy->position).length();
@@ -371,11 +371,8 @@ void GLWidget::paintGL()
     foreach(Entity *building, buildings) {
         building->draw(mainModelView);
     }
-    foreach(QVector3D node, nodes) {
-        QMatrix4x4 modelview = mainModelView;
-        modelview.translate(node);
-        modelview.scale(0.2);
-        nodeModel->draw(modelview);
+    foreach(Entity* node, nodes) {
+        node->draw(mainModelView);
     }
 
     glDisable(GL_DEPTH_TEST);
@@ -411,14 +408,111 @@ void GLWidget::paintGL()
 }
 
 void GLWidget::regenerateNodes() {
+    nodes.clear();
+    nodeNeighbors.clear();
     for(int i = -10; i < 10; i++) {
         for(int j = -10; j < 10; j++) {
-            nodes.append(QVector3D(i, j, 0));
+            if(i != 5 || j != 5) {
+                Entity* node = new Entity(boxModel);
+                node->position = QVector3D(i, j, 0);
+                node->scale *= 0.3;
+                nodes.append(node);
+            }
         }
+    }
+    foreach(Entity* node, nodes) {
+        QList<Entity*> neighbors;
+        foreach(Entity* possibleNeighbor, nodes) {
+            if((node->position - possibleNeighbor->position).lengthSquared() <= 2) { // if the distance between nodes are 1x1, a diagonal nodeneighbor will be x^2 = 1^2 + 1^2 away (Pythagoras)
+                neighbors.append(possibleNeighbor);
+            }
+        }
+        nodeNeighbors.insert(node, neighbors);
     }
 }
 
+QList<QVector3D> GLWidget::findPath(QVector3D startPosition, QVector3D endPosition) {
+    QList<Entity*> closedSet;
+    QList<Entity*> openSet;
+    QHash<Entity*, qreal> gscore;
+    QHash<Entity*, qreal> hscore;
+    QHash<Entity*, qreal> fscore;
+    QHash<Entity*, Entity*> cameFrom; // 1st came from 2nd parameter
+    // first we find the closest node to us
+    qreal lowestStartDistance = 999;
+    qreal lowestEndDistance = 999;
+    Entity* startNode;
+    Entity* goalNode;
+    foreach(Entity* node, nodes) {
+        qreal startDistance = (node->position - startPosition).length();
+        qreal endDistance = (node->position - endPosition).length();
+        if(startDistance < lowestStartDistance) {
+            lowestStartDistance = startDistance;
+            startNode = node;
+        }
+        if(endDistance < lowestEndDistance) {
+            lowestEndDistance = endDistance;
+            goalNode = node;
+        }
+    }
+    openSet.append(startNode);
+    gscore.insert(startNode, 0);
+    hscore.insert(startNode, (endPosition - startPosition).length());
+    fscore.insert(startNode, (endPosition - startPosition).length());
+    while (openSet.count() > 0) {
+        Entity* x;
+        qreal lowestFScore = 999;
+        foreach(Entity* node, openSet) {
+            qreal curFscore = fscore.value(node);
+            if(curFscore < lowestFScore) {
+                x = node;
+                lowestFScore = curFscore;
+            }
+        }
+        if(x == goalNode) {
+            // reconstruct path
+            QList<QVector3D> path;
+            Entity* currentNode = goalNode; // start at the goal
+            while(currentNode != startNode) { // if we're not there yet
+                path.prepend(currentNode->position); // add the current node's position to the beginning of the list
+                currentNode = cameFrom.value(currentNode); // find out where this node came from
+            }
+            path.prepend(startNode->position); // always add the startnode to begin with
+            return path; // return our path
+        }
+        openSet.removeAll(x);
+        closedSet.append(x);
+        foreach(Entity* y, nodeNeighbors.value(x)) {
+            if(closedSet.contains(y)) {
+                continue;
+            }
+            qreal tentativeGScore = 0;
+            bool tentativeIsBetter = false;
+            tentativeGScore = gscore[x] + (x->position - y->position).length();
+            if(!openSet.contains(y) && !closedSet.contains(y)) {
+                openSet.append(y);
+                tentativeIsBetter = true;
+            } else if(tentativeGScore < gscore.value(y)) {
+                tentativeIsBetter = true;
+            }
+            if(tentativeIsBetter) {
+                cameFrom.insert(y, x);
+                gscore.insert(y, tentativeGScore);
+                hscore.insert(y, (goalNode->position - y->position).length());
+                fscore.insert(y, gscore[y] + hscore[y]);
+            }
+        }
+    }
+    QList<QVector3D> nonfunctional;
+    nonfunctional.append(startPosition);
+    return nonfunctional; // we failed to find a path, just return the point we're at
+}
+
 QVector3D GLWidget::project(int x, int y) {
+    return project(x,y,offset);
+}
+QVector3D GLWidget::project(int x, int y, QVector3D oldOffset) {
+
     // project click down to plane
     // Another attempt
     // mainModelView should be our modelview projection matrix
@@ -437,11 +531,11 @@ QVector3D GLWidget::project(int x, int y) {
     if (dir.z()==0.0) // if we are looking in a flat direction we won't hit the ground
         return QVector3D(0,0,0);
 
-    qreal t = - (offset.z() + camera.z()) / dir.z(); // how long it is to the ground
+    qreal t = - (oldOffset.z() + camera.z()) / dir.z(); // how long it is to the ground
     QVector3D cursor;
-    cursor.setX(offset.x() + camera.x() + dir.x() * t);
-    cursor.setY(offset.y() + camera.y() + dir.y() * t);
-    cursor.setZ(offset.z() + camera.z() + dir.z() * t); // should become zero
+    cursor.setX(oldOffset.x() + camera.x() + dir.x() * t);
+    cursor.setY(oldOffset.y() + camera.y() + dir.y() * t);
+    cursor.setZ(oldOffset.z() + camera.z() + dir.z() * t); // should become zero
     return cursor;
 }
 
@@ -466,13 +560,14 @@ void GLWidget::mousePressEvent(QMouseEvent *event)
         pressCursor = project(event->x(), event->y());
         dragCursor = pressCursor;
         dragStartPosition = event->pos();
+        pressOffset = offset;
     }
 }
 // Dragging events
 void GLWidget::mouseMoveEvent(QMouseEvent* event) {
     if(!(event->buttons() & Qt::LeftButton))
         return;
-    QVector3D currentCursor = project(event->x(), event->y());
+    QVector3D currentCursor = project(event->x(), event->y(), pressOffset);
     if(dragging) {
         offset -= currentCursor - dragCursor; // offset is negative to get the "drag and drop"-feeling
     } else {
@@ -484,7 +579,9 @@ void GLWidget::mouseMoveEvent(QMouseEvent* event) {
     }
     dragCursor = currentCursor;
 }
+
 void GLWidget::mouseReleaseEvent(QMouseEvent *event) {
+    qDebug() << "looking for presscursor";
     if(!dragging) {
         if(dragtime.elapsed() > 1000) { // TODO: selection mode
             if((QVector3D(dragStartPosition) - QVector3D(event->pos())).length() > DRAG_DROP_TRESHOLD) { // select several
@@ -516,6 +613,7 @@ void GLWidget::mouseReleaseEvent(QMouseEvent *event) {
                 selectedUnit->currentTarget = NULL;
                 selectedUnit->moveTarget = cursor; // set the move target of the unit to this point
                 selectedUnit->moveToTarget = true; // let's move!
+                qDebug() << findPath(selectedUnit->position, cursor);
             }
         }
     }
