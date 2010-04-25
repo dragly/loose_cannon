@@ -23,6 +23,7 @@
 #include <math.h>
 #include <stdio.h>
 #include <string.h>
+#include <time.h>
 
 const qreal ENEMY_SPEED = 2.0; // units/s
 const qreal ENEMY_ACCELERATION = 5.0; // units/s^2
