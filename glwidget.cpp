@@ -378,9 +378,19 @@ void GLWidget::paintGL()
     foreach(Entity *building, buildings) {
         building->draw(mainModelView);
     }
-//        foreach(Entity* node, nodes) {
-//            node->draw(mainModelView);
-//        }
+    foreach(Entity* node, nodes) {
+        bool drawNode = false;
+        foreach(Entity* unit, units) {
+            foreach(QVector3D waypoint, unit->waypoints) {
+                if(waypoint == node->position) {
+                    drawNode = true;
+                }
+            }
+        }
+        if(drawNode) {
+            node->draw(mainModelView);
+        }
+    }
 
     glDisable(GL_DEPTH_TEST);
     glDisable(GL_CULL_FACE);
