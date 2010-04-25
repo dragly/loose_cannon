@@ -25,9 +25,10 @@
 #include <string.h>
 #include <time.h>
 
-const qreal ENEMY_SPEED = 2.0; // units/s
-const qreal ENEMY_ACCELERATION = 5.0; // units/s^2
-const qreal ENEMY_FRICTION = 10.0;
+const qreal ENEMY_SPEED = 3.0; // units/s
+const qreal ENEMY_ACCELERATION = 10.0; // units/s^2
+const qreal ENEMY_FRICTION_SIDE = 30.0;
+const qreal ENEMY_FRICTION_ALL = 2.0;
 const qreal ENEMY_SPAWNDISTANCE = 15; // units
 const qreal DT = 0.01; // the timestep
 const qreal ROTATE_SPEED = 180; // degrees/s
@@ -42,6 +43,7 @@ const qreal DRAG_DROP_TRESHOLD = 20;
 // weapon constants
 const qreal EXPLOSION_RADIUS = 3;
 const qreal EXPLOSION_DAMAGE = 30;
+const qreal EXPLOSION_FORCE = 25;
 const qreal FIRE_DISTANCE = 7;
 const qreal BULLET_SPAWNTIME = 2;
 
@@ -197,97 +199,6 @@ void GLWidget::paintGL()
                 }
             }
 
-            foreach(Entity* aunit, allUnits) {
-                if(aunit->position.z() > 0) {
-                    aunit->velocity += GRAVITY * DT;
-                } else {
-                    aunit->velocity.setZ(0);
-                    aunit->position.setZ(0);
-                }
-                // set the unit to attack its target (rotate/direction)
-                QVector3D aunitdir;
-                bool shallMove = false;
-                if(aunit->currentTarget != NULL) {
-                    aunitdir = aunit->currentTarget->position - aunit->position;
-                    shallMove = true;
-                } else if(aunit->useMoveTarget) {
-                    aunitdir = aunit->moveTarget - aunit->position;
-                    shallMove = true;
-                }
-                qreal aunitAngle = atan2(aunitdir.y(),aunitdir.x()) * 180 / M_PI + 90;
-                qreal difference = aunitAngle - aunit->rotation.z();
-                if(shallMove) {
-                    bool doMovement = false;
-                    while(difference > 180) difference -= 360;
-                    while(difference < -180) difference += 360;
-                    if(difference > 0) {
-                        aunit->rotation.setZ(aunit->rotation.z() + ROTATE_SPEED * DT);
-                        if(difference - ROTATE_SPEED * DT < 0) {
-                            aunit->rotation.setZ(aunitAngle);
-                            doMovement = true;
-                        }
-                    } else if(difference < 0) {
-                        aunit->rotation.setZ(aunit->rotation.z() - ROTATE_SPEED * DT);
-                        if(difference + ROTATE_SPEED * DT > 0) {
-                            aunit->rotation.setZ(aunitAngle);
-                            doMovement = true;
-                        }
-                    }
-                    if(aunit->currentTarget != NULL) {
-                        if((aunit->currentTarget->position - aunit->position).length() < FIRE_DISTANCE) {
-                            aunit->velocity *= 0;
-                            doMovement = false;
-                        }
-                    } else {
-                        doMovement = true; // we are most likely going to do movement
-                        if((aunit->position - aunit->moveTarget).length() < 0.5) {
-                            if(aunit->waypoints.count() > 0) {
-                                aunit->moveTarget = aunit->waypoints.first();
-                                aunit->waypoints.removeFirst();
-                                qDebug() << "Going to:" << aunit->moveTarget;
-                            } else { // we are too close and we have no more places to go - lets stop!
-                                aunit->velocity *= 0;
-                                aunit->useMoveTarget = false; // we are no longer to move towards a target since we are already there!
-                                doMovement = false;
-                            }
-                        }
-                    }
-                    if(doMovement) { // only if we are moving, we will be affected by friction and acceleration
-                        qreal aunitAcceleration = ENEMY_ACCELERATION - ENEMY_ACCELERATION * (aunit->velocity.length() / ENEMY_SPEED); // acceleration (force of the enemy's engine) minus air resistance - set so that the equal eachother at ENEMY_SPEED
-                        aunit->velocity += aunitdir.normalized() * aunitAcceleration * DT;
-                        // friction
-                        if(aunit->position.z() == 0) {
-                            QVector3D projected = aunit->velocity - QVector3D::dotProduct(aunit->velocity, aunitdir.normalized()) * aunitdir.normalized();
-                            qreal aunitFriction = - ENEMY_FRICTION * projected.length(); // we find the amount of friction applied
-                            aunit->velocity += projected.normalized() * aunitFriction * DT;	// apply the friction
-                        }
-                    } // end readyToMove
-                } else { // else shallMove
-                    aunit->velocity = QVector3D(0,0,aunit->velocity.z());
-                } // end shallMove
-                // fire bullets
-                if(aunit->currentTarget != NULL && difference < 1 && difference > -1 && currentTime - aunit->lastBulletFired > BULLET_SPAWNTIME) {
-                    if((aunit->currentTarget->position - aunit->position).length() < FIRE_DISTANCE) { // make sure we are close enough
-                        Entity *bullet = new Entity(bulletModel, Entity::TypeBullet);
-                        bullet->scale *= 0.3;
-                        bullet->position = aunit->position + QVector3D(0,0,0.4);
-                        QVector3D direction = aunit->currentTarget->position - bullet->position;
-                        QVector3D calcTarget = aunit->currentTarget->position + aunit->currentTarget->velocity * direction.length() / BULLET_SPEED; // hit a bit ahead of target, suggesting same speed all the way
-                        QVector3D calcDirection = calcTarget - bullet->position;
-                        bullet->velocity = calcDirection.normalized() * BULLET_SPEED;
-                        qreal bulletTime = calcDirection.length() / BULLET_SPEED;
-                        qreal startSpeed = -GRAVITY.z() * bulletTime; // from v = v0 + at
-                        bullet->velocity += QVector3D(0, 0, startSpeed * 0.5);
-                        aunit->lastBulletFired = currentTime;
-                        bullet->team = aunit->team;
-                        bullet->type = Entity::TypeBullet;
-                        bulletOwner.insert(bullet,aunit);
-                        bullets.append(bullet);
-                    }
-                } // end fire bullets
-
-                aunit->position += aunit->velocity * DT; // do movement
-            } // end foreach allUnits
             foreach(Entity* bullet, bullets) { // let's see what our bullets are doing
                 bool hitUnit = false;
                 bullet->velocity += GRAVITY * DT;
@@ -333,7 +244,7 @@ void GLWidget::paintGL()
                                     }
                                 }
                             } else if(hitUnit->type != Entity::TypeBuilding){
-                                qreal velocityChange = 2 * damage / 100;
+                                qreal velocityChange = EXPLOSION_FORCE * damage / 100;
                                 hitUnit->velocity += distance.normalized() * velocityChange; // make the explosion change the velocity in the direction of the blast
                             }
                         }
@@ -341,6 +252,100 @@ void GLWidget::paintGL()
                     bullets.removeOne(bullet);
                 } // endif hit
             } // end foreach bullets
+            foreach(Entity* aunit, allUnits) {
+                if(aunit->position.z() > 0) {
+                    aunit->velocity += GRAVITY * DT;
+                } else {
+                    aunit->velocity.setZ(0);
+                    aunit->position.setZ(0);
+                }
+                // set the unit to attack its target (rotate/direction)
+                QVector3D aunitdir;
+                bool shallMove = false;
+                if(aunit->currentTarget != NULL) {
+                    aunitdir = aunit->currentTarget->position - aunit->position;
+                    shallMove = true;
+                } else if(aunit->useMoveTarget) {
+                    aunitdir = aunit->moveTarget - aunit->position;
+                    shallMove = true;
+                }
+                qreal aunitAngle = atan2(aunitdir.y(),aunitdir.x()) * 180 / M_PI + 90;
+                qreal difference = aunitAngle - aunit->rotation.z();
+                if(shallMove) {
+                    bool doMovement = false;
+                    while(difference > 180) difference -= 360;
+                    while(difference < -180) difference += 360;
+                    if(difference > 0) {
+                        aunit->rotation.setZ(aunit->rotation.z() + ROTATE_SPEED * DT);
+                        if(difference - ROTATE_SPEED * DT < 0) {
+                            aunit->rotation.setZ(aunitAngle);
+                            doMovement = true;
+                        }
+                    } else if(difference < 0) {
+                        aunit->rotation.setZ(aunit->rotation.z() - ROTATE_SPEED * DT);
+                        if(difference + ROTATE_SPEED * DT > 0) {
+                            aunit->rotation.setZ(aunitAngle);
+                            doMovement = true;
+                        }
+                    }
+                    if(aunit->currentTarget != NULL) {
+                        if((aunit->currentTarget->position - aunit->position).length() < FIRE_DISTANCE) {
+//                            aunit->velocity *= 0;
+                            doMovement = false;
+                        }
+                    } else {
+                        doMovement = true; // we are most likely going to do movement
+                        if((aunit->position - aunit->moveTarget).length() < 0.5) {
+                            if(aunit->waypoints.count() > 0) {
+                                aunit->moveTarget = aunit->waypoints.first();
+                                aunit->waypoints.removeFirst();
+                                qDebug() << "Going to:" << aunit->moveTarget;
+                            } else { // we are too close and we have no more places to go - lets stop!
+//                                aunit->velocity *= 0;
+                                aunit->useMoveTarget = false; // we are no longer to move towards a target since we are already there!
+                                doMovement = false;
+                            }
+                        }
+                    }
+                    QVector3D vectorAcceleration;
+                    if(doMovement) { // only if we are moving, we will be affected by friction and acceleration
+                        qreal aunitAcceleration = ENEMY_ACCELERATION - ENEMY_ACCELERATION * (aunit->velocity.length() / ENEMY_SPEED); // acceleration (force of the enemy's engine) minus air resistance - set so that the equal eachother at ENEMY_SPEED
+                        vectorAcceleration += aunitdir.normalized() * aunitAcceleration;
+                    } // end doMovement
+                    // side-friction
+                    if(aunit->position.z() == 0) {
+                        QVector3D projected = aunit->velocity - QVector3D::dotProduct(aunit->velocity, aunitdir.normalized()) * aunitdir.normalized();
+                        qreal aunitFriction = - ENEMY_FRICTION_SIDE * projected.length(); // we find the amount of friction applied
+                        aunit->velocity += projected.normalized() * aunitFriction * DT;	// apply the friction
+                    }
+                    // all-way friction
+                    vectorAcceleration +=  - aunit->velocity * ENEMY_FRICTION_ALL;
+                    aunit->velocity += vectorAcceleration * DT;
+                } else { // else shallMove
+                    aunit->velocity = QVector3D(0,0,aunit->velocity.z());
+                } // end shallMove
+                // fire bullets
+                if(aunit->currentTarget != NULL && difference < 1 && difference > -1 && currentTime - aunit->lastBulletFired > BULLET_SPAWNTIME) {
+                    if((aunit->currentTarget->position - aunit->position).length() < FIRE_DISTANCE) { // make sure we are close enough
+                        Entity *bullet = new Entity(bulletModel, Entity::TypeBullet);
+                        bullet->scale *= 0.3;
+                        bullet->position = aunit->position + QVector3D(0,0,0.4);
+                        QVector3D direction = aunit->currentTarget->position - bullet->position;
+                        QVector3D calcTarget = aunit->currentTarget->position + aunit->currentTarget->velocity * direction.length() / BULLET_SPEED; // hit a bit ahead of target, suggesting same speed all the way
+                        QVector3D calcDirection = calcTarget - bullet->position;
+                        bullet->velocity = calcDirection.normalized() * BULLET_SPEED;
+                        qreal bulletTime = calcDirection.length() / BULLET_SPEED;
+                        qreal startSpeed = -GRAVITY.z() * bulletTime; // from v = v0 + at
+                        bullet->velocity += QVector3D(0, 0, startSpeed * 0.5);
+                        aunit->lastBulletFired = currentTime;
+                        bullet->team = aunit->team;
+                        bullet->type = Entity::TypeBullet;
+                        bulletOwner.insert(bullet,aunit);
+                        bullets.append(bullet);
+                    }
+                } // end fire bullets
+                aunit->position += aunit->velocity * DT; // do movement
+            } // end foreach allUnits
             if(units.count() == 0) {
                 gameOver = true;
             }
@@ -457,6 +462,7 @@ void GLWidget::regenerateNodes() {
 }
 
 QList<QVector3D> GLWidget::findPath(QVector3D startPosition, QVector3D goalPosition) {
+    // che
     QList<Entity*> closedSet;
     QList<Entity*> openSet;
     QHash<Entity*, qreal> gscore;
@@ -469,8 +475,8 @@ QList<QVector3D> GLWidget::findPath(QVector3D startPosition, QVector3D goalPosit
     Entity* startNode;
     Entity* goalNode;
     foreach(Entity* node, nodes) {
-        qreal startDistance = (node->position - startPosition).length();
-        qreal endDistance = (node->position - goalPosition).length();
+        qreal startDistance = (node->position - startPosition).lengthSquared();
+        qreal endDistance = (node->position - goalPosition).lengthSquared();
         if(startDistance < lowestStartDistance) {
             lowestStartDistance = startDistance;
             startNode = node;
@@ -482,8 +488,8 @@ QList<QVector3D> GLWidget::findPath(QVector3D startPosition, QVector3D goalPosit
     }
     openSet.append(startNode);
     gscore.insert(startNode, 0);
-    hscore.insert(startNode, (goalPosition - startPosition).length());
-    fscore.insert(startNode, (goalPosition - startPosition).length());
+    hscore.insert(startNode, (goalPosition - startPosition).lengthSquared());
+    fscore.insert(startNode, (goalPosition - startPosition).lengthSquared());
     while (openSet.count() > 0) {
         Entity* x;
         qreal lowestFScore = 999;
@@ -517,7 +523,7 @@ QList<QVector3D> GLWidget::findPath(QVector3D startPosition, QVector3D goalPosit
             }
             qreal tentativeGScore = 0;
             bool tentativeIsBetter = false;
-            tentativeGScore = gscore[x] + (x->position - y->position).length();
+            tentativeGScore = gscore[x] + (x->position - y->position).lengthSquared();
             if(!openSet.contains(y) && !closedSet.contains(y)) {
                 openSet.append(y);
                 tentativeIsBetter = true;
@@ -527,7 +533,7 @@ QList<QVector3D> GLWidget::findPath(QVector3D startPosition, QVector3D goalPosit
             if(tentativeIsBetter) {
                 cameFrom.insert(y, x);
                 gscore.insert(y, tentativeGScore);
-                hscore.insert(y, (goalNode->position - y->position).length());
+                hscore.insert(y, (goalNode->position - y->position).lengthSquared());
                 fscore.insert(y, gscore[y] + hscore[y]);
             }
         }
