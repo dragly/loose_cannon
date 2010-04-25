@@ -37,7 +37,7 @@ void Entity::initEntity(Model *model) {
     velocity = QVector3D(0,0,0);
     rotation = QVector3D(0,0,0);
     health = 100;
-    moveToTarget = false;
+    useMoveTarget = false;
     currentTarget = NULL;
     team = GLWidget::TeamHumans;
     this->model = model;

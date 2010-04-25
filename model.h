@@ -105,7 +105,7 @@ public:
     qreal health;
     Entity* currentTarget;
     QVector3D moveTarget;
-    bool moveToTarget; // shall we move to a target? Often set to false after currentTarget has been set.
+    bool useMoveTarget; // shall we move to a target? Often set to false after currentTarget has been set.
     qreal lastBulletFired;
 
     int team;

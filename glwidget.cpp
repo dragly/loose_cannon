@@ -90,7 +90,7 @@ void GLWidget::resetGame() {
     cannon2->team = TeamHumans;
     units.append(cannon2);
     Entity* building = new Entity(boxModel, Entity::TypeBuilding);
-    building->position = QVector3D(2,2,0);
+    building->position = QVector3D(-4,4,0);
     building->health = 1000;
     buildings.append(building);
     initEnemies();
@@ -209,42 +209,49 @@ void GLWidget::paintGL()
                 if(aunit->currentTarget != NULL) {
                     aunitdir = aunit->currentTarget->position - aunit->position;
                     shallMove = true;
-                } else if(aunit->moveToTarget) {
+                } else if(aunit->useMoveTarget) {
                     aunitdir = aunit->moveTarget - aunit->position;
                     shallMove = true;
                 }
                 qreal aunitAngle = atan2(aunitdir.y(),aunitdir.x()) * 180 / M_PI + 90;
                 qreal difference = aunitAngle - aunit->rotation.z();
                 if(shallMove) {
-                    bool readyToMove = false;
+                    bool doMovement = false;
                     while(difference > 180) difference -= 360;
                     while(difference < -180) difference += 360;
                     if(difference > 0) {
                         aunit->rotation.setZ(aunit->rotation.z() + ROTATE_SPEED * DT);
                         if(difference - ROTATE_SPEED * DT < 0) {
                             aunit->rotation.setZ(aunitAngle);
-                            readyToMove = true;
+                            doMovement = true;
                         }
                     } else if(difference < 0) {
                         aunit->rotation.setZ(aunit->rotation.z() - ROTATE_SPEED * DT);
                         if(difference + ROTATE_SPEED * DT > 0) {
                             aunit->rotation.setZ(aunitAngle);
-                            readyToMove = true;
+                            doMovement = true;
                         }
                     }
                     if(aunit->currentTarget != NULL) {
                         if((aunit->currentTarget->position - aunit->position).length() < FIRE_DISTANCE) {
                             aunit->velocity *= 0;
-                            readyToMove = false;
+                            doMovement = false;
                         }
                     } else {
-                        if((aunit->position - aunit->moveTarget).length() < 1) {
-                            aunit->velocity *= 0;
-                            aunit->moveToTarget = false; // we are no longer to move towards a target since we are already there!
-                            readyToMove = false;
+                        doMovement = true; // we are most likely going to do movement
+                        if((aunit->position - aunit->moveTarget).length() < 0.5) {
+                            if(aunit->waypoints.count() > 0) {
+                                aunit->moveTarget = aunit->waypoints.first();
+                                aunit->waypoints.removeFirst();
+                                qDebug() << "Going to:" << aunit->moveTarget;
+                            } else { // we are too close and we have no more places to go - lets stop!
+                                aunit->velocity *= 0;
+                                aunit->useMoveTarget = false; // we are no longer to move towards a target since we are already there!
+                                doMovement = false;
+                            }
                         }
                     }
-                    if(readyToMove) {
+                    if(doMovement) { // only if we are moving, we will be affected by friction and acceleration
                         qreal aunitAcceleration = ENEMY_ACCELERATION - ENEMY_ACCELERATION * (aunit->velocity.length() / ENEMY_SPEED); // acceleration (force of the enemy's engine) minus air resistance - set so that the equal eachother at ENEMY_SPEED
                         aunit->velocity += aunitdir.normalized() * aunitAcceleration * DT;
                         // friction
@@ -304,7 +311,7 @@ void GLWidget::paintGL()
                             hitUnit->health -= damage;
                             score += damage;
                             if(hitUnit->currentTarget == NULL && // if we have not selected a target
-                               hitUnit->moveToTarget == false && // and we are not moving anywhere
+                               hitUnit->useMoveTarget == false && // and we are not moving anywhere
                                hitUnit->team != bulletOwner[bullet]->team && // and the guy shooting on us is not on our team
                                bulletOwner[bullet]->health > 0) { // and he's not dead
                                 hitUnit->currentTarget = bulletOwner[bullet]; // then get back at that bastard!
@@ -371,9 +378,9 @@ void GLWidget::paintGL()
     foreach(Entity *building, buildings) {
         building->draw(mainModelView);
     }
-    foreach(Entity* node, nodes) {
-        node->draw(mainModelView);
-    }
+//        foreach(Entity* node, nodes) {
+//            node->draw(mainModelView);
+//        }
 
     glDisable(GL_DEPTH_TEST);
     glDisable(GL_CULL_FACE);
@@ -412,9 +419,16 @@ void GLWidget::regenerateNodes() {
     nodeNeighbors.clear();
     for(int i = -10; i < 10; i++) {
         for(int j = -10; j < 10; j++) {
-            if(i != 5 || j != 5) {
+            bool tooClose = false;
+            QVector3D position(i, j, 0);
+            foreach(Entity* building, buildings){
+                if((building->position - position).length() < 2) {
+                    tooClose = true;
+                }
+            }
+            if(!tooClose) {
                 Entity* node = new Entity(boxModel);
-                node->position = QVector3D(i, j, 0);
+                node->position = position;
                 node->scale *= 0.3;
                 nodes.append(node);
             }
@@ -431,7 +445,7 @@ void GLWidget::regenerateNodes() {
     }
 }
 
-QList<QVector3D> GLWidget::findPath(QVector3D startPosition, QVector3D endPosition) {
+QList<QVector3D> GLWidget::findPath(QVector3D startPosition, QVector3D goalPosition) {
     QList<Entity*> closedSet;
     QList<Entity*> openSet;
     QHash<Entity*, qreal> gscore;
@@ -445,7 +459,7 @@ QList<QVector3D> GLWidget::findPath(QVector3D startPosition, QVector3D endPositi
     Entity* goalNode;
     foreach(Entity* node, nodes) {
         qreal startDistance = (node->position - startPosition).length();
-        qreal endDistance = (node->position - endPosition).length();
+        qreal endDistance = (node->position - goalPosition).length();
         if(startDistance < lowestStartDistance) {
             lowestStartDistance = startDistance;
             startNode = node;
@@ -457,8 +471,8 @@ QList<QVector3D> GLWidget::findPath(QVector3D startPosition, QVector3D endPositi
     }
     openSet.append(startNode);
     gscore.insert(startNode, 0);
-    hscore.insert(startNode, (endPosition - startPosition).length());
-    fscore.insert(startNode, (endPosition - startPosition).length());
+    hscore.insert(startNode, (goalPosition - startPosition).length());
+    fscore.insert(startNode, (goalPosition - startPosition).length());
     while (openSet.count() > 0) {
         Entity* x;
         qreal lowestFScore = 999;
@@ -473,11 +487,15 @@ QList<QVector3D> GLWidget::findPath(QVector3D startPosition, QVector3D endPositi
             // reconstruct path
             QList<QVector3D> path;
             Entity* currentNode = goalNode; // start at the goal
+            //            path.prepend(goalPosition); // this is no longer legal - we can't be where there are no nodes
             while(currentNode != startNode) { // if we're not there yet
                 path.prepend(currentNode->position); // add the current node's position to the beginning of the list
                 currentNode = cameFrom.value(currentNode); // find out where this node came from
             }
-            path.prepend(startNode->position); // always add the startnode to begin with
+            if(startNode->position != startPosition) { // make sure we don't start moving to where we are
+                path.prepend(startNode->position); // always add the startnode to begin with
+            }
+            //            path.prepend(startPosition); // this is completely unecessary! We're already there!
             return path; // return our path
         }
         openSet.removeAll(x);
@@ -581,7 +599,6 @@ void GLWidget::mouseMoveEvent(QMouseEvent* event) {
 }
 
 void GLWidget::mouseReleaseEvent(QMouseEvent *event) {
-    qDebug() << "looking for presscursor";
     if(!dragging) {
         if(dragtime.elapsed() > 1000) { // TODO: selection mode
             if((QVector3D(dragStartPosition) - QVector3D(event->pos())).length() > DRAG_DROP_TRESHOLD) { // select several
@@ -601,7 +618,7 @@ void GLWidget::mouseReleaseEvent(QMouseEvent *event) {
                 if(length < CLICK_RADIUS && length < lastLength) {
                     if(aunit->team == TeamEnemies) {
                         selectedUnit->currentTarget = aunit;
-                        selectedUnit->moveToTarget = false; // we shall no longer use our moveTarget variable
+                        selectedUnit->useMoveTarget = false; // we shall no longer use our moveTarget variable
                     } else if(aunit->team == TeamHumans) {
                         selectedUnit = aunit;
                     }
@@ -611,9 +628,10 @@ void GLWidget::mouseReleaseEvent(QMouseEvent *event) {
             }
             if(!foundUnit) { // if we didn't find anything, we assume that we want to move the selected unit
                 selectedUnit->currentTarget = NULL;
-                selectedUnit->moveTarget = cursor; // set the move target of the unit to this point
-                selectedUnit->moveToTarget = true; // let's move!
-                qDebug() << findPath(selectedUnit->position, cursor);
+                selectedUnit->waypoints = findPath(selectedUnit->position, cursor); // set the move target of the unit to this point
+                selectedUnit->moveTarget = selectedUnit->waypoints.first();
+                selectedUnit->useMoveTarget = true; // let's move!
+                qDebug() << "New path:" << selectedUnit->waypoints;
             }
         }
     }
