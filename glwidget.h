@@ -25,7 +25,9 @@
 #include <QtOpenGL/qglshaderprogram.h>
 #include <QTime>
 #include <QVector>
+#include <Phonon/MediaObject>
 #include "model.h"
+#include "kgrsoundbank.h"
 
 class Bubble;
 class GLWidget : public QGLWidget {
@@ -53,6 +55,13 @@ private:
     void regenerateNodes();
     QList<QVector3D> findPath(QVector3D startPosition, QVector3D endPosition);
 
+    // sounds
+    Phonon::MediaObject *explosion;
+    Phonon::MediaObject *explosion2;
+    Phonon::MediaObject *explosion3;
+    KGrSoundBank *soundbank;
+    int expsound;
+    int expsound2;
 
     QTimer *timer;
 
@@ -61,6 +70,7 @@ private:
     int frames;
     QTime gametime;
     QTime frametime;
+    QTime explosionSoundTime; // time since last explosion sound
     qreal aspectRatio;
     QVector3D camera;
     QVector3D pressCursor;

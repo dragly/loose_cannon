@@ -20,6 +20,7 @@
 #include "model.h"
 #include <QPainter>
 #include <QPaintEngine>
+#include <Phonon/MediaObject>
 #include <math.h>
 #include <stdio.h>
 #include <string.h>
@@ -53,6 +54,13 @@ GLWidget::~GLWidget()
 
 GLWidget::GLWidget(QWidget *parent) : QGLWidget(parent)
 {
+//    soundbank = new KGrSoundBank(2);
+//    expsound = soundbank->loadSound("sounds/bomb-02.wav");
+//    expsound2 = soundbank->loadSound("sounds/bomb-02.ogg");
+//    qDebug() << QSound::isAvailable();
+//    explosion = Phonon::createPlayer(Phonon::GameCategory, Phonon::MediaSource("sounds/explosion-02.ogg"));
+//    explosion2 = Phonon::createPlayer(Phonon::GameCategory, Phonon::MediaSource("sounds/bomb-02.ogg"));
+//    explosion3 = Phonon::createPlayer(Phonon::GameCategory, Phonon::MediaSource("sounds/bomb-03.ogg"));
     qsrand(time(NULL));
     setAttribute(Qt::WA_PaintOnScreen);
     setAttribute(Qt::WA_NoSystemBackground);
@@ -65,6 +73,7 @@ GLWidget::GLWidget(QWidget *parent) : QGLWidget(parent)
     // initial values
     camera = QVector3D(5, -7, 20);
     resetGame();
+    explosionSoundTime.restart();
     // timer, should be set last, just in case
     timer = new QTimer(this);
     QObject::connect(timer, SIGNAL(timeout()), this, SLOT(updateGL()));
@@ -216,6 +225,8 @@ void GLWidget::paintGL()
                     }
                 } // foreach enemy
                 if(bullet->position.z() < 0 || hitUnit) {
+//                    soundbank->play(expsound, 0);
+                    // TODO: Add sound system.
                     // TODO: Animate explosion with sprites as seen here: http://news.developer.nvidia.com/2007/01/tips_strategies.html
                     foreach(Entity *hitUnit, allDestructibles) {
                         QVector3D distance = hitUnit->position - bullet->position;

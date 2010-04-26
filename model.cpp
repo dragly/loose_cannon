@@ -83,7 +83,7 @@ void Model::load(QString filename) {
     while (group) {
         ModelGroup modelGroup;
         modelGroup.triangles.clear();
-        for(int i = 0; i < group->numtriangles; i++) {
+        for(uint i = 0; i < group->numtriangles; i++) {
             ModelTriangle *triangle = new ModelTriangle();
             for(int j = 0; j < 3; j++) {
                 QVector3D vector(model->vertices[3 * model->triangles[group->triangles[i]].vindices[j] + 0],
