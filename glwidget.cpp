@@ -80,6 +80,7 @@ void GLWidget::resetGame() {
     score = 0;
     gameOverTime = 0.0;
     offset *= 0;
+    recruitqueue = 0;
     // end init all to zero
     gametime.start();
     bullets.clear();
@@ -353,6 +354,17 @@ void GLWidget::paintGL()
                 } // end fire bullets
                 aunit->position += aunit->velocity * DT; // do movement
             } // end foreach allUnits
+
+            //recruitment of units //foreach all buildings and make the properties private or allocate them.
+            if (recruitqueue > 0 && recruittime.elapsed() > 5000) {
+                recruitqueue--;
+                recruittime.restart();
+                Entity* cannon = new Entity(cannonModel, Entity::TypeUnit);
+                cannon->position =/* aunit->position +*/ QVector3D(-4,6,6); //note, positioning might cause trouble with buildings at the edge of the map..
+                cannon->team = TeamHumans;
+                units.append(cannon);
+            }
+
             if(units.count() == 0) {
                 gameOver = true;
             }
@@ -420,6 +432,7 @@ void GLWidget::paintGL()
     framesPerSecond.setNum(frames /(frametime.elapsed() / 1000.0), 'f', 2);
     painter.drawText(20, 40, framesPerSecond + " fps");
     painter.drawText(20, 60, "cursor: " + QString::number(pressCursor.x()) + ", " + QString::number(pressCursor.y()) + ", " + QString::number(pressCursor.z()));
+    painter.drawText(20, 80, "Unit queue: " + QString::number(recruitqueue));
     painter.drawText(width() - 200, 60, "score: " + QString::number(score));
     painter.drawText(width() - 200, 80, "enemies: " + QString::number(enemies.count()));
     if(gameOver) {
@@ -641,6 +654,7 @@ void GLWidget::mouseReleaseEvent(QMouseEvent *event) {
             QList<Entity*> allUnits;
             allUnits.append(enemies);
             allUnits.append(units);
+            allUnits.append(buildings);
             foreach(Entity* aunit, allUnits)  { // did we click on an enemy?
                 qreal length = (cursor - aunit->position).length();
                 if(length < CLICK_RADIUS && length < lastLength) {
@@ -648,12 +662,23 @@ void GLWidget::mouseReleaseEvent(QMouseEvent *event) {
                         selectedUnit->currentTarget = aunit;
                         selectedUnit->useMoveTarget = false; // we shall no longer use our moveTarget variable
                     } else if(aunit->team == TeamHumans) {
-                        selectedUnit = aunit;
+                        if (aunit->type == Entity::TypeUnit) {
+                            selectedUnit = aunit;
+                        } else /*if (enoughCash)*/ { //one of your buildings. For now, just build cannons.
+                             //cash-= price;
+                            if (recruitqueue == 0) {
+                                recruittime.restart();
+                            }
+
+                            recruitqueue++;
+                        }
                     }
+
                     foundUnit = true;
                     lastLength = length;
                 }
             }
+
             if(!foundUnit) { // if we didn't find anything, we assume that we want to move the selected unit
                 selectedUnit->currentTarget = NULL;
                 selectedUnit->waypoints = findPath(selectedUnit->position, cursor); // set the move target of the unit to this point

@@ -98,6 +98,9 @@ private:
     QPoint dragStartPosition;
     bool dragging;
     QTime dragtime;
+    QTime recruittime; //vj: temp for test.
+    //bool recruiting;
+    int recruitqueue;
 
     // mouse events
     void mousePressEvent(QMouseEvent *event);
