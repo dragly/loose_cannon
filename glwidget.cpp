@@ -54,13 +54,6 @@ GLWidget::~GLWidget()
 
 GLWidget::GLWidget(QWidget *parent) : QGLWidget(parent)
 {
-//    soundbank = new KGrSoundBank(2);
-//    expsound = soundbank->loadSound("sounds/bomb-02.wav");
-//    expsound2 = soundbank->loadSound("sounds/bomb-02.ogg");
-//    qDebug() << QSound::isAvailable();
-//    explosion = Phonon::createPlayer(Phonon::GameCategory, Phonon::MediaSource("sounds/explosion-02.ogg"));
-//    explosion2 = Phonon::createPlayer(Phonon::GameCategory, Phonon::MediaSource("sounds/bomb-02.ogg"));
-//    explosion3 = Phonon::createPlayer(Phonon::GameCategory, Phonon::MediaSource("sounds/bomb-03.ogg"));
     qsrand(time(NULL));
     setAttribute(Qt::WA_PaintOnScreen);
     setAttribute(Qt::WA_NoSystemBackground);

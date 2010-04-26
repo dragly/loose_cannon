@@ -54,14 +54,6 @@ private:
     void regenerateNodes();
     QList<QVector3D> findPath(QVector3D startPosition, QVector3D endPosition);
 
-    // sounds
-    Phonon::MediaObject *explosion;
-    Phonon::MediaObject *explosion2;
-    Phonon::MediaObject *explosion3;
-    KGrSoundBank *soundbank;
-    int expsound;
-    int expsound2;
-
     QTimer *timer;
 
     int score;
