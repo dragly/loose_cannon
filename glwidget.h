@@ -28,6 +28,7 @@
 #include <Phonon/MediaObject>
 #include "model.h"
 
+class Ui;
 class Bubble;
 class GLWidget : public QGLWidget {
 
@@ -102,6 +103,8 @@ private:
     QTime recruittime; //vj: temp for test.
     //bool recruiting;
     int recruitqueue;
+
+    Ui* ui;
 
     // mouse events
     void mousePressEvent(QMouseEvent *event);

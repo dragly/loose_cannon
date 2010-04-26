@@ -18,6 +18,7 @@
 
 #include "glwidget.h"
 #include "model.h"
+#include "ui.h"
 #include <QPainter>
 #include <QPaintEngine>
 #include <Phonon/MediaObject>
@@ -54,6 +55,13 @@ GLWidget::~GLWidget()
 
 GLWidget::GLWidget(QWidget *parent) : QGLWidget(parent)
 {
+//    soundbank = new KGrSoundBank(2);
+//    expsound = soundbank->loadSound("sounds/bomb-02.wav");
+//    expsound2 = soundbank->loadSound("sounds/bomb-02.ogg");
+//    qDebug() << QSound::isAvailable();
+//    explosion = Phonon::createPlayer(Phonon::GameCategory, Phonon::MediaSource("sounds/explosion-02.ogg"));
+//    explosion2 = Phonon::createPlayer(Phonon::GameCategory, Phonon::MediaSource("sounds/bomb-02.ogg"));
+//    explosion3 = Phonon::createPlayer(Phonon::GameCategory, Phonon::MediaSource("sounds/bomb-03.ogg"));
     qsrand(time(NULL));
     setAttribute(Qt::WA_PaintOnScreen);
     setAttribute(Qt::WA_NoSystemBackground);
@@ -71,7 +79,8 @@ GLWidget::GLWidget(QWidget *parent) : QGLWidget(parent)
     timer = new QTimer(this);
     QObject::connect(timer, SIGNAL(timeout()), this, SLOT(updateGL()));
     timer->setInterval(1);
-    timer->start();
+    timer->start();    
+    this->ui = new Ui(this);
 }
 void GLWidget::resetGame() {
     // init all to zero (also avoids memory failures)
@@ -628,6 +637,8 @@ void GLWidget::mousePressEvent(QMouseEvent *event)
 }
 // Dragging events
 void GLWidget::mouseMoveEvent(QMouseEvent* event) {
+    ui->convertMousePos(event->x(),event->y());
+
     if(!(event->buttons() & Qt::LeftButton))
         return;
     QVector3D currentCursor = project(event->x(), event->y(), pressOffset);

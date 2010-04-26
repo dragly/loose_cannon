@@ -8,12 +8,16 @@ INCLUDEPATH += .
 
 # Input
 SOURCES += main.cpp \
-    model.cpp
+    model.cpp \
+    ui.cpp \
+    window.cpp
 SOURCES += glwidget.cpp
 SOURCES += mainwindow.cpp
 SOURCES += glm.cpp
 HEADERS += glwidget.h \
-    model.h
+    model.h \
+    ui.h \
+    window.h
 HEADERS += mainwindow.h
 HEADERS += glm.h
 RESOURCES += texture.qrc
