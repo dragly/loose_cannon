@@ -25,6 +25,7 @@
 #include <QtOpenGL/qglshaderprogram.h>
 #include <QTime>
 #include <QVector>
+#include <Phonon/MediaObject>
 #include "model.h"
 
 class Bubble;
@@ -52,7 +53,7 @@ private:
     void fireBullet();
     void regenerateNodes();
     QList<QVector3D> findPath(QVector3D startPosition, QVector3D endPosition);
-
+    Phonon::MediaObject *explosion;
 
     QTimer *timer;
 

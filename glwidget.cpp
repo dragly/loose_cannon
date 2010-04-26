@@ -20,6 +20,7 @@
 #include "model.h"
 #include <QPainter>
 #include <QPaintEngine>
+#include <Phonon/MediaObject>
 #include <math.h>
 #include <stdio.h>
 #include <string.h>
@@ -53,6 +54,7 @@ GLWidget::~GLWidget()
 
 GLWidget::GLWidget(QWidget *parent) : QGLWidget(parent)
 {
+    explosion = Phonon::createPlayer(Phonon::MusicCategory, Phonon::MediaSource("sounds/explosion-02.ogg"));
     qsrand(time(NULL));
     setAttribute(Qt::WA_PaintOnScreen);
     setAttribute(Qt::WA_NoSystemBackground);
@@ -215,6 +217,9 @@ void GLWidget::paintGL()
                     }
                 } // foreach enemy
                 if(bullet->position.z() < 0 || hitUnit) {
+                    if(explosion->state() != Phonon::PlayingState) {
+                        explosion->play();
+                    }
                     // TODO: Animate explosion with sprites as seen here: http://news.developer.nvidia.com/2007/01/tips_strategies.html
                     foreach(Entity *hitUnit, allDestructibles) {
                         QVector3D distance = hitUnit->position - bullet->position;

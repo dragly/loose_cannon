@@ -25,7 +25,6 @@
 #include <QSlider>
 #include <QLabel>
 #include <QTimer>
-#include <Phonon/MediaObject>
 
 #include "glwidget.h"
 
@@ -34,10 +33,6 @@ MainWindow::MainWindow()
     //#ifdef Q_OS_MAEMO // not the right global
     //    setAttribute(Qt::WA_Maemo5PortraitOrientation, true);
     //#endif
-    Phonon::MediaObject *music =
-            Phonon::createPlayer(Phonon::MusicCategory,
-                                 Phonon::MediaSource("/home/svenni/Prosjekter/Musikk/Beats/Kicks/kick.wav"));
-    music->play();
     // we crash with segfault if we try to do this from main.cpp... so this is an ugly workaround
     GLWidget *glwidget = new GLWidget();
     //    glwidget->showFullScreen();
