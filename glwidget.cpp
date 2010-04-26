@@ -54,7 +54,11 @@ GLWidget::~GLWidget()
 
 GLWidget::GLWidget(QWidget *parent) : QGLWidget(parent)
 {
-    explosion = Phonon::createPlayer(Phonon::GameCategory, Phonon::MediaSource("sounds/explosion-02.ogg"));
+//    soundbank = new KGrSoundBank(2);
+//    expsound = soundbank->loadSound("sounds/bomb-02.wav");
+//    expsound2 = soundbank->loadSound("sounds/bomb-02.ogg");
+//    qDebug() << QSound::isAvailable();
+//    explosion = Phonon::createPlayer(Phonon::GameCategory, Phonon::MediaSource("sounds/explosion-02.ogg"));
 //    explosion2 = Phonon::createPlayer(Phonon::GameCategory, Phonon::MediaSource("sounds/bomb-02.ogg"));
 //    explosion3 = Phonon::createPlayer(Phonon::GameCategory, Phonon::MediaSource("sounds/bomb-03.ogg"));
     qsrand(time(NULL));
@@ -220,17 +224,8 @@ void GLWidget::paintGL()
                     }
                 } // foreach enemy
                 if(bullet->position.z() < 0 || hitUnit) {
-                    if(explosionSoundTime.elapsed() > 3000) { // have the last sound been playing out yet?
-                        explosion->stop();
-                        explosion->play();
-                        explosionSoundTime.restart();
-                    } /*else if(explosionSoundTime.elapsed() > 1500) { // we should at least wait a little before playing this sound
-                        explosion2->stop();
-                        explosion2->play();
-                    } else {
-                        explosion3->stop();
-                        explosion3->play();
-                    }*/
+//                    soundbank->play(expsound, 0);
+                    // TODO: Add sound system.
                     // TODO: Animate explosion with sprites as seen here: http://news.developer.nvidia.com/2007/01/tips_strategies.html
                     foreach(Entity *hitUnit, allDestructibles) {
                         QVector3D distance = hitUnit->position - bullet->position;

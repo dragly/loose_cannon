@@ -27,6 +27,7 @@
 #include <QVector>
 #include <Phonon/MediaObject>
 #include "model.h"
+#include "kgrsoundbank.h"
 
 class Bubble;
 class GLWidget : public QGLWidget {
@@ -58,6 +59,9 @@ private:
     Phonon::MediaObject *explosion;
     Phonon::MediaObject *explosion2;
     Phonon::MediaObject *explosion3;
+    KGrSoundBank *soundbank;
+    int expsound;
+    int expsound2;
 
     QTimer *timer;
 
