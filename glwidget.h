@@ -27,7 +27,6 @@
 #include <QVector>
 #include <Phonon/MediaObject>
 #include "model.h"
-#include "kgrsoundbank.h"
 
 class Bubble;
 class GLWidget : public QGLWidget {
