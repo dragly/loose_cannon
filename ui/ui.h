@@ -3,6 +3,7 @@
 
  #include <QList>
 
+class QPainter;
 class GLWidget;
 class Window;
 
@@ -11,12 +12,13 @@ class Ui
     friend class Window;
 public:
     Ui(GLWidget* glW);
-    void Draw();
+    void initialize();
+    void Draw(QPainter* painter);
     void convertMousePos(int x, int y);
     bool mouseClick();
 private:
     GLWidget* glW;
-    double mouseX,mouseY;
+    qreal mouseX,mouseY;
     QList<Window*> windows;
     Window* selectedWindow;
 };

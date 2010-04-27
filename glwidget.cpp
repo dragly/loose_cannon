@@ -18,7 +18,7 @@
 
 #include "glwidget.h"
 #include "model.h"
-#include "ui.h"
+#include "ui/ui.h"
 #include <QPainter>
 #include <QPaintEngine>
 #include <Phonon/MediaObject>
@@ -81,6 +81,7 @@ GLWidget::GLWidget(QWidget *parent) : QGLWidget(parent)
     timer->setInterval(1);
     timer->start();    
     this->ui = new Ui(this);
+    this->ui->initialize();
 }
 void GLWidget::resetGame() {
     // init all to zero (also avoids memory failures)
@@ -448,6 +449,8 @@ void GLWidget::paintGL()
     painter.drawText(20, 80, "Unit queue: " + QString::number(recruitqueue));
     painter.drawText(width() - 200, 60, "score: " + QString::number(score));
     painter.drawText(width() - 200, 80, "enemies: " + QString::number(enemies.count()));
+
+
     if(gameOver) {
         QFont font;
         font.setPixelSize(height() / 4);
@@ -456,7 +459,11 @@ void GLWidget::paintGL()
     }
     //    painter.drawText(20,80,"Verts: " + QString::number(cannon->model->vertices[20]));
     //    painter.drawText(20, 80, "Verts: " + QString::number(cannon->vertices.first().x()));
+
+    ui->Draw(&painter);
+
     painter.end();
+
 
     swapBuffers();
 
