@@ -27,21 +27,21 @@ public:
         BottomCenter,
         BottomLeft,
     };
+    Window(Ui* ui, qreal x, qreal y, qreal sizeX, qreal sizeY, Alignments alignment, bool projected, QVector3D* world, bool titlebar = false, QString title = NULL); 
+    Window(Ui* ui, qreal x, qreal y, qreal sizeX, qreal sizeY, Alignments alignment, bool titlebar = false, QString title = NULL);
 
-    Window(Ui* ui, qreal x,qreal y, qreal sizeX, qreal sizeY, Alignments alignment, bool projected, QVector3D* world, bool titlebar = false, QString title = NULL);
-    Window(Ui* ui, qreal x,qreal y, qreal sizeX, qreal sizeY, Alignments alignment, bool titlebar = false, QString title = NULL);
+    void init(Ui* ui, qreal x, qreal y, qreal sizeX, qreal sizeY, Alignments alignment, bool projected, QVector3D* world, bool titlebar = false, QString title = NULL);
     void Draw(QPainter* painter);
     void Click();
     bool Hovers();
 
 private:
-    void drawBackground();
+    void drawBackground(QPainter* painter);
     void drawElements();
 
     bool titlebar; //if no, then don't draw a titlebar :P
     QString title;
 
-    Alignments alignment;
     QList<Element*> elements;
 
     QPoint pos;

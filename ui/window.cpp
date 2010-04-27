@@ -4,11 +4,19 @@
 #include "ui.h"
 
 Window::Window(Ui* ui, qreal x,qreal y, qreal sizeX, qreal sizeY, Alignments alignment, bool projected, QVector3D* world, bool titlebar, QString title) {
+    init(ui,x,y,sizeX,sizeY,alignment,projected,world,titlebar,title);
+}
+
+Window::Window(Ui* ui, qreal x,qreal y, qreal sizeX, qreal sizeY, Alignments alignment, bool titlebar, QString title) {
+    init(ui,x,y,sizeX,sizeY,alignment,false,NULL,titlebar,title);
+}
+
+void Window::init(Ui* ui, qreal x,qreal y, qreal sizeX, qreal sizeY, Alignments alignment, bool projected, QVector3D* world, bool titlebar, QString title) {
     this->ui=ui;
-    this->alignment = alignment;
     this->world = world;
     this->titlebar = titlebar;
     this->title = title;
+    this->projected=projected;
 
     //does currently NOT allow resizing of window after construction.
     this->size.setWidth(sizeX * ui->glW->height());
@@ -34,16 +42,12 @@ Window::Window(Ui* ui, qreal x,qreal y, qreal sizeX, qreal sizeY, Alignments ali
     this->pos.setY(y * ui->glW->height() + yAlig);
 }
 
-Window::Window(Ui* ui, qreal x,qreal y, qreal sizeX, qreal sizeY, Alignments alignment, bool titlebar, QString title) {
-    Window(ui,x,y,sizeX,sizeY,alignment,false,NULL,titlebar,title);
-
-}
 void Window::Draw(QPainter* painter) {
 
     //check if the window is hidden, blablabla
 
     //draw the window itself
-    drawBackground();
+    drawBackground(painter);
 
     //draw the elements in the window
 
@@ -57,16 +61,22 @@ bool Window::Hovers() {
     return false;
 }
 
-void Window::drawBackground() {
-    int i=2;
-    //ui->convertMousePos(100,100);
-    //ui->glW->height();
-    //qreal radius =/* 0.05 */ (qreal) ui->glW->height(); //test
-    //QPainter painter;
-    //QRect(pos,size);
-    //painter.begin(ui->glW);
-   // painter.setPen(Qt::blue);
-    //painter.drawRoundedRect(QRect(pos,size),radius,radius);
+void Window::drawBackground(QPainter* painter) {
+
+
+    qreal radius = 0.05 * ui->glW->height();
+
+    QRadialGradient gradient(50, 50, 50, 50, 50);
+    gradient.setColorAt(0, QColor::fromRgbF(0, 1, 0, 1));
+    gradient.setColorAt(1, QColor::fromRgbF(0, 0, 0, 0));
+
+    QBrush brush(gradient);
+    painter->setBackground(brush);
+
+    QRect(pos,size);
+    painter->setPen(Qt::blue);
+    painter->setBackgroundMode(Qt::OpaqueMode);
+    painter->drawRoundedRect(QRect(pos,size),radius,radius);
 
     //painter.drawRects();
     //painter.drawRoundRect();

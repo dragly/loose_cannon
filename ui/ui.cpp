@@ -6,14 +6,8 @@
 Ui::Ui(GLWidget* glW)
 {
     this->glW=glW;
-
-    //temp
-
-}
-
-void Ui::initialize() {
-    //calling it from the constructor fucked with my pointer :< still did :<
     windows.prepend(new Window(this,0,0,0.2,0.2,Window::Center));
+
 }
 
 void Ui::convertMousePos(int x, int y) {
@@ -26,12 +20,6 @@ void Ui::Draw(QPainter* painter) {
 
     for ( int i = windows.size()-1;i>=0;i--) { // loop trough all windows in reverse order
         windows.at(i)->Draw(painter);
-
-        if (this != windows.at(i)->ui) {
-            painter->drawText(60, 100,"Allocated memory got moved");
-        } else
-            painter->drawText(60, 100,"Everything seems ok");
-
     }
 }
 

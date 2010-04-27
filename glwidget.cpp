@@ -81,7 +81,6 @@ GLWidget::GLWidget(QWidget *parent) : QGLWidget(parent)
     timer->setInterval(1);
     timer->start();    
     this->ui = new Ui(this);
-    this->ui->initialize();
 }
 void GLWidget::resetGame() {
     // init all to zero (also avoids memory failures)

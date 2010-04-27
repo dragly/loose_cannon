@@ -12,7 +12,6 @@ class Ui
     friend class Window;
 public:
     Ui(GLWidget* glW);
-    void initialize();
     void Draw(QPainter* painter);
     void convertMousePos(int x, int y);
     bool mouseClick();
