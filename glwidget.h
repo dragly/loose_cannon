@@ -39,7 +39,6 @@ public:
 
     enum Team {TeamHumans, TeamEnemies};
     QVector3D unProject(int x, int y);
-    QVector3D unProject(int x, int y, QVector3D oldOffset);
     QPoint project(QVector3D position);
 
     static const qreal MaxHealth = 100.0;
