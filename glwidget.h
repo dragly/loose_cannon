@@ -105,7 +105,7 @@ private:
     QPoint dragLastPosition;
     QPoint dragStartPosition;
     bool dragging;
-    QTime dragtime;
+    QTime holdtime;
     QTime recruittime; //vj: temp for test.
     //bool recruiting;
     int recruitqueue;
