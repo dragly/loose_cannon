@@ -410,7 +410,7 @@ void GLWidget::paintGL()
 
     mainModelView = QMatrix4x4(); // reset
     // set up the main view (affects all objects)
-    mainModelView.perspective(40.0, aspectRatio, 1.0, 60.0);
+    mainModelView.perspective(40.0, aspectRatio, 10.0, 60.0);
     mainModelView.lookAt(camera + offset,QVector3D(0,0,0) + offset,QVector3D(0.0,0.0,1.0));
 
     QList<Entity*> allUnits; // all units, including enemies and our own
@@ -628,33 +628,31 @@ QPoint GLWidget::project(QVector3D position) {
 }
 
 QVector3D GLWidget::unProject(int x, int y) {
-    return unProject(x,y,offset);
-}
-QVector3D GLWidget::unProject(int x, int y, QVector3D oldOffset) {
 
     // project click down to plane
     // about the mathematics: http://www.opengl.org/sdk/docs/man/xhtml/gluUnProject.xml
     // mainModelView should be our modelview projection matrix
     QMatrix4x4 inv = mainModelView.inverted();
-    qreal coordx = (qreal) x / (qreal) width();
-    qreal coordy = (qreal) (height() - y) / (qreal) height();
-    // this is correct to do, just inverted of what GluUnProject does for some reason
-    coordx *= -2.0;
-    coordx += 1.0;
-    coordy *= -2.0;
-    coordy += 1.0;
-    // end workaround - one day we might need to fix this :)
-    QVector3D screen = inv * QVector3D(coordx,coordy,-1);
-    QVector3D center = inv * QVector3D(0, 0, 0);
-    QVector3D dir = center - screen;
+    qreal coordx = 2*(qreal) x / (qreal) width() - 1;
+    qreal coordy = 2*(qreal) (height() - y) / (qreal) height() - 1;
+    QVector4D nearPoint4 = inv * QVector4D(coordx, coordy, -1, 1); // winZ = 2 * 0 - 1 = -1
+    QVector4D farPoint4 = inv * QVector4D(coordx, coordy, 1, 1); // win> = 2 * 1 - 1 = 1
+    if(nearPoint4.w() == 0.0) {
+        return QVector3D();
+    }
+    qreal w = 1.0/nearPoint4.w();
+    QVector3D nearPoint = QVector3D(nearPoint4);
+    nearPoint *= w;
+    w = 1.0/farPoint4.w();
+    QVector3D farPoint = QVector3D(farPoint4);
+    farPoint *= w;
+    qDebug() << nearPoint << farPoint;
+    QVector3D dir = farPoint - nearPoint;
     if (dir.z()==0.0) // if we are looking in a flat direction we won't hit the ground
         return QVector3D(0,0,0);
 
-    qreal t = - (oldOffset.z() + camera.z()) / dir.z(); // how long it is to the ground
-    QVector3D cursor;
-    cursor.setX(oldOffset.x() + camera.x() + dir.x() * t);
-    cursor.setY(oldOffset.y() + camera.y() + dir.y() * t);
-    cursor.setZ(oldOffset.z() + camera.z() + dir.z() * t); // should become zero
+    qreal t = - nearPoint.z() / dir.z(); // how long it is to the ground
+    QVector3D cursor = nearPoint + dir * t;
     return cursor;
 }
 
@@ -688,7 +686,7 @@ void GLWidget::mouseMoveEvent(QMouseEvent* event) {
 
     if(!(event->buttons() & Qt::LeftButton))
         return;
-    QVector3D currentCursor = unProject(event->x(), event->y(), pressOffset);
+    QVector3D currentCursor = unProject(event->x(), event->y());
     if(dragging) {
         offset -= currentCursor - dragCursor; // offset is negative to get the "drag and drop"-feeling
     } else {
