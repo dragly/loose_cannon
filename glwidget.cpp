@@ -680,7 +680,7 @@ void GLWidget::mousePressEvent(QMouseEvent *event)
             }
             return;
         }
-        dragtime.restart();
+        holdtime.restart();
 
         pressCursor = unProject(event->x(), event->y());
         dragCursor = pressCursor;
@@ -706,7 +706,7 @@ void GLWidget::mouseMoveEvent(QMouseEvent* event) {
             dragBool = false;
         }
     } else {
-        if(dragtime.elapsed() > 1000) { // TODO: selection mode
+        if(holdtime.elapsed() > 1000) { // TODO: selection mode
 
         } else if((QVector3D(dragStartPosition) - QVector3D(event->pos())).length() > DragDropTreshold) { // if we have been dragging for more than ten pixels
             dragging = true;
@@ -716,8 +716,10 @@ void GLWidget::mouseMoveEvent(QMouseEvent* event) {
 }
 
 void GLWidget::mouseReleaseEvent(QMouseEvent *event) {
+    if(!(event->buttons() & Qt::LeftButton))
+        return;
     if(!dragging) {
-        if(dragtime.elapsed() > 1000) { // TODO: selection mode
+        if(holdtime.elapsed() > 1000) { // TODO: selection mode
             if((QVector3D(dragStartPosition) - QVector3D(event->pos())).length() > DragDropTreshold) { // select several
 
             } else { // deselect all
