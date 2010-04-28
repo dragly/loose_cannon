@@ -388,8 +388,8 @@ void GLWidget::paintGL()
 
 
     QPainter painter;
-    painter.begin(this);
     painter.setRenderHint(QPainter::HighQualityAntialiasing, true);
+    painter.begin(this);
     painter.beginNativePainting();
 
     glClearColor(0.88f, 0.88f, 0.9f, 1.0f);
@@ -443,10 +443,11 @@ void GLWidget::paintGL()
     painter.endNativePainting();
 
     foreach(Entity *aunit, allUnits) { // draw health bars
-        // this function could probably have a few less calculations - maybe static colors for intervals?
-        qreal boxWidth = 100; // how wide is the box?
-        qreal boxHeight = 10; // how tall is the box?
-        qreal yOffset = 100; // how far above do we print the box?
+        // this function could probably have a few less calculations - some values may be set at resizeGL instead
+        // all sizes are relative to the width and height of the screen to create a consistent experience on all devices
+        qreal boxWidth = width() * 0.05; // how wide is the box?
+        qreal boxHeight = width() * 0.007; // how tall is the box?
+        qreal yOffset = width() * 0.05; // how far above do we print the box?
         qreal fillWidth = boxWidth * aunit->health / MAX_HEALTH;
         QVector3D position = mainModelView * aunit->position;
         QPoint projected = project(position);
@@ -454,10 +455,10 @@ void GLWidget::paintGL()
         qreal strokeY = projected.y() - yOffset;
         painter.setPen(QPen(QBrush(QColor(10, 10, 10, 120)), 1)); // dark alpha
         painter.setBrush(QBrush(QColor(20, 30, 40, 100)));
-        painter.drawRoundedRect((int)strokeX, (int)strokeY, boxWidth, boxHeight, 2, 2, Qt::AbsoluteSize); // a box above each unit
+        painter.drawRoundedRect((int)strokeX, (int)strokeY, boxWidth, boxHeight, 3, 3, Qt::AbsoluteSize); // a box above each unit
         qreal healthColor = 220 * aunit->health / MAX_HEALTH; // a bit dark color :)
         painter.setBrush(QBrush(QColor(220 - healthColor, healthColor, 10, 210))); // a color dependent on health
-        painter.drawRoundedRect((int)strokeX + 2, (int)strokeY + 2, fillWidth - 4, boxHeight - 4, 2, 2, Qt::AbsoluteSize);
+        painter.drawRoundedRect((int)strokeX + 2, (int)strokeY + 2, fillWidth - 4, boxHeight - 4, 3, 3, Qt::AbsoluteSize);
     }
 
     painter.setPen(Qt::blue);
