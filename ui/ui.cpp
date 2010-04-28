@@ -6,14 +6,14 @@
 Ui::Ui(GLWidget* glW)
 {
     this->glW=glW;
-    windows.prepend(new Window(this,0,0,0.2,0.2,Window::Center));
+    windows.prepend(new Window(this,0,0,0.2,0.3,Window::TopLeft,true,new QVector3D(1,1,1),true,"Menu"));
 
 }
 
 void Ui::convertMousePos(int x, int y) {
     // scale off of the height
-    mouseX =   x/glW->height();
-    mouseY = - y/glW->height() + 1;
+    mouseX =   (qreal) x/glW->height();
+    mouseY = - (qreal) y/glW->height() + 1;
 }
 
 void Ui::draw(QPainter* painter) {

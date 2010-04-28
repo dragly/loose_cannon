@@ -8,6 +8,7 @@
 class Element;
 class Ui;
 class QPainter;
+class QColor;
 
 class Window
 {
@@ -23,9 +24,9 @@ public:
         CenterLeft,
         Center,
         CenterRight,
-        BottomRight,
-        BottomCenter,
         BottomLeft,
+        BottomCenter,
+        BottomRight,
     };
     Window(Ui* ui, qreal x, qreal y, qreal sizeX, qreal sizeY, Alignments alignment, bool projected, QVector3D* world, bool titlebar = false, QString title = NULL); 
     Window(Ui* ui, qreal x, qreal y, qreal sizeX, qreal sizeY, Alignments alignment, bool titlebar = false, QString title = NULL);
@@ -44,11 +45,18 @@ private:
 
     QList<Element*> elements;
 
+    int testval;
+
     QPoint pos;
     QSize size;
     Ui* ui;
     bool projected;
     QVector3D* world; //IMPORTANT: This is a pointer, so it will crash if the location disappears, could do an entity pointer instead?
+
+    static const QColor ColorBackground;
+    static const QColor ColorBorder;
+    static const QColor ColorText;
+    static const QColor ColorNone;
 
 };
 

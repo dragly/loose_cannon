@@ -81,8 +81,7 @@ GLWidget::GLWidget(QWidget *parent) : QGLWidget(parent)
     timer = new QTimer(this);
     QObject::connect(timer, SIGNAL(timeout()), this, SLOT(updateGL()));
     timer->setInterval(1);
-    timer->start();    
-    this->ui = new Ui(this);
+    timer->start();
 }
 void GLWidget::resetGame() {
     // init all to zero (also avoids memory failures)
@@ -180,6 +179,8 @@ void GLWidget::initializeGL ()
 
     glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR );
     glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR );
+
+    this->ui = new Ui(this);
 }
 
 void GLWidget::paintGL()
@@ -452,8 +453,8 @@ void GLWidget::paintGL()
             qreal boxHeight = width() * 0.008; // how tall is the box?
             qreal yOffset = width() * 0.05; // how far above do we print the box?
             qreal fillWidth = boxWidth * aunit->health / MAX_HEALTH;
-            QVector3D position = mainModelView * aunit->position;
-            QPoint projected = project(position);
+            //QVector3D position = mainModelView * aunit->position;
+            QPoint projected = project(aunit->position);
             qreal strokeX = projected.x() - boxWidth / 2.0;
             qreal strokeY = projected.y() - yOffset;
             painter.setPen(QPen(QColor(10, 10, 10, 120))); // dark alpha
@@ -616,6 +617,7 @@ QList<QVector3D> GLWidget::findPath(QVector3D startPosition, QVector3D goalPosit
     return nonfunctional; // we failed to find a path, just return the point we're at
 }
 QPoint GLWidget::project(QVector3D position) {
+    position =  mainModelView * position;
     qreal winX = width() * (position.x() + 1) / 2;
     qreal winY = height() - height() * (position.y() + 1) / 2;
     return QPoint((int)winX, (int)winY);
