@@ -74,6 +74,7 @@ GLWidget::GLWidget(QWidget *parent) : QGLWidget(parent)
     nodeModel = new Model("box.obj");
     // initial values
     camera = QVector3D(5, -7, 20);
+    dragBool = false;
     resetGame();
     explosionSoundTime.restart();
     // timer, should be set last, just in case
@@ -407,7 +408,7 @@ void GLWidget::paintGL()
 
     mainModelView = QMatrix4x4(); // reset
     // set up the main view (affects all objects)
-    mainModelView.perspective(40.0, aspectRatio, 10.0, 60.0);
+    mainModelView.perspective(40.0, aspectRatio, 1.0, 60.0);
     mainModelView.lookAt(camera + offset,QVector3D(0,0,0) + offset,QVector3D(0.0,0.0,1.0));
 
     QList<Entity*> allUnits; // all units, including enemies and our own
@@ -654,7 +655,6 @@ QVector3D GLWidget::unProject(int x, int y) {
     w = 1.0/farPoint4.w();
     QVector3D farPoint = QVector3D(farPoint4);
     farPoint *= w;
-    qDebug() << nearPoint << farPoint;
     QVector3D dir = farPoint - nearPoint;
     if (dir.z()==0.0) // if we are looking in a flat direction we won't hit the ground
         return QVector3D(0,0,0);
@@ -696,9 +696,15 @@ void GLWidget::mouseMoveEvent(QMouseEvent* event) {
 
     if(!(event->buttons() & Qt::LeftButton))
         return;
+    // this should be improved. This method is not accurate.
     QVector3D currentCursor = unProject(event->x(), event->y());
     if(dragging) {
-        offset -= currentCursor - dragCursor; // offset is negative to get the "drag and drop"-feeling
+        if(!dragBool) {
+            offset -= 2 * (currentCursor - dragCursor); // offset is negative to get the "drag and drop"-feeling
+            dragBool = true;
+        } else {
+            dragBool = false;
+        }
     } else {
         if(dragtime.elapsed() > 1000) { // TODO: selection mode
 

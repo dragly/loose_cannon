@@ -72,6 +72,7 @@ private:
     QVector3D dragCursor;
     QVector3D offset;
     QVector3D pressOffset;
+    bool dragBool;
     QMatrix4x4 mainModelView;
 //    GLint gluUnProject(GLdouble winx, GLdouble winy, GLdouble winz,
 //                 const GLdouble model[16], const GLdouble proj[16],
