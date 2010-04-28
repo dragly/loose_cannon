@@ -39,7 +39,7 @@ const qreal BulletSpeed = 8; // units/s
 const qreal NumberOfEnemies = 1;
 const qreal ClickRadius = 2;
 
-// gui
+// gui - bla
 const qreal DragDropTreshold = 20;
 
 // weapon constants

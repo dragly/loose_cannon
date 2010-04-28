@@ -16,6 +16,8 @@
 //    Some parts of the code might still be from Nokia's Qt examples
 //    and are of course Copyright (C) Nokia and/or its subsidiary(-ies).
 
+
+// a
 #ifndef GLWIDGET_H
 #define GLWIDGET_H
 
