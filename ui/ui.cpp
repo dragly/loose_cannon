@@ -44,4 +44,3 @@ bool Ui::mouseClick() {
     return false;
 
 }
-
