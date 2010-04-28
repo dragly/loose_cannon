@@ -21,8 +21,6 @@
 #include <QPainter>
 #include "glwidget.h"
 
-const qreal MAX_HEALTH = 100;
-
 Entity::Entity(Model *model) {
     initEntity(model);
     type = TypeUnit;
@@ -38,7 +36,7 @@ void Entity::initEntity(Model *model) {
     position = QVector3D(0,0,0);
     velocity = QVector3D(0,0,0);
     rotation = QVector3D(0,0,0);
-    health = MAX_HEALTH;
+    health = GLWidget::MaxHealth;
     useMoveTarget = false;
     currentTarget = NULL;
     team = GLWidget::TeamHumans;

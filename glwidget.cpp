@@ -28,29 +28,28 @@
 #include <time.h>
 
 // constants (are nasty, should probably be defined in some other, global way)
-const qreal MAX_HEALTH = 100;
-const qreal ENEMY_SPEED = 3.0; // units/s
-const qreal ENEMY_ACCELERATION = 10.0; // units/s^2
-const qreal ENEMY_FRICTION_SIDE = 6.0;
-const qreal ENEMY_FRICTION_ALL = 2.0;
-const qreal ENEMY_SPAWNDISTANCE = 15; // units
-const qreal DT = 0.01; // the timestep
-const qreal ROTATE_SPEED = 180; // degrees/s
-const qreal BULLET_SPEED = 8; // units/s
-const qreal NUMBER_OF_ENEMIES = 1;
-const qreal CLICK_RADIUS = 2;
+const qreal UnitSpeed = 3.0; // units/s
+const qreal UnitAcceleration = 10.0; // units/s^2
+const qreal UnitFrictionSide = 6.0;
+const qreal UnitFrictionAll = 2.0;
+const qreal EnemySpawnDistance = 15; // units
+const qreal Dt = 0.01; // the timestep
+const qreal RotateSpeed = 180; // degrees/s
+const qreal BulletSpeed = 8; // units/s
+const qreal NumberOfEnemies = 1;
+const qreal ClickRadius = 2;
 
 // gui
-const qreal DRAG_DROP_TRESHOLD = 20;
+const qreal DragDropTreshold = 20;
 
 // weapon constants
-const qreal EXPLOSION_RADIUS = 3;
-const qreal EXPLOSION_DAMAGE = 30;
-const qreal EXPLOSION_FORCE = 20;
-const qreal FIRE_DISTANCE = 7;
-const qreal BULLET_SPAWNTIME = 2;
-QVector3D GRAVITY(0, 0, -20); // units/s^2
-
+const qreal ExplosionRadius = 3;
+const qreal ExplosionDamage = 30;
+const qreal ExplosionForce = 20;
+const qreal FireDistance = 7;
+const qreal BulletSpawnTime = 2;
+QVector3D Gravity(0, 0, -20); // units/s^2
+const qreal GLWidget::MaxHealth;
 GLWidget::~GLWidget()
 {
 }
@@ -115,16 +114,16 @@ void GLWidget::resetGame() {
 }
 
 void GLWidget::initEnemies() {
-    for(int i = 0; i < NUMBER_OF_ENEMIES; i++) {
+    for(int i = 0; i < NumberOfEnemies; i++) {
         createEnemy();
     }
 }
 
 void GLWidget::resetEnemy(Entity* enemy) {
     qreal randomAngle = qrand() * 360; // set random position
-    enemy->position = QVector3D(cos(randomAngle * M_PI / 180) * ENEMY_SPAWNDISTANCE, sin(randomAngle * M_PI / 180) * ENEMY_SPAWNDISTANCE, 0.0); // set random position
+    enemy->position = QVector3D(cos(randomAngle * M_PI / 180) * EnemySpawnDistance, sin(randomAngle * M_PI / 180) * EnemySpawnDistance, 0.0); // set random position
     qDebug() << "Position enemy:" << enemy->position;
-    enemy->health = MAX_HEALTH; // reset health
+    enemy->health = MaxHealth; // reset health
     if(buildings.count() > 0)
         enemy->currentTarget = buildings.first(); // attack any buildling
     else if(units.count() > 0)
@@ -197,7 +196,7 @@ void GLWidget::paintGL()
         QList<Entity*> allDestructibles; // all destructible things - units and buildings
         allDestructibles.append(allUnits);
         allDestructibles.append(buildings);
-        currentTime += DT; // next timestep
+        currentTime += Dt; // next timestep
         if(!gameOver) { // do logic
             foreach(Entity* enemy, enemies) {
                 if(enemy->currentTarget != NULL) {
@@ -215,8 +214,8 @@ void GLWidget::paintGL()
 
             foreach(Entity* bullet, bullets) { // let's see what our bullets are doing
                 bool hitUnit = false;
-                bullet->velocity += GRAVITY * DT;
-                bullet->position += bullet->velocity * DT;
+                bullet->velocity += Gravity * Dt;
+                bullet->position += bullet->velocity * Dt;
                 qreal bulletAngleZ = atan2(bullet->velocity.y(),bullet->velocity.x()) * 180 / M_PI + 90;
                 bullet->rotation.setZ(bulletAngleZ);
                 qreal bulletAngleX = atan2(sqrt(pow(bullet->velocity.x(),2) + pow(bullet->velocity.y(),2)),
@@ -234,8 +233,8 @@ void GLWidget::paintGL()
                     // TODO: Animate explosion with sprites as seen here: http://news.developer.nvidia.com/2007/01/tips_strategies.html
                     foreach(Entity *hitUnit, allDestructibles) {
                         QVector3D distance = hitUnit->position - bullet->position;
-                        if(distance.length() < EXPLOSION_RADIUS) { // in explosion radius
-                            qreal damage = EXPLOSION_DAMAGE * (distance.length() / EXPLOSION_RADIUS); // the damage is relative to the distance
+                        if(distance.length() < ExplosionRadius) { // in explosion radius
+                            qreal damage = ExplosionDamage * (distance.length() / ExplosionRadius); // the damage is relative to the distance
                             hitUnit->health -= damage;
                             score += damage;
                             if(hitUnit->currentTarget == NULL && // if we have not selected a target
@@ -260,7 +259,7 @@ void GLWidget::paintGL()
                                     }
                                 }
                             } else if(hitUnit->type != Entity::TypeBuilding){
-                                qreal velocityChange = EXPLOSION_FORCE * damage / 100;
+                                qreal velocityChange = ExplosionForce * damage / 100;
                                 hitUnit->velocity += distance.normalized() * velocityChange; // make the explosion change the velocity in the direction of the blast
                             }
                         }
@@ -270,7 +269,7 @@ void GLWidget::paintGL()
             } // end foreach bullets
             foreach(Entity* aunit, allUnits) {
                 if(aunit->position.z() > 0) {
-                    aunit->velocity += GRAVITY * DT;
+                    aunit->velocity += Gravity * Dt;
                 } else {
                     aunit->velocity.setZ(0);
                     aunit->position.setZ(0);
@@ -292,20 +291,20 @@ void GLWidget::paintGL()
                     while(difference > 180) difference -= 360;
                     while(difference < -180) difference += 360;
                     if(difference > 0) {
-                        aunit->rotation.setZ(aunit->rotation.z() + ROTATE_SPEED * DT);
-                        if(difference - ROTATE_SPEED * DT < 0) {
+                        aunit->rotation.setZ(aunit->rotation.z() + RotateSpeed * Dt);
+                        if(difference - RotateSpeed * Dt < 0) {
                             aunit->rotation.setZ(aunitAngle);
                             doMovement = true;
                         }
                     } else if(difference < 0) {
-                        aunit->rotation.setZ(aunit->rotation.z() - ROTATE_SPEED * DT);
-                        if(difference + ROTATE_SPEED * DT > 0) {
+                        aunit->rotation.setZ(aunit->rotation.z() - RotateSpeed * Dt);
+                        if(difference + RotateSpeed * Dt > 0) {
                             aunit->rotation.setZ(aunitAngle);
                             doMovement = true;
                         }
                     }
                     if(aunit->currentTarget != NULL) {
-                        if((aunit->currentTarget->position - aunit->position).length() < FIRE_DISTANCE) {
+                        if((aunit->currentTarget->position - aunit->position).length() < FireDistance) {
 //                            aunit->velocity *= 0;
                             doMovement = false;
                             aunit->useMoveTarget = false;
@@ -332,33 +331,33 @@ void GLWidget::paintGL()
                     }
                     QVector3D vectorAcceleration;
                     if(doMovement) { // only if we are moving, we will be affected by friction and acceleration
-                        qreal aunitAcceleration = ENEMY_ACCELERATION - ENEMY_ACCELERATION * (aunit->velocity.length() / ENEMY_SPEED); // acceleration (force of the enemy's engine) minus air resistance - set so that the equal eachother at ENEMY_SPEED
+                        qreal aunitAcceleration = UnitAcceleration - UnitAcceleration * (aunit->velocity.length() / UnitSpeed); // acceleration (force of the enemy's engine) minus air resistance - set so that the equal eachother at ENEMY_SPEED
                         vectorAcceleration += aunitdir.normalized() * aunitAcceleration;
                     } // end doMovement
                     // side-friction
                     if(aunit->position.z() == 0) {
                         QVector3D projected = aunit->velocity - QVector3D::dotProduct(aunit->velocity, aunitdir.normalized()) * aunitdir.normalized();
-                        qreal aunitFriction = - ENEMY_FRICTION_SIDE * projected.length(); // we find the amount of friction applied
-                        aunit->velocity += projected.normalized() * aunitFriction * DT;	// apply the friction
+                        qreal aunitFriction = - UnitFrictionSide * projected.length(); // we find the amount of friction applied
+                        aunit->velocity += projected.normalized() * aunitFriction * Dt;	// apply the friction
                     }
                     // all-way friction
-                    vectorAcceleration +=  - aunit->velocity * ENEMY_FRICTION_ALL;
-                    aunit->velocity += vectorAcceleration * DT;
+                    vectorAcceleration +=  - aunit->velocity * UnitFrictionAll;
+                    aunit->velocity += vectorAcceleration * Dt;
                 } else { // else shallMove
                     aunit->velocity = QVector3D(0,0,aunit->velocity.z());
                 } // end shallMove
                 // fire bullets
-                if(aunit->currentTarget != NULL && difference < 1 && difference > -1 && currentTime - aunit->lastBulletFired > BULLET_SPAWNTIME) {
-                    if((aunit->currentTarget->position - aunit->position).length() < FIRE_DISTANCE) { // make sure we are close enough
+                if(aunit->currentTarget != NULL && difference < 1 && difference > -1 && currentTime - aunit->lastBulletFired > BulletSpawnTime) {
+                    if((aunit->currentTarget->position - aunit->position).length() < FireDistance) { // make sure we are close enough
                         Entity *bullet = new Entity(bulletModel, Entity::TypeBullet);
                         bullet->scale *= 0.3;
                         bullet->position = aunit->position + QVector3D(0,0,0.4);
                         QVector3D direction = aunit->currentTarget->position - bullet->position;
-                        QVector3D calcTarget = aunit->currentTarget->position + aunit->currentTarget->velocity * direction.length() / BULLET_SPEED; // hit a bit ahead of target, suggesting same speed all the way
+                        QVector3D calcTarget = aunit->currentTarget->position + aunit->currentTarget->velocity * direction.length() / BulletSpeed; // hit a bit ahead of target, suggesting same speed all the way
                         QVector3D calcDirection = calcTarget - bullet->position;
-                        bullet->velocity = calcDirection.normalized() * BULLET_SPEED;
-                        qreal bulletTime = calcDirection.length() / BULLET_SPEED;
-                        qreal startSpeed = -GRAVITY.z() * bulletTime; // from v = v0 + at
+                        bullet->velocity = calcDirection.normalized() * BulletSpeed;
+                        qreal bulletTime = calcDirection.length() / BulletSpeed;
+                        qreal startSpeed = -Gravity.z() * bulletTime; // from v = v0 + at
                         bullet->velocity += QVector3D(0, 0, startSpeed * 0.5);
                         aunit->lastBulletFired = currentTime;
                         bullet->team = aunit->team;
@@ -367,7 +366,7 @@ void GLWidget::paintGL()
                         bullets.append(bullet);
                     }
                 } // end fire bullets
-                aunit->position += aunit->velocity * DT; // do movement
+                aunit->position += aunit->velocity * Dt; // do movement
             } // end foreach allUnits
 
             //recruitment of units //foreach all buildings and make the properties private or allocate them.
@@ -451,7 +450,7 @@ void GLWidget::paintGL()
             qreal boxWidth = width() * 0.07; // how wide is the box?
             qreal boxHeight = width() * 0.008; // how tall is the box?
             qreal yOffset = width() * 0.05; // how far above do we print the box?
-            qreal fillWidth = boxWidth * aunit->health / MAX_HEALTH;
+            qreal fillWidth = boxWidth * aunit->health / MaxHealth;
             QVector3D position = mainModelView * aunit->position;
             QPoint projected = project(position);
             qreal strokeX = projected.x() - boxWidth / 2.0;
@@ -459,7 +458,7 @@ void GLWidget::paintGL()
             painter.setPen(QPen(QColor(10, 10, 10, 120))); // dark alpha
             painter.setBrush(QBrush(QColor(20, 30, 40, 100)));
             painter.drawRoundedRect((int)strokeX, (int)strokeY, boxWidth, boxHeight, 3, 3, Qt::AbsoluteSize); // a box above each unit
-            qreal healthColor = 220 * aunit->health / MAX_HEALTH; // a bit dark color :)
+            qreal healthColor = 220 * aunit->health / MaxHealth; // a bit dark color :)
             if(width() > 800) { // fix for small screens
                 painter.setPen(QPen(QColor(20,30,40,100))); // thin stroke
             } else {
@@ -688,7 +687,7 @@ void GLWidget::mouseMoveEvent(QMouseEvent* event) {
     } else {
         if(dragtime.elapsed() > 1000) { // TODO: selection mode
 
-        } else if((QVector3D(dragStartPosition) - QVector3D(event->pos())).length() > DRAG_DROP_TRESHOLD) { // if we have been dragging for more than ten pixels
+        } else if((QVector3D(dragStartPosition) - QVector3D(event->pos())).length() > DragDropTreshold) { // if we have been dragging for more than ten pixels
             dragging = true;
         }
     }
@@ -698,7 +697,7 @@ void GLWidget::mouseMoveEvent(QMouseEvent* event) {
 void GLWidget::mouseReleaseEvent(QMouseEvent *event) {
     if(!dragging) {
         if(dragtime.elapsed() > 1000) { // TODO: selection mode
-            if((QVector3D(dragStartPosition) - QVector3D(event->pos())).length() > DRAG_DROP_TRESHOLD) { // select several
+            if((QVector3D(dragStartPosition) - QVector3D(event->pos())).length() > DragDropTreshold) { // select several
 
             } else { // deselect all
 
@@ -706,14 +705,14 @@ void GLWidget::mouseReleaseEvent(QMouseEvent *event) {
         } else {
             QVector3D cursor = pressCursor;
             bool foundUnit = false;
-            qreal lastLength = CLICK_RADIUS;
+            qreal lastLength = ClickRadius;
             QList<Entity*> allUnits;
             allUnits.append(enemies);
             allUnits.append(units);
             allUnits.append(buildings);
             foreach(Entity* aunit, allUnits)  { // did we click on an enemy?
                 qreal length = (cursor - aunit->position).length();
-                if(length < CLICK_RADIUS && length < lastLength) {
+                if(length < ClickRadius && length < lastLength) {
                     if(aunit->team == TeamEnemies) {
                         selectedUnit->currentTarget = aunit;
                         selectedUnit->useMoveTarget = false; // we shall no longer use our moveTarget variable
