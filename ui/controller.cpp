@@ -20,6 +20,10 @@ bool Controller::click() {
     return false;
 }
 
+bool Controller::hovers() {
+    return false;
+}
+
 void Controller::move() {
 
 }

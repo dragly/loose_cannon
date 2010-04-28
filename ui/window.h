@@ -38,6 +38,7 @@ public:
     bool click();
     void hide();
     void  addController(Controller* controller);
+    bool hovers();
 
 private:
     void drawBackground(QPainter* painter);
@@ -60,6 +61,7 @@ private:
     static const QColor ColorBackground;
     static const QColor ColorBorder;
     static const QColor ColorText;
+    static const QColor ColorHighlight;
     static const QColor ColorNone;
 
 };

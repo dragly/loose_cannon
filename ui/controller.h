@@ -15,6 +15,7 @@ class Controller : public QObject {
 public:
     Controller(Window* parent, QPointF relativePos, QSizeF size);
 
+    virtual bool hovers();
     virtual bool click();
     virtual void move();
     virtual void draw(QPainter *painter);

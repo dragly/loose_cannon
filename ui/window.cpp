@@ -7,6 +7,8 @@
 const QColor Window::ColorNone = QColor(0,0,0,0);
 const QColor Window::ColorBackground = QColor(25, 25, 25, 180);
 const QColor Window::ColorBorder = QColor(127, 127, 127, 255);
+const QColor Window::ColorHighlight = QColor(255, 255, 255, 255);
+//colorText..
 
 Window::Window(Ui* ui, qreal x,qreal y, qreal sizeX, qreal sizeY, Alignments alignment, bool projected, QVector3D* world, bool titlebar, QString title) {
     init(ui,x,y,sizeX,sizeY,alignment,projected,world,titlebar,title);
@@ -97,6 +99,9 @@ bool Window::click() {
     }
 
     return true;
+}
+bool Window::hovers() {
+    return (ui->mouseX > pos.x() && ui->mouseX < pos.x()+size.height() && ui->mouseY > pos.y() && ui->mouseY < pos.y()+size.width());
 }
 
 

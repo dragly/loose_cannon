@@ -39,9 +39,8 @@ public:
 
     enum Team {TeamHumans, TeamEnemies};
     QVector3D unProject(int x, int y);
+    QVector3D unProject(int x, int y, QVector3D oldOffset);
     QPoint project(QVector3D position);
-
-    static const qreal MaxHealth = 100.0;
 
 protected:
     void paintGL ();
@@ -89,8 +88,6 @@ private:
     QHash<Entity*, QList<Entity*> > nodeNeighbors;
 
     QHash<Entity*, Entity*> bulletOwner;
-
-    Entity* testUnit;
 //    QHash<Entity*, QVector3D> bulletTargets;
     Entity* selectedUnit;
     Model *monkeyModel;
@@ -104,6 +101,7 @@ private:
     QPoint dragLastPosition;
     QPoint dragStartPosition;
     bool dragging;
+    bool inMenu;
     QTime dragtime;
     QTime recruittime; //vj: temp for test.
     //bool recruiting;

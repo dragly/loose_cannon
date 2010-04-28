@@ -9,6 +9,9 @@ Cbutton::Cbutton(Window* parent, QPointF pos, QString text) : Controller(parent,
 {
     this->text = text;
 }
+bool Cbutton::hovers() {
+    return (parent->ui->mouseX > pos.x() && parent->ui->mouseX < pos.x()+size.height() && parent->ui->mouseY > pos.y() && parent->ui->mouseY < pos.y()+size.width());
+}
 
 bool Cbutton::click() {
     if (parent->ui->mouseX < pos.x() || parent->ui->mouseX > pos.x()+size.height() || parent->ui->mouseY < pos.y() || parent->ui->mouseY > pos.y()+size.width())
@@ -23,11 +26,19 @@ bool Cbutton::click() {
 void Cbutton::draw(QPainter *painter) {
     QPoint location = pos;
 
+    QColor* color;
+    if (hovers)
+        color = Window::ColorHighlight;
+    else
+        color = Window::ColorBorder;
+
+
+
     if (parent->projected) {
         location += parent->ui->glW->project(*parent->world);
     }
 
-    QPen pen(Window::ColorBorder,parent->ui->glW->height()*0.0025,Qt::SolidLine,Qt::SquareCap,Qt::MiterJoin);
+    QPen pen(Window::ColorHighlight,parent->ui->glW->height()*0.0025,Qt::SolidLine,Qt::SquareCap,Qt::MiterJoin);
 
     painter->setPen(pen);
     painter->setBrush(Window::ColorBackground);

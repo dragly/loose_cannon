@@ -18,6 +18,7 @@ public:
     void draw(QPainter* painter);
     void convertMousePos(int x, int y);
     bool mouseClick();
+    void mouseRelease();
     void addWindow(Window* window);
 private:
     GLWidget* glW;

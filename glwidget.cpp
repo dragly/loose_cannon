@@ -90,6 +90,7 @@ void GLWidget::resetGame() {
     currentTime = 0.0;
     gameOver = false;
     dragging = false;
+    inMenu = false;
     frames = 0;
     score = 0;
     gameOverTime = 0.0;
@@ -665,6 +666,12 @@ QVector3D GLWidget::unProject(int x, int y) {
 void GLWidget::mousePressEvent(QMouseEvent *event)
 {
     if (event->button() == Qt::LeftButton) {
+        if (ui->mouseClick()) {
+            inMenu=true;
+            return;
+        }
+        inMenu=false;
+
         if(gameOver) { // make sure we have had the game over text shown for 1.5 seconds
             qDebug() << currentTime - gameOverTime;
             if(currentTime - gameOverTime > 1.5) {
@@ -700,7 +707,9 @@ void GLWidget::mouseMoveEvent(QMouseEvent* event) {
 }
 
 void GLWidget::mouseReleaseEvent(QMouseEvent *event) {
-    if(!dragging) {
+    if (inMenu) {
+        ui->mouseRelease();
+    } else if(!dragging) {
         if(dragtime.elapsed() > 1000) { // TODO: selection mode
             if((QVector3D(dragStartPosition) - QVector3D(event->pos())).length() > DRAG_DROP_TRESHOLD) { // select several
 

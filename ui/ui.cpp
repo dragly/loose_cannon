@@ -26,24 +26,30 @@ void Ui::draw(QPainter* painter) {
 }
 
 //Ui::mouseMove etc..
+void Ui::mouseRelease() {
+    if (selectedWindow != NULL && selectedWindow->hovers()) {
+        selectedWindow->click();
+    }
+}
+
 bool Ui::mouseClick() {
 
     for (int i=0; i<windows.size(); i++) {
         Window* window = windows.at(i);
-        if (window->click()) {
+        if (window->hovers()) {
             windows.move(i,0);
-            selectedWindow=window; //this one should always be at slot 0, to be drawn on top.
+            selectedWindow=window; //this one should always be at slot 0 to be drawn on top.
             return true;
         }
     }
 
     selectedWindow=NULL;
 
-    //for now just hide all windows?
-    for (int i=0; i<windows.size(); i++) {
-        Window* window = windows.at(i);
-        window->hidden = true;
-    }
+//    //for now just hide all windows?
+//    for (int i=0; i<windows.size(); i++) {
+//        Window* window = windows.at(i);
+//        window->hidden = true;
+//    }
     return false;
 
 }

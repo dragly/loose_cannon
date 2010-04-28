@@ -12,6 +12,8 @@ class Cbutton : public Controller
     Q_OBJECT
 public:
     Cbutton(Window* parent, QPointF pos, QString text);
+
+    bool hovers();
     bool click();
     void move();
     void draw(QPainter *painter);
