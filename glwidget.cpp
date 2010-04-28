@@ -617,12 +617,12 @@ QVector3D GLWidget::unProject(int x, int y) {
 QVector3D GLWidget::unProject(int x, int y, QVector3D oldOffset) {
 
     // project click down to plane
-    // Another attempt
+    // about the mathematics: http://www.opengl.org/sdk/docs/man/xhtml/gluUnProject.xml
     // mainModelView should be our modelview projection matrix
     QMatrix4x4 inv = mainModelView.inverted();
     qreal coordx = (qreal) x / (qreal) width();
     qreal coordy = (qreal) (height() - y) / (qreal) height();
-    // alright, don't ask me why, but we need to do this get the right position on screen
+    // this is correct to do, just inverted of what GluUnProject does for some reason
     coordx *= -2.0;
     coordx += 1.0;
     coordy *= -2.0;
