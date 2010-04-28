@@ -16,6 +16,8 @@
 //    Some parts of the code might still be from Nokia's Qt examples
 //    and are of course Copyright (C) Nokia and/or its subsidiary(-ies).
 
+
+// a
 #ifndef GLWIDGET_H
 #define GLWIDGET_H
 
@@ -71,6 +73,7 @@ private:
     QVector3D dragCursor;
     QVector3D offset;
     QVector3D pressOffset;
+    bool dragBool;
     QMatrix4x4 mainModelView;
 //    GLint gluUnProject(GLdouble winx, GLdouble winy, GLdouble winz,
 //                 const GLdouble model[16], const GLdouble proj[16],
@@ -101,10 +104,9 @@ private:
     QPoint dragLastPosition;
     QPoint dragStartPosition;
     bool dragging;
+    QTime holdtime;
     bool inMenu;
-    QTime dragtime;
-    QTime recruittime; //vj: temp for test.
-    //bool recruiting;
+    QTime recruittime; //vj: temp for test.    //bool recruiting;
     int recruitqueue;
 
     Ui* ui;
