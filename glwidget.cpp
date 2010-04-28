@@ -713,9 +713,10 @@ void GLWidget::mouseMoveEvent(QMouseEvent* event) {
 }
 
 void GLWidget::mouseReleaseEvent(QMouseEvent *event) {
-    if(!(event->buttons() & Qt::LeftButton))
+/*    if(!(event->buttons() & Qt::LeftButton)) {
+        dragging = false;
         return;
-    if (inMenu) {
+    } else*/ if (inMenu) {
         ui->mouseRelease();
     } else if(!dragging) {
         if(holdtime.elapsed() > 1000) { // TODO: selection mode

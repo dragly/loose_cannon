@@ -82,7 +82,7 @@ void Window::draw(QPainter* painter) {
 bool Window::click() {
 
     //check if we hover at all
-    if (ui->mouseX < pos.x() || ui->mouseX > pos.x()+size.height() || ui->mouseY < pos.y() || ui->mouseY > pos.y()+size.width())
+    if (!hovers())
         return false;
 
     //check if we pressed the titlebar
@@ -101,7 +101,14 @@ bool Window::click() {
     return true;
 }
 bool Window::hovers() {
-    return (ui->mouseX > pos.x() && ui->mouseX < pos.x()+size.height() && ui->mouseY > pos.y() && ui->mouseY < pos.y()+size.width());
+    QPoint location = pos;
+
+    if (projected) {
+        location += ui->glW->project(*world);
+    }
+
+    return (ui->mouseX > location.x() && ui->mouseX < location.x()+size.width() && ui->mouseY > location.y() && ui->mouseY < location.y()+size.height());
+
 }
 
 

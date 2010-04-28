@@ -10,11 +10,17 @@ Cbutton::Cbutton(Window* parent, QPointF pos, QString text) : Controller(parent,
     this->text = text;
 }
 bool Cbutton::hovers() {
-    return (parent->ui->mouseX > pos.x() && parent->ui->mouseX < pos.x()+size.height() && parent->ui->mouseY > pos.y() && parent->ui->mouseY < pos.y()+size.width());
+    QPoint location = pos;
+
+    if (parent->projected) {
+        location += parent->ui->glW->project(*parent->world);
+    }
+
+    return (parent->ui->mouseX > location.x() && parent->ui->mouseX < location.x()+size.width() && parent->ui->mouseY > location.y() && parent->ui->mouseY < location.y()+size.height());
 }
 
 bool Cbutton::click() {
-    if (parent->ui->mouseX < pos.x() || parent->ui->mouseX > pos.x()+size.height() || parent->ui->mouseY < pos.y() || parent->ui->mouseY > pos.y()+size.width())
+    if (!hovers())
         return false;
 
     //call our function
@@ -26,8 +32,8 @@ bool Cbutton::click() {
 void Cbutton::draw(QPainter *painter) {
     QPoint location = pos;
 
-    QColor* color;
-    if (hovers)
+    QColor color;
+    if (hovers())
         color = Window::ColorHighlight;
     else
         color = Window::ColorBorder;
@@ -38,7 +44,7 @@ void Cbutton::draw(QPainter *painter) {
         location += parent->ui->glW->project(*parent->world);
     }
 
-    QPen pen(Window::ColorHighlight,parent->ui->glW->height()*0.0025,Qt::SolidLine,Qt::SquareCap,Qt::MiterJoin);
+    QPen pen(color,parent->ui->glW->height()*0.0025,Qt::SolidLine,Qt::SquareCap,Qt::MiterJoin);
 
     painter->setPen(pen);
     painter->setBrush(Window::ColorBackground);
