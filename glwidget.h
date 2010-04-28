@@ -90,6 +90,8 @@ private:
     QHash<Entity*, QList<Entity*> > nodeNeighbors;
 
     QHash<Entity*, Entity*> bulletOwner;
+
+    Entity* testUnit;
 //    QHash<Entity*, QVector3D> bulletTargets;
     Entity* selectedUnit;
     Model *monkeyModel;

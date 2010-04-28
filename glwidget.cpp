@@ -109,6 +109,8 @@ void GLWidget::resetGame() {
     building->health = 1000;
     buildings.append(building);
     initEnemies();
+    testUnit = new Entity(boxModel);
+    testUnit->scale *= 0.1;
     regenerateNodes();
 }
 
@@ -436,6 +438,7 @@ void GLWidget::paintGL()
             node->draw(mainModelView);
         }
     }
+    testUnit->draw(mainModelView);
 
     glDisable(GL_DEPTH_TEST);
     glDisable(GL_CULL_FACE);
@@ -535,6 +538,7 @@ void GLWidget::regenerateNodes() {
 }
 
 QList<QVector3D> GLWidget::findPath(QVector3D startPosition, QVector3D goalPosition) {
+    qDebug() << "Finding path from" << startPosition << "to" << goalPosition;
     // che
     QList<Entity*> closedSet;
     QList<Entity*> openSet;
@@ -543,34 +547,41 @@ QList<QVector3D> GLWidget::findPath(QVector3D startPosition, QVector3D goalPosit
     QHash<Entity*, qreal> fscore;
     QHash<Entity*, Entity*> cameFrom; // 1st came from 2nd parameter
     // first we find the closest node to us
-    qreal lowestStartDistance = 999;
-    qreal lowestEndDistance = 999;
+    qreal lowestStartDistance = 0;
+    qreal lowestEndDistance = 0;
     Entity* startNode;
     Entity* goalNode;
+    bool firstStartDistance = true;
+    bool firstEndDistance = true;
     foreach(Entity* node, nodes) {
         qreal startDistance = (node->position - startPosition).lengthSquared();
         qreal endDistance = (node->position - goalPosition).lengthSquared();
-        if(startDistance < lowestStartDistance) {
+        if(startDistance < lowestStartDistance || firstStartDistance) {
             lowestStartDistance = startDistance;
             startNode = node;
+            firstStartDistance = false;
         }
-        if(endDistance < lowestEndDistance) {
+        if(endDistance < lowestEndDistance || firstEndDistance) {
             lowestEndDistance = endDistance;
             goalNode = node;
+            firstEndDistance = false;
         }
     }
+    qDebug() << "Using points" << startNode->position << "to" << goalNode->position;
     openSet.append(startNode);
     gscore.insert(startNode, 0);
     hscore.insert(startNode, (goalPosition - startPosition).lengthSquared());
     fscore.insert(startNode, (goalPosition - startPosition).lengthSquared());
     while (openSet.count() > 0) {
         Entity* x;
-        qreal lowestFScore = 999;
+        qreal lowestFScore = 0;
+        bool firstFScore = true;
         foreach(Entity* node, openSet) {
             qreal curFscore = fscore.value(node);
-            if(curFscore < lowestFScore) {
+            if(curFscore < lowestFScore || firstFScore) {
                 x = node;
                 lowestFScore = curFscore;
+                firstFScore = false;
             }
         }
         if(x == goalNode) {
@@ -586,6 +597,7 @@ QList<QVector3D> GLWidget::findPath(QVector3D startPosition, QVector3D goalPosit
                 path.prepend(startNode->position); // always add the startnode to begin with
             }
             //            path.prepend(startPosition); // this is completely unecessary! We're already there!
+            qDebug() << "Path found!";
             return path; // return our path
         }
         openSet.removeAll(x);
@@ -613,6 +625,7 @@ QList<QVector3D> GLWidget::findPath(QVector3D startPosition, QVector3D goalPosit
     }
     QList<QVector3D> nonfunctional;
     nonfunctional.append(startPosition);
+    qDebug() << "Path not found!";
     return nonfunctional; // we failed to find a path, just return the point we're at
 }
 QPoint GLWidget::project(QVector3D position) {
@@ -675,6 +688,8 @@ void GLWidget::mousePressEvent(QMouseEvent *event)
         dragCursor = pressCursor;
         dragStartPosition = event->pos();
         pressOffset = offset;
+        testUnit->position = unProject(event->x(), event->y());
+
     }
 }
 // Dragging events
