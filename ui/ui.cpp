@@ -6,14 +6,16 @@
 Ui::Ui(GLWidget* glW)
 {
     this->glW=glW;
-    windows.prepend(new Window(this,0,0,0.2,0.3,Window::TopLeft,true,new QVector3D(1,1,1),true,"Menu"));
+}
 
+void Ui::addWindow(Window* window) {
+    windows.prepend(window);
 }
 
 void Ui::convertMousePos(int x, int y) {
     // scale off of the height
-    mouseX =   (qreal) x/glW->height();
-    mouseY = - (qreal) y/glW->height() + 1;
+    mouseX =   (qreal) x/*/glW->height()*/;
+    mouseY = glW->height() - y;
 }
 
 void Ui::draw(QPainter* painter) {
@@ -25,22 +27,23 @@ void Ui::draw(QPainter* painter) {
 
 //Ui::mouseMove etc..
 bool Ui::mouseClick() {
-    if (selectedWindow != NULL) {
-        selectedWindow->Click();
-    }
 
     for (int i=0; i<windows.size(); i++) {
         Window* window = windows.at(i);
-        if (window->Hovers()) {
+        if (window->click()) {
             windows.move(i,0);
             selectedWindow=window; //this one should always be at slot 0, to be drawn on top.
-            selectedWindow->Click();
             return true;
         }
     }
 
     selectedWindow=NULL;
-    //Stop drawing windows, if not in menu.. or anything else..
+
+    //for now just hide all windows?
+    for (int i=0; i<windows.size(); i++) {
+        Window* window = windows.at(i);
+        window->hidden = true;
+    }
     return false;
 
 }

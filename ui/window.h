@@ -5,16 +5,18 @@
 #include <QtGui/qvector3d.h>
 #include <QSize>
 
-class Element;
 class Ui;
 class QPainter;
 class QColor;
+class Controller;
 
-class Window
-{
+class Window {
 
 public:
+
     friend class Ui;
+    friend class Controller;
+    friend class Cbutton;
 
     //bind the given side of the window to the given side of the screen, offset with the specified x and y coords
     enum Alignments {
@@ -33,19 +35,21 @@ public:
 
     void init(Ui* ui, qreal x, qreal y, qreal sizeX, qreal sizeY, Alignments alignment, bool projected, QVector3D* world, bool titlebar = false, QString title = NULL);
     void draw(QPainter* painter);
-    void Click();
-    bool Hovers();
+    bool click();
+    void hide();
+    void  addController(Controller* controller);
 
 private:
     void drawBackground(QPainter* painter);
-    void drawElements();
+
+    Controller* selectedController;
 
     bool titlebar; //if no, then don't draw a titlebar :P
     QString title;
 
-    QList<Element*> elements;
+    QList<Controller*> controllers;
 
-    int testval;
+    bool hidden; //window is invisible yet not destructed.
 
     QPoint pos;
     QSize size;

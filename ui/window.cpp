@@ -1,5 +1,6 @@
 #include "window.h"
 #include "glwidget.h"
+#include "controller.h"
 
 #include "ui.h"
 
@@ -21,6 +22,9 @@ void Window::init(Ui* ui, qreal x,qreal y, qreal sizeX, qreal sizeY, Alignments 
     this->titlebar = titlebar;
     this->title = title;
     this->projected=projected;
+    this->hidden = false; //temp
+
+    ui->addWindow(this);
 
     //does currently NOT allow resizing of window after construction.
     this->size.setWidth(sizeX * ui->glW->height());
@@ -44,33 +48,58 @@ void Window::init(Ui* ui, qreal x,qreal y, qreal sizeX, qreal sizeY, Alignments 
 
         this->pos.setX(x * ui->glW->height() + xAlig);
         this->pos.setY(y * ui->glW->height() + yAlig);
-} else {
+    } else {
         this->pos.setX(x * ui->glW->height());
         this->pos.setY(y * ui->glW->height());
+    }
 }
 
+void  Window::addController(Controller* controller) {
+    controllers.prepend(controller);
+}
 
+void Window::hide() {
+   // hidden=true;
 }
 
 void Window::draw(QPainter* painter) {
 
-
-    //check if the window is hidden, blablabla
-
+    if (hidden)
+        return;
     //draw the window itself
     drawBackground(painter);
 
     //draw the elements in the window
+    for ( int i = controllers.size()-1;i>=0;i--) { // loop trough all windows in reverse order
+        controllers.at(i)->draw(painter);
+
+    }
 
 }
 
-void Window::Click() {
+bool Window::click() {
 
+    //check if we hover at all
+    if (ui->mouseX < pos.x() || ui->mouseX > pos.x()+size.height() || ui->mouseY < pos.y() || ui->mouseY > pos.y()+size.width())
+        return false;
+
+    //check if we pressed the titlebar
+    if (!projected && /*hovering the titlebar*/ false) {
+        return true;
+    }
+    //check all elements
+    for (int i=0; i<controllers.size(); i++) {
+        Controller* control = controllers.at(i);
+        if (control->click()) {
+            selectedController=control; //this one should always be at slot 0, to be drawn on top.
+            return true;
+        }
+    }
+
+    return true;
 }
 
-bool Window::Hovers() {
-    return false;
-}
+
 
 void Window::drawBackground(QPainter* painter) {
     QPoint location = pos;
@@ -98,7 +127,7 @@ void Window::drawBackground(QPainter* painter) {
     }
 
     //draw the window itself
-    painter->setPen(pen);;
+    painter->setPen(pen);
     painter->setBrush(Window::ColorBackground);
     painter->drawRoundedRect(QRect(location,size),radius,radius);
 
@@ -110,8 +139,4 @@ void Window::drawBackground(QPainter* painter) {
         painter->drawLine(location.x(),location.y()+radius*1.5,location.x()+size.width(),location.y()+radius*1.5);
         painter->drawText(QRect(location.x(),location.y(),size.width(),radius*1.5),Qt::AlignHCenter | Qt::AlignBottom, title);
     }
-}
-
-void Window::drawElements() {
-
 }
