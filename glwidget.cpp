@@ -447,25 +447,27 @@ void GLWidget::paintGL()
         // all sizes are relative to the width and height of the screen to create a consistent experience on all devices
         // health bars are ugly and take up lots of screen space - health should probably be represented in a better way in the future
         // only on selection of units, for instance?
-        qreal boxWidth = width() * 0.07; // how wide is the box?
-        qreal boxHeight = width() * 0.008; // how tall is the box?
-        qreal yOffset = width() * 0.05; // how far above do we print the box?
-        qreal fillWidth = boxWidth * aunit->health / MAX_HEALTH;
-        QVector3D position = mainModelView * aunit->position;
-        QPoint projected = project(position);
-        qreal strokeX = projected.x() - boxWidth / 2.0;
-        qreal strokeY = projected.y() - yOffset;
-        painter.setPen(QPen(QColor(10, 10, 10, 120))); // dark alpha
-        painter.setBrush(QBrush(QColor(20, 30, 40, 100)));
-        painter.drawRoundedRect((int)strokeX, (int)strokeY, boxWidth, boxHeight, 3, 3, Qt::AbsoluteSize); // a box above each unit
-        qreal healthColor = 220 * aunit->health / MAX_HEALTH; // a bit dark color :)
-        if(width() > 800) { // fix for small screens
-            painter.setPen(QPen(QColor(20,30,40,100))); // thin stroke
-        } else {
-            painter.setPen(QPen(QColor(0,0,0,0))); // no stroke
+        if(aunit == selectedUnit) {
+            qreal boxWidth = width() * 0.07; // how wide is the box?
+            qreal boxHeight = width() * 0.008; // how tall is the box?
+            qreal yOffset = width() * 0.05; // how far above do we print the box?
+            qreal fillWidth = boxWidth * aunit->health / MAX_HEALTH;
+            QVector3D position = mainModelView * aunit->position;
+            QPoint projected = project(position);
+            qreal strokeX = projected.x() - boxWidth / 2.0;
+            qreal strokeY = projected.y() - yOffset;
+            painter.setPen(QPen(QColor(10, 10, 10, 120))); // dark alpha
+            painter.setBrush(QBrush(QColor(20, 30, 40, 100)));
+            painter.drawRoundedRect((int)strokeX, (int)strokeY, boxWidth, boxHeight, 3, 3, Qt::AbsoluteSize); // a box above each unit
+            qreal healthColor = 220 * aunit->health / MAX_HEALTH; // a bit dark color :)
+            if(width() > 800) { // fix for small screens
+                painter.setPen(QPen(QColor(20,30,40,100))); // thin stroke
+            } else {
+                painter.setPen(QPen(QColor(0,0,0,0))); // no stroke
+            }
+            painter.setBrush(QBrush(QColor(220 - healthColor, healthColor, 10, 210))); // a color dependent on health
+            painter.drawRoundedRect((int)strokeX + 2, (int)strokeY + 2, fillWidth - 4, boxHeight - 4, 3, 3, Qt::AbsoluteSize);
         }
-        painter.setBrush(QBrush(QColor(220 - healthColor, healthColor, 10, 210))); // a color dependent on health
-        painter.drawRoundedRect((int)strokeX + 2, (int)strokeY + 2, fillWidth - 4, boxHeight - 4, 3, 3, Qt::AbsoluteSize);
     }
 
     painter.setPen(Qt::blue);
