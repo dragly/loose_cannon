@@ -16,10 +16,10 @@ void Ui::convertMousePos(int x, int y) {
     mouseY = - y/glW->height() + 1;
 }
 
-void Ui::Draw(QPainter* painter) {
+void Ui::draw(QPainter* painter) {
 
     for ( int i = windows.size()-1;i>=0;i--) { // loop trough all windows in reverse order
-        windows.at(i)->Draw(painter);
+        windows.at(i)->draw(painter);
     }
 }
 

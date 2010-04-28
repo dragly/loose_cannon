@@ -12,7 +12,7 @@ class Ui
     friend class Window;
 public:
     Ui(GLWidget* glW);
-    void Draw(QPainter* painter);
+    void draw(QPainter* painter);
     void convertMousePos(int x, int y);
     bool mouseClick();
 private:

@@ -31,7 +31,7 @@ public:
     Window(Ui* ui, qreal x, qreal y, qreal sizeX, qreal sizeY, Alignments alignment, bool titlebar = false, QString title = NULL);
 
     void init(Ui* ui, qreal x, qreal y, qreal sizeX, qreal sizeY, Alignments alignment, bool projected, QVector3D* world, bool titlebar = false, QString title = NULL);
-    void Draw(QPainter* painter);
+    void draw(QPainter* painter);
     void Click();
     bool Hovers();
 

@@ -27,6 +27,8 @@
 #include <string.h>
 #include <time.h>
 
+// constants (are nasty, should probably be defined in some other, global way)
+const qreal MAX_HEALTH = 100;
 const qreal ENEMY_SPEED = 3.0; // units/s
 const qreal ENEMY_ACCELERATION = 10.0; // units/s^2
 const qreal ENEMY_FRICTION_SIDE = 6.0;
@@ -36,7 +38,6 @@ const qreal DT = 0.01; // the timestep
 const qreal ROTATE_SPEED = 180; // degrees/s
 const qreal BULLET_SPEED = 8; // units/s
 const qreal NUMBER_OF_ENEMIES = 1;
-QVector3D GRAVITY(0, 0, -20); // units/s^2
 const qreal CLICK_RADIUS = 2;
 
 // gui
@@ -48,6 +49,7 @@ const qreal EXPLOSION_DAMAGE = 30;
 const qreal EXPLOSION_FORCE = 20;
 const qreal FIRE_DISTANCE = 7;
 const qreal BULLET_SPAWNTIME = 2;
+QVector3D GRAVITY(0, 0, -20); // units/s^2
 
 GLWidget::~GLWidget()
 {
@@ -122,7 +124,7 @@ void GLWidget::resetEnemy(Entity* enemy) {
     qreal randomAngle = qrand() * 360; // set random position
     enemy->position = QVector3D(cos(randomAngle * M_PI / 180) * ENEMY_SPAWNDISTANCE, sin(randomAngle * M_PI / 180) * ENEMY_SPAWNDISTANCE, 0.0); // set random position
     qDebug() << "Position enemy:" << enemy->position;
-    enemy->health = 100; // reset health
+    enemy->health = MAX_HEALTH; // reset health
     if(buildings.count() > 0)
         enemy->currentTarget = buildings.first(); // attack any buildling
     else if(units.count() > 0)
@@ -387,6 +389,7 @@ void GLWidget::paintGL()
 
     QPainter painter;
     painter.begin(this);
+    painter.setRenderHint(QPainter::HighQualityAntialiasing, true);
     painter.beginNativePainting();
 
     glClearColor(0.88f, 0.88f, 0.9f, 1.0f);
@@ -439,6 +442,22 @@ void GLWidget::paintGL()
 
     painter.endNativePainting();
 
+    foreach(Entity *aunit, allUnits) {
+        qreal boxWidth = 100; // how wide is the box?
+        qreal boxHeight = 10; // how tall is the box?
+        qreal yOffset = 100; // how far above do we print the box?
+        qreal fillWidth = boxWidth * aunit->health / MAX_HEALTH;
+        QVector3D position = mainModelView * aunit->position;
+        QPoint projected = project(position);
+        qreal strokeX = projected.x() - boxWidth / 2.0;
+        qreal strokeY = projected.y() - yOffset;
+        painter.setPen(QPen(QBrush(QColor(10, 10, 10, 120)), 1)); // dark alpha
+        painter.setBrush(QBrush(QColor(20, 30, 40, 100)));
+        painter.drawRoundedRect((int)strokeX, (int)strokeY, boxWidth, boxHeight, 2, 2, Qt::AbsoluteSize); // a box above each unit
+        qreal healthColor = 150 * aunit->health / MAX_HEALTH; // a bit dark color :)
+        painter.setBrush(QBrush(QColor(200 - healthColor, healthColor, 10, 210))); // a color dependent on health
+        painter.drawRoundedRect((int)strokeX + 2, (int)strokeY + 2, fillWidth - 4, boxHeight - 4, 2, 2, Qt::AbsoluteSize);
+    }
 
     painter.setPen(Qt::blue);
     QString framesPerSecond;
@@ -459,7 +478,7 @@ void GLWidget::paintGL()
     //    painter.drawText(20,80,"Verts: " + QString::number(cannon->model->vertices[20]));
     //    painter.drawText(20, 80, "Verts: " + QString::number(cannon->vertices.first().x()));
 
-    ui->Draw(&painter);
+    ui->draw(&painter);
 
     painter.end();
 
@@ -585,11 +604,16 @@ QList<QVector3D> GLWidget::findPath(QVector3D startPosition, QVector3D goalPosit
     nonfunctional.append(startPosition);
     return nonfunctional; // we failed to find a path, just return the point we're at
 }
-
-QVector3D GLWidget::project(int x, int y) {
-    return project(x,y,offset);
+QPoint GLWidget::project(QVector3D position) {
+    qreal winX = width() * (position.x() + 1) / 2;
+    qreal winY = height() - height() * (position.y() + 1) / 2;
+    return QPoint((int)winX, (int)winY);
 }
-QVector3D GLWidget::project(int x, int y, QVector3D oldOffset) {
+
+QVector3D GLWidget::unProject(int x, int y) {
+    return unProject(x,y,offset);
+}
+QVector3D GLWidget::unProject(int x, int y, QVector3D oldOffset) {
 
     // project click down to plane
     // Another attempt
@@ -635,7 +659,7 @@ void GLWidget::mousePressEvent(QMouseEvent *event)
         }
         dragtime.restart();
 
-        pressCursor = project(event->x(), event->y());
+        pressCursor = unProject(event->x(), event->y());
         dragCursor = pressCursor;
         dragStartPosition = event->pos();
         pressOffset = offset;
@@ -647,7 +671,7 @@ void GLWidget::mouseMoveEvent(QMouseEvent* event) {
 
     if(!(event->buttons() & Qt::LeftButton))
         return;
-    QVector3D currentCursor = project(event->x(), event->y(), pressOffset);
+    QVector3D currentCursor = unProject(event->x(), event->y(), pressOffset);
     if(dragging) {
         offset -= currentCursor - dragCursor; // offset is negative to get the "drag and drop"-feeling
     } else {

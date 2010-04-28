@@ -42,7 +42,7 @@ void Window::init(Ui* ui, qreal x,qreal y, qreal sizeX, qreal sizeY, Alignments 
     this->pos.setY(y * ui->glW->height() + yAlig);
 }
 
-void Window::Draw(QPainter* painter) {
+void Window::draw(QPainter* painter) {
 
     //check if the window is hidden, blablabla
 
@@ -77,7 +77,6 @@ void Window::drawBackground(QPainter* painter) {
     painter->setPen(Qt::blue);
     painter->setBackgroundMode(Qt::OpaqueMode);
     painter->drawRoundedRect(QRect(pos,size),radius,radius);
-
     //painter.drawRects();
     //painter.drawRoundRect();
 //    QString framesPerSecond;

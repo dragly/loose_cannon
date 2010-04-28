@@ -38,8 +38,10 @@ public:
     ~GLWidget();
 
     enum Team {TeamHumans, TeamEnemies};
-    QVector3D project(int x, int y);
-    QVector3D project(int x, int y, QVector3D oldOffset);
+    QVector3D unProject(int x, int y);
+    QVector3D unProject(int x, int y, QVector3D oldOffset);
+    QPoint project(QVector3D position);
+
 protected:
     void paintGL ();
     void initializeGL ();
