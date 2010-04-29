@@ -22,10 +22,8 @@ bool Cbutton::hovers() {
 bool Cbutton::click() {
     if (!hovers())
         return false;
-
     //call our function
     emit btnClicked();
-
     return true;
 }
 

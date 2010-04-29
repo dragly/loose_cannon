@@ -78,6 +78,7 @@ GLWidget::GLWidget(QWidget *parent) : QGLWidget(parent)
     camera = QVector3D(5, -7, 20);
     dragBool = false;
     explosionSoundTime.restart();
+    painter = new QPainter();
     // timer, should be set last, just in case
     timer = new QTimer(this);
     QObject::connect(timer, SIGNAL(timeout()), this, SLOT(updateGL()));
@@ -110,9 +111,9 @@ void GLWidget::resetGame() {
     Entity* building = new Entity(boxModel, Entity::TypeBuilding);
     building->position = QVector3D(-4,4,0);
     building->health = 1000;
-    Window* baseMenu = new Window(ui,0,0,0.2,0.2,Window::TopLeft,true,&building->position,true,"Base");
-    Cbutton* btn = new Cbutton(baseMenu,QPointF(0.015,0.05),"Recruit unit");
-    connect(btn,SIGNAL(Cbutton::btnClicked()),SLOT(recruitUnit()));
+    baseMenu = new Window(ui,0,0,0.2,0.2,Window::TopLeft,true,&building->position,true,"Base");
+    btn = new Cbutton(baseMenu,QPointF(0.015,0.05),"Recruit unit");
+    connect(btn, SIGNAL(btnClicked()),SLOT(recruitUnit()));
     building->addMenuPoitner(baseMenu);
     buildings.append(building);
     initEnemies();
@@ -400,10 +401,9 @@ void GLWidget::paintGL()
     }
 
 
-    QPainter painter;
-    painter.begin(this);
-    painter.beginNativePainting();
-    painter.setRenderHint(QPainter::HighQualityAntialiasing, true);
+    painter->begin(this);
+    painter->beginNativePainting();
+    painter->setRenderHint(QPainter::HighQualityAntialiasing, true);
 
     glClearColor(0.88f, 0.88f, 0.9f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -454,7 +454,7 @@ void GLWidget::paintGL()
     glDisable(GL_DEPTH_TEST);
     glDisable(GL_CULL_FACE);
 
-    painter.endNativePainting();
+    painter->endNativePainting();
 
     foreach(Entity *aunit, allUnits) { // draw health bars
         // this function could probably have a few less calculations - some values may be set at resizeGL instead
@@ -470,42 +470,42 @@ void GLWidget::paintGL()
             QPoint projected = project(aunit->position);
             qreal strokeX = projected.x() - boxWidth / 2.0;
             qreal strokeY = projected.y() - yOffset;
-            painter.setPen(QPen(QColor(10, 10, 10, 120))); // dark alpha
-            painter.setBrush(QBrush(QColor(20, 30, 40, 100)));
-            painter.drawRoundedRect((int)strokeX, (int)strokeY, boxWidth, boxHeight, 3, 3, Qt::AbsoluteSize); // a box above each unit
+            painter->setPen(QPen(QColor(10, 10, 10, 120))); // dark alpha
+            painter->setBrush(QBrush(QColor(20, 30, 40, 100)));
+            painter->drawRoundedRect((int)strokeX, (int)strokeY, boxWidth, boxHeight, 3, 3, Qt::AbsoluteSize); // a box above each unit
             qreal healthColor = 220 * aunit->health / MaxHealth; // a bit dark color :)
             if(width() > 800) { // fix for small screens
-                painter.setPen(QPen(QColor(20,30,40,100))); // thin stroke
+                painter->setPen(QPen(QColor(20,30,40,100))); // thin stroke
             } else {
-                painter.setPen(QPen(QColor(0,0,0,0))); // no stroke
+                painter->setPen(QPen(QColor(0,0,0,0))); // no stroke
             }
-            painter.setBrush(QBrush(QColor(220 - healthColor, healthColor, 10, 210))); // a color dependent on health
-            painter.drawRoundedRect((int)strokeX + 2, (int)strokeY + 2, fillWidth - 4, boxHeight - 4, 3, 3, Qt::AbsoluteSize);
+            painter->setBrush(QBrush(QColor(220 - healthColor, healthColor, 10, 210))); // a color dependent on health
+            painter->drawRoundedRect((int)strokeX + 2, (int)strokeY + 2, fillWidth - 4, boxHeight - 4, 3, 3, Qt::AbsoluteSize);
         }
     }
 
-    painter.setPen(Qt::blue);
+    painter->setPen(Qt::blue);
     QString framesPerSecond;
     framesPerSecond.setNum(frames /(frametime.elapsed() / 1000.0), 'f', 2);
-    painter.drawText(20, 40, framesPerSecond + " fps");
-    painter.drawText(20, 60, "cursor: " + QString::number(pressCursor.x()) + ", " + QString::number(pressCursor.y()) + ", " + QString::number(pressCursor.z()));
-    painter.drawText(20, 80, "Unit queue: " + QString::number(recruitqueue));
-    painter.drawText(width() - 200, 60, "score: " + QString::number(score));
-    painter.drawText(width() - 200, 80, "enemies: " + QString::number(enemies.count()));
+    painter->drawText(20, 40, framesPerSecond + " fps");
+    painter->drawText(20, 60, "cursor: " + QString::number(pressCursor.x()) + ", " + QString::number(pressCursor.y()) + ", " + QString::number(pressCursor.z()));
+    painter->drawText(20, 80, "Unit queue: " + QString::number(recruitqueue));
+    painter->drawText(width() - 200, 60, "score: " + QString::number(score));
+    painter->drawText(width() - 200, 80, "enemies: " + QString::number(enemies.count()));
 
+    ui->draw(painter);
 
     if(gameOver) {
         QFont font;
         font.setPixelSize(height() / 4);
-        painter.setFont(font);
-        painter.drawText(QRectF(width() / 4, height() / 4, width() / 2, height() / 2),Qt::AlignCenter,tr("Game\nOver!"));
+        painter->setFont(font);
+        painter->drawText(QRectF(width() / 4, height() / 4, width() / 2, height() / 2),Qt::AlignCenter,tr("Game\nOver!"));
     }
-    //    painter.drawText(20,80,"Verts: " + QString::number(cannon->model->vertices[20]));
-    //    painter.drawText(20, 80, "Verts: " + QString::number(cannon->vertices.first().x()));
+    //    painter->drawText(20,80,"Verts: " + QString::number(cannon->model->vertices[20]));
+    //    painter->drawText(20, 80, "Verts: " + QString::number(cannon->vertices.first().x()));
 
-    ui->draw(&painter);
 
-    painter.end();
+    painter->end();
 
 
     swapBuffers();
@@ -783,7 +783,6 @@ void GLWidget::mouseReleaseEvent(QMouseEvent *event) {
 }
 void GLWidget::recruitUnit(/*location ? */) {
     /*if (enoughCash)*/  //one of your buildings. For now, just build cannons.
-
     if (recruitqueue == 0) {
         recruittime.restart();
     }
@@ -794,4 +793,6 @@ void GLWidget::recruitUnit(/*location ? */) {
 
 void GLWidget::resizeGL(int width, int height) {
     aspectRatio = (qreal) width / (qreal) height;
+    baseMenu->resize();
+    btn->resize();
 }

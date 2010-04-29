@@ -28,9 +28,10 @@ void Window::init(Ui* ui, qreal x,qreal y, qreal sizeX, qreal sizeY, Alignments 
 
     ui->addWindow(this);
 
-    //does currently NOT allow resizing of window after construction.
-    this->size.setWidth(sizeX * ui->glW->height());
-    this->size.setHeight(sizeY * ui->glW->height());
+    qDebug() << "Sizes!" << sizeX;
+    relativeSize.setWidth(sizeX);
+    relativeSize.setHeight(sizeY);
+    resize();
 
   if (!projected) {
         qreal xAlig, yAlig;
@@ -54,6 +55,12 @@ void Window::init(Ui* ui, qreal x,qreal y, qreal sizeX, qreal sizeY, Alignments 
         this->pos.setX(x * ui->glW->height());
         this->pos.setY(y * ui->glW->height());
     }
+}
+
+void Window::resize() {
+    size.setWidth(relativeSize.width() * ui->glW->height());
+    size.setHeight(relativeSize.height() * ui->glW->height());
+    qDebug() << relativeSize << size;
 }
 
 void  Window::addController(Controller* controller) {
@@ -143,10 +150,12 @@ void Window::drawBackground(QPainter* painter) {
         painter->drawRect(location.x(),location.y() + radius,size.width(),radius/2);
     }
 
+
     //draw the window itself
     painter->setPen(pen);
     painter->setBrush(Window::ColorBackground);
     painter->drawRoundedRect(QRect(location,size),radius,radius);
+//    qDebug() << size;
 
     //draw the title and titlebar line
     if (titlebar) {

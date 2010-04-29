@@ -40,6 +40,8 @@ public:
     void show();
     void  addController(Controller* controller);
     bool hovers();
+    void resize();
+    QVector3D* world; //IMPORTANT: This is a pointer, so it will crash if the location disappears, could do an entity pointer instead?
 
 private:
     void drawBackground(QPainter* painter);
@@ -55,9 +57,9 @@ private:
 
     QPoint pos;
     QSize size;
+    QSizeF relativeSize;
     Ui* ui;
     bool projected;
-    QVector3D* world; //IMPORTANT: This is a pointer, so it will crash if the location disappears, could do an entity pointer instead?
 
     static const QColor ColorBackground;
     static const QColor ColorBorder;

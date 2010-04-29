@@ -19,9 +19,12 @@ public:
     virtual bool click();
     virtual void move();
     virtual void draw(QPainter *painter);
+    void resize();
 protected:
     QPoint pos;
+    QPointF posRelative;
     QSize size;
+    QSizeF sizeRelative;
     Window* parent;
 };
 

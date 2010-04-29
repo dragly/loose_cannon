@@ -3,17 +3,20 @@
 #include "ui.h"
 #include "glwidget.h"
 
-Controller::Controller(Window* parent, QPointF relativePos,QSizeF size)
+Controller::Controller(Window* parent, QPointF posRelative,QSizeF sizeRelative)
 {
     this->parent = parent;
 
     parent->addController(this);
 
-    this->pos.setX(parent->pos.x() + relativePos.x() * parent->ui->glW->height());
-    this->pos.setY(parent->pos.y() + relativePos.y() * parent->ui->glW->height());
-
-    this->size.setWidth(size.width() * parent->ui->glW->height());
-    this->size.setHeight(size.height() * parent->ui->glW->height());
+    this->posRelative = posRelative;
+    this->sizeRelative = sizeRelative;
+}
+void Controller::resize() {
+    size.setWidth(sizeRelative.width() * parent->ui->glW->height());
+    size.setHeight(sizeRelative.height() * parent->ui->glW->height());
+    pos.setX(parent->pos.x() + posRelative.x() * parent->ui->glW->height());
+    pos.setY(parent->pos.y() + posRelative.y() * parent->ui->glW->height());
 }
 
 bool Controller::click() {

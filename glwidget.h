@@ -32,6 +32,7 @@
 
 class Ui;
 class Bubble;
+class Cbutton;
 class GLWidget : public QGLWidget {
 
     Q_OBJECT
@@ -88,6 +89,10 @@ private:
     QList<Entity*> units;
     QList<Entity*> buildings;
     QList<Entity*> bullets;
+    QPainter *painter;
+
+    Window* baseMenu;
+    Cbutton* btn;
 
     QList<Entity*> nodes; // should probably have their own class - using Entity for convenience
     QHash<Entity*, QList<Entity*> > nodeNeighbors;
