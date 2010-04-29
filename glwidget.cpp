@@ -56,13 +56,13 @@ GLWidget::~GLWidget()
 
 GLWidget::GLWidget(QWidget *parent) : QGLWidget(parent)
 {
-//    soundbank = new KGrSoundBank(2);
-//    expsound = soundbank->loadSound("sounds/bomb-02.wav");
-//    expsound2 = soundbank->loadSound("sounds/bomb-02.ogg");
-//    qDebug() << QSound::isAvailable();
-//    explosion = Phonon::createPlayer(Phonon::GameCategory, Phonon::MediaSource("sounds/explosion-02.ogg"));
-//    explosion2 = Phonon::createPlayer(Phonon::GameCategory, Phonon::MediaSource("sounds/bomb-02.ogg"));
-//    explosion3 = Phonon::createPlayer(Phonon::GameCategory, Phonon::MediaSource("sounds/bomb-03.ogg"));
+    //    soundbank = new KGrSoundBank(2);
+    //    expsound = soundbank->loadSound("sounds/bomb-02.wav");
+    //    expsound2 = soundbank->loadSound("sounds/bomb-02.ogg");
+    //    qDebug() << QSound::isAvailable();
+    //    explosion = Phonon::createPlayer(Phonon::GameCategory, Phonon::MediaSource("sounds/explosion-02.ogg"));
+    //    explosion2 = Phonon::createPlayer(Phonon::GameCategory, Phonon::MediaSource("sounds/bomb-02.ogg"));
+    //    explosion3 = Phonon::createPlayer(Phonon::GameCategory, Phonon::MediaSource("sounds/bomb-03.ogg"));
     qsrand(time(NULL));
     setAttribute(Qt::WA_PaintOnScreen);
     setAttribute(Qt::WA_NoSystemBackground);
@@ -232,7 +232,7 @@ void GLWidget::paintGL()
                     }
                 } // foreach enemy
                 if(bullet->position.z() < 0 || hitUnit) {
-//                    soundbank->play(expsound, 0);
+                    //                    soundbank->play(expsound, 0);
                     // TODO: Add sound system.
                     // TODO: Animate explosion with sprites as seen here: http://news.developer.nvidia.com/2007/01/tips_strategies.html
                     foreach(Entity *hitUnit, allDestructibles) {
@@ -309,7 +309,7 @@ void GLWidget::paintGL()
                     }
                     if(aunit->currentTarget != NULL) {
                         if((aunit->currentTarget->position - aunit->position).length() < FireDistance) {
-//                            aunit->velocity *= 0;
+                            //                            aunit->velocity *= 0;
                             doMovement = false;
                             aunit->useMoveTarget = false;
                             aunit->waypoints.clear();
@@ -328,7 +328,7 @@ void GLWidget::paintGL()
                             qDebug() << "Going to:" << aunit->moveTarget;
                             doMovement = true;
                         } else { // we are too close and we have no more places to go - lets stop!
-//                                aunit->velocity *= 0;
+                            //                                aunit->velocity *= 0;
                             aunit->useMoveTarget = false; // we are no longer to move towards a target since we are already there!
                             doMovement = false;
                         }
@@ -694,79 +694,79 @@ void GLWidget::mousePressEvent(QMouseEvent *event)
 void GLWidget::mouseMoveEvent(QMouseEvent* event) {
     ui->convertMousePos(event->x(),event->y());
 
-    if(!(event->buttons() & Qt::LeftButton))
-        return;
-    // this should be improved. This method is not accurate.
-    QVector3D currentCursor = unProject(event->x(), event->y());
-    if(dragging) {
-        if(!dragBool) {
-            offset -= 2 * (currentCursor - dragCursor); // offset is negative to get the "drag and drop"-feeling
-            dragBool = true;
+    if (event->buttons() & Qt::LeftButton) {
+        // this should be improved. This method is not accurate.
+        QVector3D currentCursor = unProject(event->x(), event->y());
+        if(dragging) {
+            if(!dragBool) {
+                offset -= 2 * (currentCursor - dragCursor); // offset is negative to get the "drag and drop"-feeling
+                dragBool = true;
+            } else {
+                dragBool = false;
+            }
         } else {
-            dragBool = false;
-        }
-    } else {
-        if(holdtime.elapsed() > 1000) { // TODO: selection mode
+            if(holdtime.elapsed() > 1000) { // TODO: selection mode
 
-        } else if((QVector3D(dragStartPosition) - QVector3D(event->pos())).length() > DragDropTreshold) { // if we have been dragging for more than ten pixels
-            dragging = true;
+            } else if((QVector3D(dragStartPosition) - QVector3D(event->pos())).length() > DragDropTreshold) { // if we have been dragging for more than ten pixels
+                dragging = true;
+            }
         }
+        dragCursor = currentCursor;
     }
-    dragCursor = currentCursor;
 }
 
 void GLWidget::mouseReleaseEvent(QMouseEvent *event) {
-    if(!(event->buttons() & Qt::LeftButton))
-        return;
-    if(!dragging) {
-        if(holdtime.elapsed() > 1000) { // TODO: selection mode
-            if((QVector3D(dragStartPosition) - QVector3D(event->pos())).length() > DragDropTreshold) { // select several
+    if (event->button() == Qt::LeftButton) {
+        if(!dragging) {
+            if(holdtime.elapsed() > 1000) { // TODO: selection mode
+                if((QVector3D(dragStartPosition) - QVector3D(event->pos())).length() > DragDropTreshold) { // select several
 
-            } else { // deselect all
+                } else { // deselect all
 
-            }
-        } else {
-            QVector3D cursor = pressCursor;
-            bool foundUnit = false;
-            qreal lastLength = ClickRadius;
-            QList<Entity*> allUnits;
-            allUnits.append(enemies);
-            allUnits.append(units);
-            allUnits.append(buildings);
-            foreach(Entity* aunit, allUnits)  { // did we click on an enemy?
-                qreal length = (cursor - aunit->position).length();
-                if(length < ClickRadius && length < lastLength) {
-                    if(aunit->team == TeamEnemies) {
-                        selectedUnit->currentTarget = aunit;
-                        selectedUnit->useMoveTarget = false; // we shall no longer use our moveTarget variable
-                    } else if(aunit->team == TeamHumans) {
-                        if (aunit->type == Entity::TypeUnit) {
-                            selectedUnit = aunit;
-                        } else /*if (enoughCash)*/ { //one of your buildings. For now, just build cannons.
-                             //cash-= price;
-                            if (recruitqueue == 0) {
-                                recruittime.restart();
+                }
+            } else {
+                QVector3D cursor = pressCursor;
+                bool foundUnit = false;
+                qreal lastLength = ClickRadius;
+                QList<Entity*> allUnits;
+                allUnits.append(enemies);
+                allUnits.append(units);
+                allUnits.append(buildings);
+                foreach(Entity* aunit, allUnits)  { // did we click on an enemy?
+                    qreal length = (cursor - aunit->position).length();
+                    if(length < ClickRadius && length < lastLength) {
+                        if(aunit->team == TeamEnemies) {
+                            selectedUnit->currentTarget = aunit;
+                            selectedUnit->useMoveTarget = false; // we shall no longer use our moveTarget variable
+                        } else if(aunit->team == TeamHumans) {
+                            if (aunit->type == Entity::TypeUnit) {
+                                selectedUnit = aunit;
+                            } else /*if (enoughCash)*/ { //one of your buildings. For now, just build cannons.
+                                //cash-= price;
+                                if (recruitqueue == 0) {
+                                    recruittime.restart();
+                                }
+
+                                recruitqueue++;
                             }
-
-                            recruitqueue++;
                         }
-                    }
 
-                    foundUnit = true;
-                    lastLength = length;
+                        foundUnit = true;
+                        lastLength = length;
+                    }
+                }
+
+                if(!foundUnit) { // if we didn't find anything, we assume that we want to move the selected unit
+                    selectedUnit->currentTarget = NULL;
+                    selectedUnit->waypoints = findPath(selectedUnit->position, cursor); // set the move target of the unit to this point
+                    selectedUnit->moveTarget = selectedUnit->waypoints.first();
+                    selectedUnit->useMoveTarget = true; // let's move!
+                    qDebug() << "New path:" << selectedUnit->waypoints;
                 }
             }
-
-            if(!foundUnit) { // if we didn't find anything, we assume that we want to move the selected unit
-                selectedUnit->currentTarget = NULL;
-                selectedUnit->waypoints = findPath(selectedUnit->position, cursor); // set the move target of the unit to this point
-                selectedUnit->moveTarget = selectedUnit->waypoints.first();
-                selectedUnit->useMoveTarget = true; // let's move!
-                qDebug() << "New path:" << selectedUnit->waypoints;
-            }
         }
+        dragging = false;
     }
-    dragging = false;
 }
 
 void GLWidget::resizeGL(int width, int height) {
