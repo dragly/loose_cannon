@@ -89,7 +89,6 @@ private:
     QList<Entity*> units;
     QList<Entity*> buildings;
     QList<Entity*> bullets;
-    QPainter *painter;
 
     Window* baseMenu;
     Cbutton* btn;
