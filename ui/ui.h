@@ -20,11 +20,13 @@ public:
     bool mouseClick();
     void mouseRelease();
     void addWindow(Window* window);
+    bool isMouseDown();
 private:
     GLWidget* glW;
     qreal mouseX,mouseY;
     QList<Window*> windows;
     Window* selectedWindow;
+    bool mouseDown;
 };
 
 #endif // UI_H

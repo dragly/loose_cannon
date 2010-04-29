@@ -703,7 +703,7 @@ void GLWidget::mousePressEvent(QMouseEvent *event)
 void GLWidget::mouseMoveEvent(QMouseEvent* event) {
     ui->convertMousePos(event->x(),event->y());
 
-    if (event->buttons() & Qt::LeftButton) {
+    if (event->buttons() & Qt::LeftButton && !inMenu) {
         // this should be improved. This method is not accurate.
         QVector3D currentCursor = unProject(event->x(), event->y());
         if(dragging) {
