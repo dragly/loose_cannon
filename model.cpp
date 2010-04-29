@@ -29,6 +29,8 @@ Entity::Entity(Model *model) {
 Entity::Entity(Model *model, int type) {
     initEntity(model);
     this->type = type;
+
+    if (type == Entity::TypeBuilding)
 }
 
 void Entity::initEntity(Model *model) {

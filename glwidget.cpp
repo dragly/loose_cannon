@@ -676,6 +676,7 @@ QVector3D GLWidget::unProject(int x, int y) {
 //        deselect: press and hold for one second
 void GLWidget::mousePressEvent(QMouseEvent *event)
 {
+    ui->convertMousePos(event->x(),event->y());
     if (event->button() == Qt::LeftButton) {
         if (ui->mouseClick()) {
             inMenu=true;
@@ -726,6 +727,7 @@ void GLWidget::mouseMoveEvent(QMouseEvent* event) {
 }
 
 void GLWidget::mouseReleaseEvent(QMouseEvent *event) {
+    ui->convertMousePos(event->x(),event->y());
     if (event->button() == Qt::LeftButton) {
         if (inMenu) {
             ui->mouseRelease();

@@ -47,6 +47,8 @@ signals:
 public slots:
 
 };
+
+
 class Model
 {
 public:
@@ -75,6 +77,8 @@ private:
     int texCoordAttr;
     int textureUniform;
 };
+
+class Window;
 
 class Entity
 {
@@ -108,11 +112,14 @@ public:
     bool useMoveTarget; // shall we move to a target? Often set to false after currentTarget has been set.
     qreal lastBulletFired;
 
+
+
     int team;
     int type;
 
 private:
     Model *model;
+    Window* menu; //export if we make building a child entity class
 };
 
 #endif // MODEL_H
