@@ -584,9 +584,10 @@ QList<QVector3D> GLWidget::findPath(QVector3D startPosition, QVector3D goalPosit
         bool firstFScore = true;
         foreach(Entity* node, openSet) {
             qreal curFscore = fscore.value(node);
-            if(curFscore < lowestFScore) {
+            if(curFscore < lowestFScore || firstFScore) {
                 x = node;
                 lowestFScore = curFscore;
+                firstFScore = false;
             }
         }
         if(x == goalNode) {
