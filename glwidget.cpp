@@ -77,7 +77,6 @@ GLWidget::GLWidget(QWidget *parent) : QGLWidget(parent)
     // initial values
     camera = QVector3D(5, -7, 20);
     dragBool = false;
-    resetGame();
     explosionSoundTime.restart();
     // timer, should be set last, just in case
     timer = new QTimer(this);
@@ -111,6 +110,10 @@ void GLWidget::resetGame() {
     Entity* building = new Entity(boxModel, Entity::TypeBuilding);
     building->position = QVector3D(-4,4,0);
     building->health = 1000;
+    Window* baseMenu = new Window(ui,0,0,0.2,0.2,Window::TopLeft,true,&building->position,true,"Base");
+    Cbutton* btn = new Cbutton(baseMenu,QPointF(0.015,0.05),"Recruit unit");
+    connect(btn,SIGNAL(Cbutton::btnClicked()),SLOT(recruitUnit()));
+    building->addMenuPoitner(baseMenu);
     buildings.append(building);
     initEnemies();
     testUnit = new Entity(boxModel);
@@ -186,8 +189,10 @@ void GLWidget::initializeGL ()
     glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR );
 
     this->ui = new Ui(this);
-    Window* menu = new Window(ui,0,0,0.2,0.3,Window::TopLeft,true,new QVector3D(1,1,1),true,"Menu");
-    new Cbutton(menu,QPointF(0.015,0.05),"New game");
+//    Window* menu = new Window(ui,0,0,0.2,0.3,Window::Center,true,"Menu");
+//    new Cbutton(menu,QPointF(0.015,0.05),"New game");
+    resetGame();
+
 }
 
 void GLWidget::paintGL()
@@ -753,16 +758,10 @@ void GLWidget::mouseReleaseEvent(QMouseEvent *event) {
                             selectedUnit->currentTarget = aunit;
                             selectedUnit->useMoveTarget = false; // we shall no longer use our moveTarget variable
                         } else if(aunit->team == TeamHumans) {
-                            if (aunit->type == Entity::TypeUnit) {
+                            /*if (aunit->type == Entity::TypeUnit) */
                                 selectedUnit = aunit;
-                            } else /*if (enoughCash)*/ { //one of your buildings. For now, just build cannons.
-                                //cash-= price;
-                                if (recruitqueue == 0) {
-                                    recruittime.restart();
-                                }
+                                aunit->select();
 
-                                recruitqueue++;
-                            }
                         }
 
                         foundUnit = true;
@@ -781,6 +780,16 @@ void GLWidget::mouseReleaseEvent(QMouseEvent *event) {
         }
         dragging = false;
     }
+}
+void GLWidget::recruitUnit(/*location ? */) {
+    /*if (enoughCash)*/  //one of your buildings. For now, just build cannons.
+
+    if (recruitqueue == 0) {
+        recruittime.restart();
+    }
+
+    recruitqueue++;
+    //cash-= price;
 }
 
 void GLWidget::resizeGL(int width, int height) {

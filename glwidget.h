@@ -119,5 +119,7 @@ private:
     void mousePressEvent(QMouseEvent *event);
     void mouseMoveEvent(QMouseEvent* event);
     void mouseReleaseEvent(QMouseEvent *event);
+public slots:
+    void recruitUnit();
 };
 #endif

@@ -21,6 +21,7 @@ public:
     void mouseRelease();
     void addWindow(Window* window);
     bool isMouseDown();
+    void moveToFront(Window *window);
 private:
     GLWidget* glW;
     qreal mouseX,mouseY;

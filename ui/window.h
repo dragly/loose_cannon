@@ -37,6 +37,7 @@ public:
     void draw(QPainter* painter);
     bool click();
     void hide();
+    void show();
     void  addController(Controller* controller);
     bool hovers();
 

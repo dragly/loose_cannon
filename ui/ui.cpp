@@ -13,6 +13,11 @@ void Ui::addWindow(Window* window) {
     windows.prepend(window);
 }
 
+void Ui::moveToFront(Window *window) {
+    //NB: will crash if 'window' is not part of the list.
+    windows.move(windows.indexOf(window),0);
+}
+
 void Ui::convertMousePos(int x, int y) {
     // scale off of the height
     mouseX = x/*/glW->height()*/;
@@ -49,13 +54,16 @@ bool Ui::mouseClick() {
         }
     }
 
+    //if the last mouse press was in a menu but this one wasn't hide all windows
+    if (selectedWindow != NULL) {
+        for (int i=0; i<windows.size(); i++) {
+            windows.at(i)->hide();
+        }
+    }
+
     selectedWindow=NULL;
 
-//    //for now just hide all windows?
-//    for (int i=0; i<windows.size(); i++) {
-//        Window* window = windows.at(i);
-//        window->hidden = true;
-//    }
+
     return false;
 
 }

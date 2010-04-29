@@ -61,7 +61,12 @@ void  Window::addController(Controller* controller) {
 }
 
 void Window::hide() {
-   // hidden=true;
+   hidden=true;
+}
+
+void Window::show() {
+    ui->moveToFront(this);
+    hidden = false;
 }
 
 void Window::draw(QPainter* painter) {
@@ -82,8 +87,8 @@ void Window::draw(QPainter* painter) {
 bool Window::click() {
 
     //check if we hover at all
-    if (!hovers())
-        return false;
+    //if (!hovers()) //checked in ui
+   //     return false;
 
     //check if we pressed the titlebar
     if (!projected && /*hovering the titlebar*/ false) {

@@ -20,17 +20,25 @@
 #include <QtOpenGL>
 #include <QPainter>
 #include "glwidget.h"
+#include "ui/window.h"
 
 Entity::Entity(Model *model) {
     initEntity(model);
     type = TypeUnit;
+    this->menu = NULL;
 }
 
 Entity::Entity(Model *model, int type) {
     initEntity(model);
     this->type = type;
-
-    if (type == Entity::TypeBuilding)
+    this->menu = NULL;
+}
+void Entity::addMenuPoitner(Window* menu) {
+    this->menu = menu;
+}
+void Entity::select() {
+    if (this->menu != NULL)
+        menu->show();
 }
 
 void Entity::initEntity(Model *model) {
