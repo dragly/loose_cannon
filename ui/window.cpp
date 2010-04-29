@@ -115,6 +115,9 @@ bool Window::click() {
 bool Window::hovers() {
     QPoint location = pos;
 
+    if (hidden)
+        return false;
+
     if (projected) {
         location += ui->glW->project(*world);
     }

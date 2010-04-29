@@ -16,6 +16,7 @@ void Ui::addWindow(Window* window) {
 void Ui::moveToFront(Window *window) {
     //NB: will crash if 'window' is not part of the list.
     windows.move(windows.indexOf(window),0);
+    selectedWindow=window;
 }
 
 void Ui::convertMousePos(int x, int y) {
@@ -54,7 +55,7 @@ bool Ui::mouseClick() {
         }
     }
 
-    //if the last mouse press was in a menu but this one wasn't hide all windows
+    //if the last mouse press was in a menu but this one wasn't, hide all windows
     if (selectedWindow != NULL) {
         for (int i=0; i<windows.size(); i++) {
             windows.at(i)->hide();
