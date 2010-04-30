@@ -33,6 +33,13 @@ Entity::Entity(Model *model, int type) {
     this->type = type;
     this->menu = NULL;
 }
+
+Entity::~Entity() {
+    if (this->menu != NULL)
+        delete menu;
+
+}
+
 void Entity::addMenuPoitner(Window* menu) {
     this->menu = menu;
 }
