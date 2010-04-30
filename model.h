@@ -63,6 +63,7 @@ public:
     bool linkShaderProgram();
     bool initShaderProgram();
     void setShaderProgram(QGLShaderProgram *program);
+    QVector3D scale;
 private:
     // variables
     GLMmodel *model;

@@ -30,16 +30,17 @@
 #include "ui/cbutton.h"
 
 // constants (are nasty, should probably be defined in some other, global way)
-const qreal UnitSpeed = 3.0; // units/s
-const qreal UnitAcceleration = 10.0; // units/s^2
+const qreal UnitSpeed = 3.0; // m/s
+const qreal UnitAcceleration = 10.0; // m/s^2
 const qreal UnitFrictionSide = 6.0;
 const qreal UnitFrictionAll = 2.0;
-const qreal EnemySpawnDistance = 15; // units
+const qreal EnemySpawnDistance = 15; // m
 const qreal Dt = 0.01; // the timestep
 const qreal RotateSpeed = 180; // degrees/s
-const qreal BulletSpeed = 8; // units/s
+const qreal BulletSpeed = 20; // m/s
 const qreal NumberOfEnemies = 1;
 const qreal ClickRadius = 2;
+const int mapSize = 30; // 2n x 2n nodes
 
 // gui - bla
 const qreal DragDropTreshold = 20;
@@ -48,9 +49,9 @@ const qreal DragDropTreshold = 20;
 const qreal ExplosionRadius = 3;
 const qreal ExplosionDamage = 30;
 const qreal ExplosionForce = 20;
-const qreal FireDistance = 7;
+const qreal FireDistance = 20;
 const qreal BulletSpawnTime = 2;
-QVector3D Gravity(0, 0, -20); // units/s^2
+QVector3D Gravity(0, 0, -10); // m/s^2
 const qreal GLWidget::MaxHealth;
 GLWidget::~GLWidget()
 {
@@ -72,10 +73,12 @@ GLWidget::GLWidget(QWidget *parent) : QGLWidget(parent)
     monkeyModel = new Model("monkey1.obj");
     boxModel = new Model("box.obj");
     cannonModel = new Model("cannon.obj");
+    tankModel = new Model("tank-body.obj");
+    tankModel->scale *= 0.4;
     bulletModel = new Model("bullet.obj");
     nodeModel = new Model("box.obj");
     // initial values
-    camera = QVector3D(5, -7, 20);
+    camera = QVector3D(20, -20, 60);
     dragBool = false;
     explosionSoundTime.restart();
     // timer, should be set last, just in case
@@ -99,11 +102,11 @@ void GLWidget::resetGame() {
     gametime.start();
     bullets.clear();
     enemies.clear();
-    Entity* cannon = new Entity(cannonModel, Entity::TypeUnit);
+    Entity* cannon = new Entity(tankModel, Entity::TypeUnit);
     cannon->team = TeamHumans;
     selectedUnit = cannon;
     units.append(cannon);
-    Entity* cannon2 = new Entity(cannonModel, Entity::TypeUnit);
+    Entity* cannon2 = new Entity(tankModel, Entity::TypeUnit);
     cannon2->position = QVector3D(1,1,1);
     cannon2->team = TeamHumans;
     units.append(cannon2);
@@ -140,7 +143,7 @@ void GLWidget::resetEnemy(Entity* enemy) {
 
 void GLWidget::createEnemy() {
     qDebug() << "Creating enemy";
-    Entity *enemy = new Entity(cannonModel, Entity::TypeUnit);
+    Entity *enemy = new Entity(tankModel, Entity::TypeUnit);
     enemy->team = TeamEnemies;
     enemies.append(enemy);
     resetEnemy(enemy);
@@ -159,6 +162,7 @@ void GLWidget::initializeGL ()
     bulletModel->setShaderProgram(program);
     boxModel->setShaderProgram(program);
     nodeModel->setShaderProgram(program);
+    tankModel->setShaderProgram(program);
     //    if(!monkeyModel->setShaderFiles("fshader.glsl","vshader.glsl")) {
     //        qDebug() << "Failed to set shader files.";
     //    }
@@ -183,6 +187,7 @@ void GLWidget::initializeGL ()
     monkeyModel->setTexture(furTexture);
     cannonModel->setTexture(metalTexture);
     bulletModel->setTexture(metalTexture);
+    tankModel->setTexture(metalTexture);
     // end textures
 
     glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR );
@@ -387,7 +392,7 @@ void GLWidget::paintGL()
             if (recruitqueue > 0 && recruittime.elapsed() > 5000) {
                 recruitqueue--;
                 recruittime.restart();
-                Entity* cannon = new Entity(cannonModel, Entity::TypeUnit);
+                Entity* cannon = new Entity(tankModel, Entity::TypeUnit);
                 cannon->position =/* aunit->position +*/ QVector3D(-4,6,6); //note, positioning might cause trouble with buildings at the edge of the map..
                 cannon->team = TeamHumans;
                 units.append(cannon);
@@ -418,7 +423,7 @@ void GLWidget::paintGL()
 
     mainModelView = QMatrix4x4(); // reset
     // set up the main view (affects all objects)
-    mainModelView.perspective(40.0, aspectRatio, 1.0, 60.0);
+    mainModelView.perspective(40.0, aspectRatio, 1.0, 100.0);
     mainModelView.lookAt(camera + offset,QVector3D(0,0,0) + offset,QVector3D(0.0,0.0,1.0));
 
     QList<Entity*> allUnits; // all units, including enemies and our own
@@ -518,12 +523,14 @@ void GLWidget::paintGL()
 }
 
 void GLWidget::regenerateNodes() {
+    qreal nodeSize = 2;
+    qreal nodeSizeSquared = nodeSize*nodeSize + nodeSize*nodeSize;
     nodes.clear();
     nodeNeighbors.clear();
-    for(int i = -10; i < 10; i++) {
-        for(int j = -10; j < 10; j++) {
+    for(int i = -mapSize; i < mapSize; i++) {
+        for(int j = -mapSize; j < mapSize; j++) {
             bool tooClose = false;
-            QVector3D position(i, j, 0);
+            QVector3D position((qreal)i * nodeSize, (qreal)j * nodeSize, 0);
             foreach(Entity* building, buildings){
                 if((building->position - position).length() < 2) {
                     tooClose = true;
@@ -540,7 +547,7 @@ void GLWidget::regenerateNodes() {
     foreach(Entity* node, nodes) {
         QList<Entity*> neighbors;
         foreach(Entity* possibleNeighbor, nodes) {
-            if((node->position - possibleNeighbor->position).lengthSquared() <= 2) { // if the distance between nodes are 1x1, a diagonal nodeneighbor will be x^2 = 1^2 + 1^2 away (Pythagoras)
+            if((node->position - possibleNeighbor->position).lengthSquared() <= nodeSizeSquared) { // if the distance between nodes are 1x1, a diagonal nodeneighbor will be x^2 = 1^2 + 1^2 away (Pythagoras)
                 neighbors.append(possibleNeighbor);
             }
         }
