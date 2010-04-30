@@ -72,10 +72,12 @@ GLWidget::GLWidget(QWidget *parent) : QGLWidget(parent)
     monkeyModel = new Model("monkey1.obj");
     boxModel = new Model("box.obj");
     cannonModel = new Model("cannon.obj");
+    tankModel = new Model("tank-body.obj");
+    tankModel->scale *= 0.4;
     bulletModel = new Model("bullet.obj");
     nodeModel = new Model("box.obj");
     // initial values
-    camera = QVector3D(5, -7, 20);
+    camera = QVector3D(10, -14, 40);
     dragBool = false;
     explosionSoundTime.restart();
     // timer, should be set last, just in case
@@ -99,11 +101,11 @@ void GLWidget::resetGame() {
     gametime.start();
     bullets.clear();
     enemies.clear();
-    Entity* cannon = new Entity(cannonModel, Entity::TypeUnit);
+    Entity* cannon = new Entity(tankModel, Entity::TypeUnit);
     cannon->team = TeamHumans;
     selectedUnit = cannon;
     units.append(cannon);
-    Entity* cannon2 = new Entity(cannonModel, Entity::TypeUnit);
+    Entity* cannon2 = new Entity(tankModel, Entity::TypeUnit);
     cannon2->position = QVector3D(1,1,1);
     cannon2->team = TeamHumans;
     units.append(cannon2);
@@ -159,6 +161,7 @@ void GLWidget::initializeGL ()
     bulletModel->setShaderProgram(program);
     boxModel->setShaderProgram(program);
     nodeModel->setShaderProgram(program);
+    tankModel->setShaderProgram(program);
     //    if(!monkeyModel->setShaderFiles("fshader.glsl","vshader.glsl")) {
     //        qDebug() << "Failed to set shader files.";
     //    }
@@ -183,6 +186,7 @@ void GLWidget::initializeGL ()
     monkeyModel->setTexture(furTexture);
     cannonModel->setTexture(metalTexture);
     bulletModel->setTexture(metalTexture);
+    tankModel->setTexture(metalTexture);
     // end textures
 
     glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR );
@@ -518,12 +522,14 @@ void GLWidget::paintGL()
 }
 
 void GLWidget::regenerateNodes() {
+    qreal nodeSize = 2;
+    qreal nodeSizeSquared = nodeSize*nodeSize + nodeSize*nodeSize;
     nodes.clear();
     nodeNeighbors.clear();
     for(int i = -10; i < 10; i++) {
         for(int j = -10; j < 10; j++) {
             bool tooClose = false;
-            QVector3D position(i, j, 0);
+            QVector3D position((qreal)i * nodeSize, (qreal)j * nodeSize, 0);
             foreach(Entity* building, buildings){
                 if((building->position - position).length() < 2) {
                     tooClose = true;
@@ -540,7 +546,7 @@ void GLWidget::regenerateNodes() {
     foreach(Entity* node, nodes) {
         QList<Entity*> neighbors;
         foreach(Entity* possibleNeighbor, nodes) {
-            if((node->position - possibleNeighbor->position).lengthSquared() <= 2) { // if the distance between nodes are 1x1, a diagonal nodeneighbor will be x^2 = 1^2 + 1^2 away (Pythagoras)
+            if((node->position - possibleNeighbor->position).lengthSquared() <= nodeSizeSquared) { // if the distance between nodes are 1x1, a diagonal nodeneighbor will be x^2 = 1^2 + 1^2 away (Pythagoras)
                 neighbors.append(possibleNeighbor);
             }
         }

@@ -75,6 +75,7 @@ Model::Model(QString filename) {
     textureUniform = 0;
     program = new QGLShaderProgram();
     load(filename);
+    scale = QVector3D(1,1,1);
 }
 void Model::setShaderProgram(QGLShaderProgram *program) {
     this->program = program;
@@ -181,6 +182,7 @@ bool Model::initShaderProgram() {
 }
 
 void Model::draw(QMatrix4x4 modelview) {
+    modelview.scale(scale);
     program->bind();
     program->setUniformValue(matrixUniform, modelview);
 ////    program->setUniformValue(textureUniform, 0);    // use texture unit 0 - causes performance hit - doesn't appear to do anything

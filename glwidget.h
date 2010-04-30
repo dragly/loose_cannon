@@ -104,6 +104,7 @@ private:
     Model *monkeyModel;
     Model *boxModel;
     Model *cannonModel;
+    Model *tankModel;
     Model *bulletModel;
     Model *nodeModel;
     bool gameOver;
