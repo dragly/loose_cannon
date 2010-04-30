@@ -46,6 +46,8 @@ public:
     QPoint project(QVector3D position);
 
     static const qreal MaxHealth = 100.0;
+    QList<Entity*> findPath(Entity* startPosition, Entity* endPosition);
+    Entity* closestNode(QVector3D position);
 
 protected:
     void paintGL ();
@@ -60,8 +62,6 @@ private:
     void resetEnemy(Entity* enemy);
     void fireBullet();
     void regenerateNodes();
-    QList<QVector3D> findPath(QVector3D startPosition, QVector3D endPosition);
-
     QTimer *timer;
 
     int score;

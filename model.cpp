@@ -43,7 +43,6 @@ void Entity::select() {
 
 void Entity::initEntity(Model *model) {
     scale = QVector3D(1,1,1);
-    position = QVector3D(0,0,0);
     velocity = QVector3D(0,0,0);
     rotation = QVector3D(0,0,0);
     health = GLWidget::MaxHealth;
