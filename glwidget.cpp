@@ -272,6 +272,7 @@ void GLWidget::paintGL()
                                         }
                                     }
                                 }
+                                delete hitUnit;
                             } else if(hitUnit->type != Entity::TypeBuilding){
                                 qreal velocityChange = ExplosionForce * damage / 100;
                                 hitUnit->velocity += distance.normalized() * velocityChange; // make the explosion change the velocity in the direction of the blast
