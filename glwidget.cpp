@@ -30,16 +30,17 @@
 #include "ui/cbutton.h"
 
 // constants (are nasty, should probably be defined in some other, global way)
-const qreal UnitSpeed = 3.0; // units/s
-const qreal UnitAcceleration = 10.0; // units/s^2
+const qreal UnitSpeed = 3.0; // m/s
+const qreal UnitAcceleration = 10.0; // m/s^2
 const qreal UnitFrictionSide = 6.0;
 const qreal UnitFrictionAll = 2.0;
-const qreal EnemySpawnDistance = 15; // units
+const qreal EnemySpawnDistance = 15; // m
 const qreal Dt = 0.01; // the timestep
 const qreal RotateSpeed = 180; // degrees/s
-const qreal BulletSpeed = 8; // units/s
+const qreal BulletSpeed = 20; // m/s
 const qreal NumberOfEnemies = 1;
 const qreal ClickRadius = 2;
+const int mapSize = 30; // 2n x 2n nodes
 
 // gui - bla
 const qreal DragDropTreshold = 20;
@@ -48,9 +49,9 @@ const qreal DragDropTreshold = 20;
 const qreal ExplosionRadius = 3;
 const qreal ExplosionDamage = 30;
 const qreal ExplosionForce = 20;
-const qreal FireDistance = 7;
+const qreal FireDistance = 20;
 const qreal BulletSpawnTime = 2;
-QVector3D Gravity(0, 0, -20); // units/s^2
+QVector3D Gravity(0, 0, -10); // m/s^2
 const qreal GLWidget::MaxHealth;
 GLWidget::~GLWidget()
 {
@@ -77,7 +78,7 @@ GLWidget::GLWidget(QWidget *parent) : QGLWidget(parent)
     bulletModel = new Model("bullet.obj");
     nodeModel = new Model("box.obj");
     // initial values
-    camera = QVector3D(10, -14, 40);
+    camera = QVector3D(20, -20, 60);
     dragBool = false;
     explosionSoundTime.restart();
     // timer, should be set last, just in case
@@ -142,7 +143,7 @@ void GLWidget::resetEnemy(Entity* enemy) {
 
 void GLWidget::createEnemy() {
     qDebug() << "Creating enemy";
-    Entity *enemy = new Entity(cannonModel, Entity::TypeUnit);
+    Entity *enemy = new Entity(tankModel, Entity::TypeUnit);
     enemy->team = TeamEnemies;
     enemies.append(enemy);
     resetEnemy(enemy);
@@ -391,7 +392,7 @@ void GLWidget::paintGL()
             if (recruitqueue > 0 && recruittime.elapsed() > 5000) {
                 recruitqueue--;
                 recruittime.restart();
-                Entity* cannon = new Entity(cannonModel, Entity::TypeUnit);
+                Entity* cannon = new Entity(tankModel, Entity::TypeUnit);
                 cannon->position =/* aunit->position +*/ QVector3D(-4,6,6); //note, positioning might cause trouble with buildings at the edge of the map..
                 cannon->team = TeamHumans;
                 units.append(cannon);
@@ -422,7 +423,7 @@ void GLWidget::paintGL()
 
     mainModelView = QMatrix4x4(); // reset
     // set up the main view (affects all objects)
-    mainModelView.perspective(40.0, aspectRatio, 1.0, 60.0);
+    mainModelView.perspective(40.0, aspectRatio, 1.0, 100.0);
     mainModelView.lookAt(camera + offset,QVector3D(0,0,0) + offset,QVector3D(0.0,0.0,1.0));
 
     QList<Entity*> allUnits; // all units, including enemies and our own
@@ -526,8 +527,8 @@ void GLWidget::regenerateNodes() {
     qreal nodeSizeSquared = nodeSize*nodeSize + nodeSize*nodeSize;
     nodes.clear();
     nodeNeighbors.clear();
-    for(int i = -10; i < 10; i++) {
-        for(int j = -10; j < 10; j++) {
+    for(int i = -mapSize; i < mapSize; i++) {
+        for(int j = -mapSize; j < mapSize; j++) {
             bool tooClose = false;
             QVector3D position((qreal)i * nodeSize, (qreal)j * nodeSize, 0);
             foreach(Entity* building, buildings){
