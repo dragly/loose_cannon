@@ -28,6 +28,7 @@
 #include <time.h>
 #include "ui/window.h"
 #include "ui/cbutton.h"
+#include "node.h"
 
 // constants
 const qreal UnitSpeed = 40.0; // m/s
@@ -349,12 +350,12 @@ void GLWidget::paintGL()
                                    stoppedUnit->moveState != Entity::StateMovingOutOfTheWay &&
                                    movingUnit->moveState != Entity::StateMovingOutOfTheWay) {
 //                                    qDebug() << "finding nodes";
-                                    QList<Entity*> avoidNodes;
+                                    QList<Node*> avoidNodes;
                                     avoidNodes.append(movingUnit->waypoints);
                                     avoidNodes.append(movingUnit->positionNode);
                                     if(nodeNeighbors[aunit->positionNode].count() > 0) {
-                                        QList<Entity*> freeNodes;
-                                        foreach(Entity* node, nodeNeighbors[stoppedUnit->positionNode]) {
+                                        QList<Node*> freeNodes;
+                                        foreach(Node* node, nodeNeighbors[stoppedUnit->positionNode]) {
                                             if(!avoidNodes.contains(node)) { // make sure the unit asking to get past is not going to any of these waypoints
                                                 freeNodes.append(node);
                                             }
@@ -362,9 +363,9 @@ void GLWidget::paintGL()
                                         if(freeNodes.count() > 0) {
                                             // let's select a random node - this keeps unit's away from all moving in the same direction
                                             int randomInt = (int)((qreal) freeNodes.count() * (qreal) qrand() / (qreal) RAND_MAX);
-                                            Entity* node = freeNodes.at(randomInt);
+                                            Node* node = freeNodes.at(randomInt);
 //                                            qDebug() << "newWaypoints findpath";
-                                            QList<Entity*> newWaypoints;
+                                            QList<Node*> newWaypoints;
                                             newWaypoints.append(findPath(stoppedUnit->positionNode, node, avoidNodes));
                                             if(stoppedUnit->waypoints.count() > 0) // if the one which is stopped was going somewhere, add the rest to the path
                                                 newWaypoints.append(findPath(node, stoppedUnit->waypoints.last()));
@@ -573,10 +574,10 @@ void GLWidget::paintGL()
     foreach(Entity *building, buildings) {
         building->draw(mainModelView);
     }
-    foreach(Entity* node, nodes) {
+    foreach(Node* node, nodes) {
         bool drawNode = false;
         foreach(Entity* aunit, allUnits) {
-            foreach(Entity* waypoint, aunit->waypoints) {
+            foreach(Node* waypoint, aunit->waypoints) {
                 if(waypoint == node) {
                     drawNode = true;
                 }
@@ -664,21 +665,20 @@ void GLWidget::regenerateNodes() {
             bool tooClose = false;
             QVector3D position((qreal)i * NodeSize, (qreal)j * NodeSize, 0);
             foreach(Entity* building, buildings){
-                if((building->position - position).length() < 2) {
+                if((building->position - position).lengthSquared() < NodeSizeSquared) {
                     tooClose = true;
                 }
             }
             if(!tooClose) {
-                Entity* node = new Entity(boxModel);
+                Node* node = new Node();
                 node->position = position;
-                node->scale *= 0.3;
                 nodes.append(node);
             }
         }
     }
-    foreach(Entity* node, nodes) {
-        QList<Entity*> neighbors;
-        foreach(Entity* possibleNeighbor, nodes) {
+    foreach(Node* node, nodes) {
+        QList<Node*> neighbors;
+        foreach(Node* possibleNeighbor, nodes) {
             if((node->position - possibleNeighbor->position).lengthSquared() <= NodeSizeDiagonal && possibleNeighbor != node) { // if the distance between nodes are 1x1, a diagonal nodeneighbor will be x^2 = 1^2 + 1^2 away (Pythagoras)
                 neighbors.append(possibleNeighbor);
             }
@@ -687,7 +687,7 @@ void GLWidget::regenerateNodes() {
     }
 }
 
-QList<Entity*> GLWidget::findPath(Entity* startNode, Entity* goalNode, QList<Entity*> avoid) {
+QList<Node*> GLWidget::findPath(Node* startNode, Node* goalNode, QList<Node*> avoid) {
     // bug fix - if one of the nodes for some strange reason does not exist (has been seen happening) - use a completely different node
     if(!nodes.contains(startNode)) {
         startNode = nodes.first();
@@ -698,21 +698,21 @@ QList<Entity*> GLWidget::findPath(Entity* startNode, Entity* goalNode, QList<Ent
     // end bug fix
     qDebug() << "Finding path from" << startNode->position << "to" << goalNode->position;
     // che
-    QList<Entity*> closedSet;
-    QList<Entity*> openSet;
-    QHash<Entity*, qreal> gscore;
-    QHash<Entity*, qreal> hscore;
-    QHash<Entity*, qreal> fscore;
-    QHash<Entity*, Entity*> cameFrom; // 1st came from 2nd parameter
+    QList<Node*> closedSet;
+    QList<Node*> openSet;
+    QHash<Node*, qreal> gscore;
+    QHash<Node*, qreal> hscore;
+    QHash<Node*, qreal> fscore;
+    QHash<Node*, Node*> cameFrom; // 1st came from 2nd parameter
     openSet.append(startNode);
     gscore.insert(startNode, 0);
     hscore.insert(startNode, (goalNode->position - startNode->position).lengthSquared());
     fscore.insert(startNode, (goalNode->position - startNode->position).lengthSquared());
     while (openSet.count() > 0) {
-        Entity* x;
+        Node* x;
         qreal lowestFScore = 0;
         bool firstFScore = true;
-        foreach(Entity* node, openSet) {
+        foreach(Node* node, openSet) {
             qreal curFscore = fscore.value(node);
             if(curFscore < lowestFScore || firstFScore) {
                 x = node;
@@ -722,8 +722,8 @@ QList<Entity*> GLWidget::findPath(Entity* startNode, Entity* goalNode, QList<Ent
         }
         if(x == goalNode) {
             // reconstruct path
-            QList<Entity*> path;
-            Entity* currentNode = goalNode; // start at the goal
+            QList<Node*> path;
+            Node* currentNode = goalNode; // start at the goal
             //            path.prepend(goalPosition); // this is no longer legal - we can't be where there are no nodes
             while(currentNode != startNode) { // if we're not there yet
                 path.prepend(currentNode); // add the current node's position to the beginning of the list
@@ -736,7 +736,7 @@ QList<Entity*> GLWidget::findPath(Entity* startNode, Entity* goalNode, QList<Ent
         }
         openSet.removeAll(x);
         closedSet.append(x);
-        foreach(Entity* y, nodeNeighbors.value(x)) {
+        foreach(Node* y, nodeNeighbors.value(x)) {
             if(closedSet.contains(y) || avoid.contains(y)) { // if in closed set or we should avoid this node
                 continue;
             }
@@ -757,7 +757,7 @@ QList<Entity*> GLWidget::findPath(Entity* startNode, Entity* goalNode, QList<Ent
             }
         }
     }
-    QList<Entity*> nonfunctional;
+    QList<Node*> nonfunctional;
     nonfunctional.append(startNode);
     qDebug() << "Path not found!";
     return nonfunctional; // we failed to find a path, just return the point we're at
@@ -797,12 +797,12 @@ QVector3D GLWidget::unProject(int x, int y) {
     return cursor;
 }
 
-Entity* GLWidget::closestNode(QVector3D position) {
+Node* GLWidget::closestNode(QVector3D position) {
     // first we find the closest node to us
     qreal lowestDistance = 0;
-    Entity* foundNode;
+    Node* foundNode;
     bool firstStartDistance = true;
-    foreach(Entity* node, nodes) {
+    foreach(Node* node, nodes) {
         qreal startDistance = (node->position - position).lengthSquared();
         if(startDistance < lowestDistance || firstStartDistance) {
             lowestDistance = startDistance;
@@ -908,7 +908,7 @@ void GLWidget::mouseReleaseEvent(QMouseEvent *event) {
                         lastLength = length;
                     }
                 }
-                Entity* cursorNode = closestNode(cursorPosition);
+                Node* cursorNode = closestNode(cursorPosition);
                 if(!foundUnit) { // if we didn't find anything, we assume that we want to move the selected unit
                     selectedUnit->currentTarget = NULL;
                     selectedUnit->setWaypoints(findPath(selectedUnit->positionNode, cursorNode)); // set the move target of the unit to this point

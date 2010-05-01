@@ -26,6 +26,8 @@
 
 #include "glm.h"
 
+class Node;
+
 class ModelTriangle
 {
 public:
@@ -104,10 +106,10 @@ public:
 //    bool linkShaderProgram();
 //    bool initShaderProgram();
     void setModel(Model *model);
-    void setWaypoints(QList<Entity*> waypoints);
+    void setWaypoints(QList<Node*> waypoints);
     bool isMoving();
-    QList<Entity*> waypoints;
-    Entity* moveTarget;
+    QList<Node*> waypoints;
+    Node* moveTarget;
 
     // variables
     QVector3D position;
@@ -119,7 +121,7 @@ public:
     Entity* currentTarget;
     bool useMoveTarget; // shall we move to a target? Often set to false after currentTarget has been set.
     qreal lastBulletFired;
-    Entity* positionNode;
+    Node* positionNode;
 
 
     int team;

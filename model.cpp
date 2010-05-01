@@ -35,7 +35,7 @@ Entity::Entity(Model *model, int type) {
 }
 
 
-void Entity::setWaypoints(QList<Entity*> waypoints) {
+void Entity::setWaypoints(QList<Node*> waypoints) {
     this->waypoints = waypoints;
     if(waypoints.count() > 0) {
         this->moveTarget = waypoints.first();

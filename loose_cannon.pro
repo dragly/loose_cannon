@@ -12,7 +12,8 @@ SOURCES += main.cpp \
     ui/window.cpp \
     ui/ui.cpp \
     ui/controller.cpp \
-    ui/cbutton.cpp
+    ui/cbutton.cpp \
+    node.cpp
 SOURCES += glwidget.cpp
 SOURCES += mainwindow.cpp
 SOURCES += glm.cpp
@@ -21,7 +22,8 @@ HEADERS += glwidget.h \
     ui/window.h \
     ui/ui.h \
     ui/controller.h \
-    ui/cbutton.h
+    ui/cbutton.h \
+    node.h
 HEADERS += mainwindow.h
 HEADERS += glm.h
 RESOURCES += texture.qrc
