@@ -312,25 +312,8 @@ void GLWidget::paintGL()
                                 if(nodeNeighbors[aunit->positionNode].count() > 0) {
                                     aunit->setWaypoints(findPath(aunit->positionNode, nodeNeighbors[aunit->positionNode].first()));
                                 }
-                            } else if(aunit->moveState == Entity::StateMoving && collideUnit->moveState == Entity::StateMoving) { // both are moving
-                                if(nodeNeighbors[aunit->positionNode].count() > 0) {
-                                    QList<Entity*> avoidNodesAunit;
-                                    avoidNodesAunit.append(collideUnit->positionNode);
-                                    if(collideUnit->waypoints.count() > 0)
-                                        avoidNodesAunit.append(collideUnit->waypoints.first());
-                                    if(collideUnit->waypoints.count() > 1)
-                                        avoidNodesAunit.append(collideUnit->waypoints.at(1)); // second waypoint
-                                    QList<Entity*> avoidNodesCollideUnit;
-                                    avoidNodesCollideUnit.append(aunit->positionNode);
-                                    if(aunit->waypoints.count() > 0)
-                                        avoidNodesCollideUnit.append(aunit->waypoints.first()); // second waypoint
-                                    if(aunit->waypoints.count() > 1)
-                                        avoidNodesCollideUnit.append(aunit->waypoints.at(1));
-                                    aunit->setWaypoints(findPath(aunit->positionNode, aunit->waypoints.last(), avoidNodesAunit)); // generate new path to target, but avoid the other's path
-                                    collideUnit->setWaypoints(findPath(collideUnit->positionNode, collideUnit->waypoints.last(), avoidNodesCollideUnit)); // generate new path to target, but avoid the other's path
-                                }
                             } else if(aunit->moveState == Entity::StateMoving || collideUnit->moveState == Entity::StateMoving) { // only one is moving
-                                qDebug() << "just one moving";
+                                qDebug() << "one moving" << frametime.elapsed();
                                 Entity *movingUnit; // the moving unit
                                 Entity *stoppedUnit; // the unit standing still
                                 if(aunit->moveState == Entity::StateMoving) {
@@ -352,7 +335,11 @@ void GLWidget::paintGL()
                                                 continue;
                                             }
                                             if(!movingUnit->waypoints.contains(node)) { // make sure the unit asking to get past is not going to any of these waypoints
-                                                stoppedUnit->setWaypoints(findPath(aunit->positionNode, node));
+                                                QList<Entity*> newWaypoints;
+                                                newWaypoints.append(findPath(stoppedUnit->positionNode, node));
+                                                if(stoppedUnit->waypoints.count() > 0) // if the one which is stopped was going somewhere, add the rest to the path
+                                                    newWaypoints.append(findPath(node, stoppedUnit->waypoints.last()));
+                                                stoppedUnit->setWaypoints(newWaypoints);
                                                 foundFreeNode = true;
                                             }
                                         }
@@ -412,6 +399,10 @@ void GLWidget::paintGL()
                     }
                     if((aunit->position - aunit->moveTarget->position).lengthSquared() < NodeSizeSquared / 2) {
                         aunit->positionNode = aunit->moveTarget;
+                        if(aunit->movingAwayFrom != NULL) { // If we were moving away from someone, report back to them that they should move, and that we are not moving away from them anymore
+                            aunit->movingAwayFrom->moveState = Entity::StateMoving;
+                            aunit->movingAwayFrom = NULL;
+                        }
                         if(aunit->waypoints.count() > 0) { // we still got somewhere to go
                             aunit->moveTarget = aunit->waypoints.first();
                             aunit->waypoints.removeFirst();
@@ -423,10 +414,6 @@ void GLWidget::paintGL()
                                 doMovement = false;
                                 qDebug() << "At target!";
                                 aunit->moveState = Entity::StateStopped;
-                                if(aunit->movingAwayFrom != NULL) {
-                                    aunit->movingAwayFrom->moveState = Entity::StateMoving;
-                                    aunit->movingAwayFrom = NULL;
-                                }
                             } else {
                                 doMovement = true;
                             }
@@ -683,7 +670,7 @@ QList<Entity*> GLWidget::findPath(Entity* startNode, Entity* goalNode, QList<Ent
                 path.prepend(currentNode); // add the current node's position to the beginning of the list
                 currentNode = cameFrom.value(currentNode); // find out where this node came from
             }
-            path.prepend(startNode); // always add the startnode to begin with
+//            path.prepend(startNode); // always add the startnode to begin with
 
             //            path.prepend(startPosition); // this is completely unecessary! We're already there!
             return path; // return our path
