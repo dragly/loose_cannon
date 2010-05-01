@@ -18,6 +18,13 @@ public:
     friend class Controller;
     friend class Cbutton;
 
+    static const QColor ColorBackground;
+    static const QColor ColorBorder;
+    static const QColor ColorText;
+    static const QColor ColorHighlight;
+    static const QColor ColorNone;
+
+
     //bind the given side of the window to the given side of the screen, offset with the specified x and y coords
     enum Alignments {
         TopLeft,
@@ -60,13 +67,6 @@ private:
     QSizeF relativeSize;
     Ui* ui;
     bool projected;
-
-    static const QColor ColorBackground;
-    static const QColor ColorBorder;
-    static const QColor ColorText;
-    static const QColor ColorHighlight;
-    static const QColor ColorNone;
-
 };
 
 #endif // WINDOW_H

@@ -41,15 +41,17 @@ const qreal BulletSpeed = 20; // m/s
 const qreal NumberOfEnemies = 0;
 
 // map and nodes
-const int MapSize = 30; // 2n x 2n nodes
-const qreal NodeSize = 8; // each node is 8x8 m (the length of a tank)
-const qreal NodeSizeSquared = NodeSize*NodeSize; // just for convenience
-const qreal NodeSizeDiagonal = NodeSize*NodeSize + NodeSize*NodeSize; // just for convenience
+const int GLWidget::MapSize; //Vj: moved to header as i need them in another class
+const qreal GLWidget::NodeSize;
+//const int MapSize = 30; // 2n x 2n nodes
+//const qreal NodeSize = 8; // each node is 8x8 m (the length of a tank)
+const qreal NodeSizeSquared = GLWidget::NodeSize * GLWidget::NodeSize; // just for convenience
+const qreal NodeSizeDiagonal = GLWidget::NodeSize * GLWidget::NodeSize + GLWidget::NodeSize * GLWidget::NodeSize; // just for convenience
 const qreal UnitCollideDistance = NodeSizeSquared / 2.5; // divided by two because we shouldn't be too nazi ;) now units may move diagonally without interrupting neighbor nodes.
 
 // gui and interactions
 const qreal DragDropTreshold = 20;
-const qreal ClickRadius = NodeSize / 2.0;
+const qreal ClickRadius = GLWidget::NodeSize / 2.0;
 
 // weapon constants
 const qreal ExplosionRadius = 3;
@@ -84,7 +86,7 @@ GLWidget::GLWidget(QWidget *parent) : QGLWidget(parent)
     bulletModel = new Model("bullet.obj");
     nodeModel = new Model("box.obj");
     // initial values
-    camera = QVector3D(25, -35, 80);
+    camera = QVector3D(25, -25, 80);
     dragBool = false;
     explosionSoundTime.restart();
     // timer, should be set last, just in case
@@ -93,6 +95,7 @@ GLWidget::GLWidget(QWidget *parent) : QGLWidget(parent)
     timer->setInterval(1);
     timer->start();
 }
+
 void GLWidget::resetGame() {
     regenerateNodes();
     // init all to zero (also avoids memory failures)

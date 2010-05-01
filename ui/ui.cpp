@@ -67,15 +67,57 @@ bool Ui::mouseClick() {
 
     selectedWindow=NULL;
 
+    if (clickMap())
+        return true;
 
     return false;
 
 }
 
+
+
+
+bool Ui::clickMap () {
+
+    const qreal Sqrt2 = 1.414213562373095;
+    const qreal RadarSize=0.25; //size of the UiMap
+    const qreal MAPSIZE = GLWidget::MapSize * GLWidget::NodeSize;
+    const qreal MapWidth= MAPSIZE*2;
+    const qreal MapHeight= MAPSIZE*2;
+
+    qreal mapSize= RadarSize*glW->height()*2.55; //i got no idea where the factor 2.55 comes from :S
+
+    //get the location of the coordinate system
+    qreal mapCenterX =((qreal) glW->width() - ((qreal) glW->height()*RadarSize) /Sqrt2)/*-0.025*height*/;
+    qreal mapCenterY = ((qreal) glW->height()*RadarSize)/Sqrt2;
+
+    //translate
+    qreal screenCoordX = mouseX - mapCenterX;
+    qreal screenCoordY = mouseY - mapCenterY;
+
+    //rotate
+    qreal worldX = screenCoordX/Sqrt2 + screenCoordY/Sqrt2;
+    qreal worldY = screenCoordX/Sqrt2 - screenCoordY/Sqrt2;
+
+    //scale
+    worldX*= mapSize/MapWidth;
+    worldY*= mapSize/MapHeight;
+
+    //clip
+    if (worldX<-MAPSIZE || worldX > MAPSIZE || worldY <-MAPSIZE or worldY > MAPSIZE)
+        return false;
+
+    //move the view
+    glW->offset.setX(worldX);
+    glW->offset.setY(worldY);
+
+    return true;
+}
+
 void Ui::drawMap(QPainter* painter) {
 
     //these should be fetched form glW
-    const qreal MAPSIZE = 30; //copied from glwidgets mapsize, which (confusingly) is only half of the actual mapsize.
+    const qreal MAPSIZE = GLWidget::MapSize * GLWidget::NodeSize; //copied from glwidgets mapsize, which (confusingly) should be multiplied with 2*nodedistance to get the actual map size.
     const qreal MapX = -MAPSIZE;
     const qreal MapY = -MAPSIZE;
     const qreal MapWidth= MAPSIZE*2;
@@ -83,20 +125,19 @@ void Ui::drawMap(QPainter* painter) {
 
     //temp vars
     const qreal Sqrt2 = 1.414213562373095;
-    const qreal MapSize=0.25; //size of the UiMap
+    const qreal RadarSize=0.25; //size of the UiMap
     const qreal XPos = 0.05; //from the edge
     const qreal YPos = 0.05;
-    const qreal DotSize = 0.0001; //factor, small because it is evaluted after the scaling
+    const qreal DotSize = GLWidget::NodeSize;
 
-    //if (dont draw map) return;
+    //if (dont draw map)
+        //return;
 
     int height = glW->height();
 
-    QPoint mapPos((qreal) glW->width() - glW->height()*MapSize*Sqrt2/2/*-0.025*height*/,0/*-0.025*height*/);
-    qreal mapSize= MapSize*height;
-    qreal dotSize = DotSize*MapHeight*height*MapSize;
+    QPoint mapPos((qreal) glW->width() - (qreal) glW->height()*RadarSize*Sqrt2/2/*-0.025*height*/,0/*-0.025*height*/);
+    qreal mapSize= RadarSize*height;
 
-    //painter->setViewTransformEnabled();
     painter->translate(mapPos);
     painter->rotate(45);
 
@@ -111,33 +152,36 @@ void Ui::drawMap(QPainter* painter) {
 
     //convert to world coords
     painter->scale(mapSize/MapWidth, mapSize/MapHeight);
-    painter->translate(- dotSize/2 - MapX,-dotSize/2 - MapY); //reposition the dots
+    painter->translate(- DotSize/2 - MapX,-DotSize/2 - MapY); //reposition the dots
 
     painter->setPen(Window::ColorNone);
 
     //draw buildings
     painter->setBrush(Qt::darkGreen);
     foreach(Entity* ent, glW->buildings) {
-       painter->drawRect(QRectF(ent->position.x(),- ent->position.y(),dotSize,dotSize));
+       painter->drawRect(QRectF(ent->position.x(),- ent->position.y(),DotSize,DotSize));
     }
 
+   painter->setBrush(Window::ColorNone);
+   painter->setPen(Qt::green);
+
     //draw friends
-    painter->setBrush(Qt::green);
+    //painter->setBrush(Qt::green);
     foreach(Entity* ent, glW->units) {
-        painter->drawRect(QRectF(ent->position.x(),- ent->position.y(),dotSize,dotSize));
+        painter->drawRect(QRectF(ent->position.x(),- ent->position.y(),DotSize,DotSize));
+        //draw selected units in another color?
     }
 
     //draw enemies
-    painter->setBrush(Qt::red);
+    painter->setPen(Qt::red);
     foreach(Entity* ent, glW->enemies) {
-        painter->drawRect(QRectF(ent->position.x(),- ent->position.y(),dotSize,dotSize));
+        painter->drawRect(QRectF(ent->position.x(),- ent->position.y(),DotSize,DotSize));
     }
 
-    //draw the camera square
-    QPen pen(Qt::white,0,Qt::SolidLine,Qt::SquareCap,Qt::MiterJoin);
-    painter->setPen(pen);
+    //draw the camera square  
+    painter->setPen(Qt::white); //QPen pen(Qt::white,0,Qt::SolidLine,Qt::SquareCap,Qt::MiterJoin);
     QVector<QVector3D*> vecs;
-    painter->translate(dotSize/2 ,dotSize/2); //reposition the dots
+    painter->translate(DotSize/2 ,DotSize/2); //reposition the dots
 
     //should'nt really be projected, but a fixed square.
     //just leaving it like this since we'll probably change the camera angle later on

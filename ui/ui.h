@@ -23,6 +23,7 @@ public:
     bool isMouseDown();
     void moveToFront(Window *window);
     void drawMap(QPainter* painter);
+    bool clickMap();
 private:
     GLWidget* glW;
     qreal mouseX,mouseY;

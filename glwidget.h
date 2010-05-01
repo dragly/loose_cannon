@@ -48,6 +48,8 @@ public:
     QPoint project(QVector3D position);
 
     static const qreal MaxHealth = 100.0;
+    static const int MapSize = 30; // 2n x 2n nodes
+    static const qreal NodeSize = 8; // each node is 8x8 m (the length of a tank)
     QList<Entity*> findPath(Entity* startPosition, Entity* endPosition, QList<Entity*> avoid = QList<Entity*>());
     Entity* closestNode(QVector3D position);
 
