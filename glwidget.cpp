@@ -360,7 +360,10 @@ void GLWidget::paintGL()
                                         }
                                     } // end if node neighbor count
                                 }
-                            } // end if state
+                            } else if(aunit->moveState == Entity::StateQueued && collideUnit->moveState == Entity::StateQueued){
+                                aunit->moveState = Entity::StateMovingOutOfTheWay; // just to avoid getting stuck
+                            }
+                                // end if state
                         } else {
                             // just stop both units if they are enemies
 //                            aunit->moveState = Entity::StateStopped;
