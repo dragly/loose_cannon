@@ -126,7 +126,7 @@ public:
     int type;
     int moveState;
 
-//    Entity* movingAwayFrom;
+    Entity* movingAwayFrom;
 
 private:
     Model *model;

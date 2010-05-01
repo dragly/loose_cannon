@@ -38,7 +38,7 @@ const qreal EnemySpawnDistance = 15; // m
 const qreal Dt = 0.01; // the timestep
 const qreal RotateSpeed = 90; // degrees/s
 const qreal BulletSpeed = 20; // m/s
-const qreal NumberOfEnemies = 0;
+const qreal NumberOfEnemies = 1;
 
 // map and nodes
 const int GLWidget::MapSize; //Vj: moved to header as i need them in another class
@@ -301,6 +301,7 @@ void GLWidget::paintGL()
                     bullets.removeOne(bullet);
                 } // endif hit
             } // end foreach bullets
+            // start collision detection
             QList<Entity*> alreadyChecked;
             QList<Entity*> collisions;
             foreach(Entity* aunit, allUnits) { // foreach all units
@@ -318,11 +319,20 @@ void GLWidget::paintGL()
                         if(aunit->team == collideUnit->team) { // we don't give orders to the other team's units
                             if(aunit->moveState == Entity::StateStopped && collideUnit->moveState == Entity::StateStopped) { // worst case scenario - they shouldn't come this far
                                 if(nodeNeighbors[aunit->positionNode].count() > 0) {
-                                    qDebug() << "collision findpath";
+//                                    qDebug() << "collision findpath";
                                     aunit->setWaypoints(findPath(aunit->positionNode, nodeNeighbors[aunit->positionNode].first())); // should probably do a random selection
                                     aunit->moveState = Entity::StateMovingOutOfTheWay;
+                                    aunit->movingAwayFrom = collideUnit;
+//                                    qDebug() << "collision states" << aunit->moveState << collideUnit->moveState;
+                                } else {
+//                                    qDebug() << "collision statestopped, but could not find neighbors";
                                 }
                             } else if(aunit->moveState == Entity::StateMoving || collideUnit->moveState == Entity::StateMoving || aunit->moveState == Entity::StateMovingOutOfTheWay || collideUnit->moveState == Entity::StateMovingOutOfTheWay) { // only one is moving
+                                if((aunit->moveState == Entity::StateMovingOutOfTheWay && aunit->movingAwayFrom == collideUnit)
+                                   || (collideUnit->moveState == Entity::StateMovingOutOfTheWay && collideUnit->movingAwayFrom == aunit)) {
+                                    continue; // if we are moving away from the other unit, let's not make new plans because of a new collision
+                                }
+//                                qDebug() << "collision moving states" << aunit->moveState << collideUnit->moveState;
                                 Entity *movingUnit; // the moving unit
                                 Entity *stoppedUnit; // the unit standing still
                                 if(aunit->moveState == Entity::StateMoving) {
@@ -332,40 +342,48 @@ void GLWidget::paintGL()
                                     movingUnit = collideUnit;
                                     stoppedUnit = aunit;
                                 }
-                                if(stoppedUnit->moveState != Entity::StateQueued /*&& movingUnit->moveState != Entity::StateQueued && stoppedUnit->moveState != Entity::StateMovingOutOfTheWay && movingUnit->moveState != Entity::StateMovingOutOfTheWay*/) {
-                                    movingUnit->moveState = Entity::StateQueued;
-                                    stoppedUnit->moveState = Entity::StateMovingOutOfTheWay;
-//                                    stoppedUnit->movingAwayFrom = movingUnit; // we need to report back to this unit when we are done moving away
+                                if(stoppedUnit->moveState != Entity::StateQueued &&
+                                   movingUnit->moveState != Entity::StateQueued &&
+                                   stoppedUnit->moveState != Entity::StateMovingOutOfTheWay &&
+                                   movingUnit->moveState != Entity::StateMovingOutOfTheWay) {
+//                                    qDebug() << "finding nodes";
                                     QList<Entity*> avoidNodes;
                                     avoidNodes.append(movingUnit->waypoints);
                                     avoidNodes.append(movingUnit->positionNode);
                                     if(nodeNeighbors[aunit->positionNode].count() > 0) {
                                         QList<Entity*> freeNodes;
-                                        bool foundNode = false;
                                         foreach(Entity* node, nodeNeighbors[stoppedUnit->positionNode]) {
-                                            if(foundNode) {
-                                                continue;
-                                            }
                                             if(!avoidNodes.contains(node)) { // make sure the unit asking to get past is not going to any of these waypoints
-                                                foundNode = true;
-                                                qDebug() << "newWaypoints findpath";
-                                                QList<Entity*> newWaypoints;
-                                                newWaypoints.append(findPath(stoppedUnit->positionNode, node, avoidNodes));
-                                                if(stoppedUnit->waypoints.count() > 0) // if the one which is stopped was going somewhere, add the rest to the path
-                                                    newWaypoints.append(findPath(node, stoppedUnit->waypoints.last()));
-                                                stoppedUnit->setWaypoints(newWaypoints);
+                                                freeNodes.append(node);
                                             }
                                         }
-                                        if(!foundNode) { // could not find free node
+                                        if(freeNodes.count() > 0) {
+                                            // let's select a random node - this keeps unit's away from all moving in the same direction
+                                            int randomInt = (int)((qreal) freeNodes.count() * (qreal) qrand() / (qreal) RAND_MAX);
+                                            Entity* node = freeNodes.at(randomInt);
+//                                            qDebug() << "newWaypoints findpath";
+                                            QList<Entity*> newWaypoints;
+                                            newWaypoints.append(findPath(stoppedUnit->positionNode, node, avoidNodes));
+                                            if(stoppedUnit->waypoints.count() > 0) // if the one which is stopped was going somewhere, add the rest to the path
+                                                newWaypoints.append(findPath(node, stoppedUnit->waypoints.last()));
+                                            stoppedUnit->setWaypoints(newWaypoints);
+                                            stoppedUnit->movingAwayFrom = movingUnit; // we need to report back to this unit when we are done moving away
+                                            movingUnit->moveState = Entity::StateQueued; // set states
+                                            stoppedUnit->moveState = Entity::StateMovingOutOfTheWay;
+                                        } else { // could not find free node
                                             movingUnit->moveState = Entity::StateStopped;
                                             stoppedUnit->moveState = Entity::StateStopped;
-                                            qDebug() << "Could not find free node!";
+//                                            qDebug() << "Could not find free node!";
                                         }
+                                    } else {
+//                                        qDebug() << "collision moving had no node neighbors!";
                                     } // end if node neighbor count
+                                } else {
+//                                    qDebug() << "collision moving - was queued or moving out of the way";
                                 }
-                            } else if(aunit->moveState == Entity::StateQueued && collideUnit->moveState == Entity::StateQueued){
+                            } /*else if(aunit->moveState == Entity::StateQueued && collideUnit->moveState == Entity::StateQueued){
                                 aunit->moveState = Entity::StateMovingOutOfTheWay; // just to avoid getting stuck
-                            }
+                            }*/
                                 // end if state
                         } else {
                             // just stop both units if they are enemies
@@ -425,16 +443,17 @@ void GLWidget::paintGL()
                     if(aunit->moveTarget != NULL) {
                         if((aunit->position - aunit->moveTarget->position).lengthSquared() < NodeSizeSquared / 2) {
                             aunit->positionNode = aunit->moveTarget;
-//                            if(aunit->movingAwayFrom != NULL) { // If we were moving away from someone, report back to them that they should move, and that we are not moving away from them anymore
-//                                aunit->movingAwayFrom->moveState = Entity::StateMoving;
-//                                aunit->movingAwayFrom = NULL;
-//                            }
                             if(aunit->waypoints.count() > 0) { // we still got somewhere to go
                                 aunit->moveTarget = aunit->waypoints.first();
                                 aunit->waypoints.removeFirst();
                                 qDebug() << "Going to:" << aunit->moveTarget->position;
                                 doMovement = true;
                             } else { // we are too close and we have no more places to go, let's get a bit closer, then stop
+                                if(aunit->movingAwayFrom != NULL) { // If we were moving away from someone, report back to them that they should move, and that we are not moving away from them anymore
+                                    aunit->movingAwayFrom->moveState = Entity::StateMoving;
+                                    aunit->movingAwayFrom = NULL;
+                                    qDebug() << "Reporting back to friend";
+                                }
                                 if((aunit->position - aunit->moveTarget->position).lengthSquared() < 1) { // move to the center of the node
                                     aunit->moveState = Entity::StateStopped; // we are no longer to move towards a target since we are already there!
                                     aunit->moveTarget = NULL;
@@ -454,7 +473,7 @@ void GLWidget::paintGL()
                     if(doMovement) { // only if we are moving, we will be affected by engine acceleration
                         qreal aunitAcceleration = UnitAcceleration;
                         vectorAcceleration += aunitdir.normalized() * aunitAcceleration;
-                        aunit->moveState = Entity::StateMoving;
+//                        aunit->moveState = Entity::StateMoving;
                     } // end doMovement
                     // side-friction
                     //                    if(aunit->position.z() == 0) {
