@@ -85,6 +85,8 @@ class Entity
 {
 public:
     enum Type {TypeUnit, TypeBuilding, TypeBullet};
+    enum MoveState {StateMoving, StateStopped, StateMovingOutOfTheWay, StateQueued}; // Moving = going to waypoint, Queued = waiting for waipoint to become free.
+
     Entity(Model *model);
     Entity(Model *model, int type);
     ~Entity();
@@ -102,6 +104,10 @@ public:
 //    bool linkShaderProgram();
 //    bool initShaderProgram();
     void setModel(Model *model);
+    void setWaypoints(QList<Entity*> waypoints);
+    bool isMoving();
+    QList<Entity*> waypoints;
+    Entity* moveTarget;
 
     // variables
     QVector3D position;
@@ -109,17 +115,18 @@ public:
     QVector3D rotation;
     QVector3D scale;
 
-    QList<QVector3D> waypoints;
     qreal health;
     Entity* currentTarget;
-    QVector3D moveTarget;
     bool useMoveTarget; // shall we move to a target? Often set to false after currentTarget has been set.
     qreal lastBulletFired;
-
+    Entity* positionNode;
 
 
     int team;
     int type;
+    int moveState;
+
+//    Entity* movingAwayFrom;
 
 private:
     Model *model;
