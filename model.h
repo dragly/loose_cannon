@@ -85,7 +85,7 @@ class Entity
 {
 public:
     enum Type {TypeUnit, TypeBuilding, TypeBullet};
-    enum MoveState {StateMoving, StateQueued, StateStopped, StateMovingOutOfTheWay}; // Moving = going to waypoint, Queued = waiting for waipoint to become free.
+    enum MoveState {StateMoving, StateStopped, StateMovingOutOfTheWay, StateQueued}; // Moving = going to waypoint, Queued = waiting for waipoint to become free.
 
     Entity(Model *model);
     Entity(Model *model, int type);
@@ -126,7 +126,7 @@ public:
     int type;
     int moveState;
 
-    Entity* movingAwayFrom;
+//    Entity* movingAwayFrom;
 
 private:
     Model *model;
