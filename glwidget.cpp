@@ -351,6 +351,10 @@ void GLWidget::paintGL()
                                     } // end if node neighbor count
                                 }
                             } // end if state
+                        } else {
+                            // just stop both units if they are enemies
+                            aunit->moveState = Entity::StateStopped;
+                            collideUnit->moveState = Entity::StateStopped;
                         } // end if same team
                     } // end if collided
                 } // end foreach all units
@@ -385,12 +389,16 @@ void GLWidget::paintGL()
                             doMovement = true;
                         }
                     }
+                    if(aunit->moveState == Entity::StateStopped) {
+                        doMovement = false;
+                    }
                     if(aunit->currentTarget != NULL && aunit->moveState != Entity::StateMovingOutOfTheWay) { // if we have an enemy to kill and we're not messing around with bad placement
                         if((aunit->currentTarget->position - aunit->position).length() < FireDistance) {
                             //                            aunit->velocity *= 0;
-                            doMovement = false;
-//                            aunit->moveState = Entity::StateStopped;
-                            aunit->waypoints.clear();
+//                            doMovement = false;
+                            aunit->moveState = Entity::StateStopped;
+                            aunit->waypoints.clear(); // we are close enough, just remove our waypoints
+                            aunit->moveTarget = NULL;
                         } else {
                             if(!aunit->isMoving()) {
                                 qDebug() << "not moving but too far away";
