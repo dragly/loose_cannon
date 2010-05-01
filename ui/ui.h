@@ -22,6 +22,7 @@ public:
     void addWindow(Window* window);
     bool isMouseDown();
     void moveToFront(Window *window);
+    void drawMap(QPainter* painter);
 private:
     GLWidget* glW;
     qreal mouseX,mouseY;

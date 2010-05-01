@@ -44,6 +44,10 @@ void Entity::setWaypoints(QList<Entity*> waypoints) {
         this->moveState = StateStopped;
     }
 }
+Entity::~Entity() {
+    if (this->menu != NULL)
+        delete menu;
+}
 
 void Entity::addMenuPoitner(Window* menu) {
     this->menu = menu;

@@ -36,6 +36,8 @@ class Cbutton;
 class GLWidget : public QGLWidget {
 
     Q_OBJECT
+
+    friend class Ui;
 public:
     GLWidget(QWidget *parent = 0);
     ~GLWidget();

@@ -144,7 +144,7 @@ void Window::drawBackground(QPainter* painter) {
 
     //draw the titlebar as just another layer of the background ..for now
     if (titlebar) {
-        painter->setPen(QColor(0,0,0,0));
+        painter->setPen(Window::ColorNone);
         painter->setBrush(Window::ColorBackground);
 
         painter->drawPie(location.x(),location.y(),radius*2,radius*2,16*90,16*90);

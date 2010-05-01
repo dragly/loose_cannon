@@ -89,6 +89,7 @@ public:
 
     Entity(Model *model);
     Entity(Model *model, int type);
+    ~Entity();
 
     void addMenuPoitner(Window* menu);
     void select();
