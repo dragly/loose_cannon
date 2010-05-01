@@ -38,7 +38,7 @@ const qreal EnemySpawnDistance = 15; // m
 const qreal Dt = 0.01; // the timestep
 const qreal RotateSpeed = 90; // degrees/s
 const qreal BulletSpeed = 20; // m/s
-const qreal NumberOfEnemies = 0;
+const qreal NumberOfEnemies = 1;
 
 // map and nodes
 const int MapSize = 30; // 2n x 2n nodes
