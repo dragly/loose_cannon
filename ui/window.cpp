@@ -24,7 +24,7 @@ void Window::init(Ui* ui, qreal x,qreal y, qreal sizeX, qreal sizeY, Alignments 
     this->titlebar = titlebar;
     this->title = title;
     this->projected=projected;
-    this->hidden = false; //temp
+    this->hidden = true; //temp
 
     ui->addWindow(this);
 
