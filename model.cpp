@@ -33,6 +33,18 @@ Entity::Entity(Model *model, int type) {
     this->type = type;
     this->menu = NULL;
 }
+
+
+void Entity::setWaypoints(QList<Entity*> waypoints) {
+    this->waypoints = waypoints;
+    if(waypoints.count() > 0) {
+        this->moveTarget = waypoints.first();
+        this->moveState = StateMoving;
+    } else {
+        this->moveState = StateStopped;
+    }
+}
+
 void Entity::addMenuPoitner(Window* menu) {
     this->menu = menu;
 }
@@ -46,10 +58,18 @@ void Entity::initEntity(Model *model) {
     velocity = QVector3D(0,0,0);
     rotation = QVector3D(0,0,0);
     health = GLWidget::MaxHealth;
-    useMoveTarget = false;
     currentTarget = NULL;
     team = GLWidget::TeamHumans;
     this->model = model;
+    moveState = StateStopped;
+    movingAwayFrom = NULL;
+}
+bool Entity::isMoving() {
+    if(moveState == StateMoving || moveState == StateMovingOutOfTheWay) {
+        return true;
+    } else {
+        return false;
+    }
 }
 
 void Entity::setModel(Model *model) {

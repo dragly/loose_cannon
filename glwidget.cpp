@@ -30,25 +30,25 @@
 #include "ui/cbutton.h"
 
 // constants
-const qreal UnitSpeed = 3.0; // m/s
+const qreal UnitSpeed = 40.0; // m/s
 const qreal UnitAcceleration = 10.0; // m/s^2
 const qreal UnitFrictionSide = 6.0;
 const qreal UnitFrictionAll = 2.0;
 const qreal EnemySpawnDistance = 15; // m
 const qreal Dt = 0.01; // the timestep
-const qreal RotateSpeed = 180; // degrees/s
+const qreal RotateSpeed = 90; // degrees/s
 const qreal BulletSpeed = 20; // m/s
 const qreal NumberOfEnemies = 0;
-const qreal ClickRadius = 2;
 
 // map and nodes
-const int mapSize = 30; // 2n x 2n nodes
-const qreal nodeSize = 8; // each node is 8x8 m (the length of a tank)
-const qreal nodeSizeSquared = nodeSize*nodeSize; // just for convenience
-const qreal nodeSizeDiagonal = nodeSize*nodeSize + nodeSize*nodeSize; // just for convenience
+const int MapSize = 30; // 2n x 2n nodes
+const qreal NodeSize = 8; // each node is 8x8 m (the length of a tank)
+const qreal NodeSizeSquared = NodeSize*NodeSize; // just for convenience
+const qreal NodeSizeDiagonal = NodeSize*NodeSize + NodeSize*NodeSize; // just for convenience
 
 // gui and interactions
 const qreal DragDropTreshold = 20;
+const qreal ClickRadius = NodeSize / 2.0;
 
 // weapon constants
 const qreal ExplosionRadius = 3;
@@ -83,7 +83,7 @@ GLWidget::GLWidget(QWidget *parent) : QGLWidget(parent)
     bulletModel = new Model("bullet.obj");
     nodeModel = new Model("box.obj");
     // initial values
-    camera = QVector3D(20, -20, 60);
+    camera = QVector3D(25, -35, 80);
     dragBool = false;
     explosionSoundTime.restart();
     // timer, should be set last, just in case
@@ -204,8 +204,8 @@ void GLWidget::initializeGL ()
     glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR );
 
     this->ui = new Ui(this);
-//    Window* menu = new Window(ui,0,0,0.2,0.3,Window::Center,true,"Menu");
-//    new Cbutton(menu,QPointF(0.015,0.05),"New game");
+    //    Window* menu = new Window(ui,0,0,0.2,0.3,Window::Center,true,"Menu");
+    //    new Cbutton(menu,QPointF(0.015,0.05),"New game");
     resetGame();
 
 }
@@ -218,6 +218,7 @@ void GLWidget::paintGL()
     // First we check the time to see wether or not we need to recalculate physics.
     // If we do, we iterate through each timestep until we have caught up with the framerate.
     // This avoids missed collisions due to bad framerates, but causes the CPU to work a bit more
+    bool collision = false;
     while(currentTime <= newTime) { // let the physics catch up with the current time
         QList<Entity*> allUnits; // all units, including enemies and our own
         allUnits.append(enemies);
@@ -267,7 +268,7 @@ void GLWidget::paintGL()
                             hitUnit->health -= damage;
                             score += damage;
                             if(hitUnit->currentTarget == NULL && // if we have not selected a target
-                               hitUnit->useMoveTarget == false && // and we are not moving anywhere
+                               hitUnit->isMoving() == false && // and we are not moving anywhere
                                hitUnit->team != bulletOwner[bullet]->team && // and the guy shooting on us is not on our team
                                bulletOwner[bullet]->health > 0) { // and he's not dead
                                 hitUnit->currentTarget = bulletOwner[bullet]; // then get back at that bastard!
@@ -296,25 +297,82 @@ void GLWidget::paintGL()
                     bullets.removeOne(bullet);
                 } // endif hit
             } // end foreach bullets
-            foreach(Entity* aunit, allUnits) { // for all units
+            foreach(Entity* aunit, allUnits) { // foreach all units
                 QList<Entity*> alreadyChecked;
                 // collision detection (path finding)
                 foreach(Entity* collideUnit, allUnits) {
                     if(collideUnit == aunit || alreadyChecked.contains(aunit))
                         continue; // if it is ourselves, we of course don't collide and we don't need to check both A & B and B & A.
                     alreadyChecked.append(collideUnit);
-                    if((collideUnit->position - aunit->position).lengthSquared() < nodeSizeSquared) {
-                        if(aunit->moveState == Entity::StateStopped && collideUnit->moveState == Entity::StateStopped) { // worst case scenario - they shouldn't come this far
-
-                        }
-                    }
-                }
+                    if((collideUnit->position - aunit->position).lengthSquared() < NodeSizeSquared / 2.5) { // divided by two because we shouldn't be too nazi ;) now units may move diagonally without interrupting neighbor nodes.
+                        collision = true;
+                        if(aunit->team == collideUnit->team) { // we don't give orders to the other team's units
+                            if(aunit->moveState == Entity::StateStopped && collideUnit->moveState == Entity::StateStopped) { // worst case scenario - they shouldn't come this far
+                                qDebug() << "neighbors" << nodeNeighbors[aunit->positionNode].count();
+                                if(nodeNeighbors[aunit->positionNode].count() > 0) {
+                                    aunit->setWaypoints(findPath(aunit->positionNode, nodeNeighbors[aunit->positionNode].first()));
+                                }
+                            } else if(aunit->moveState == Entity::StateMoving && collideUnit->moveState == Entity::StateMoving) { // both are moving
+                                if(nodeNeighbors[aunit->positionNode].count() > 0) {
+                                    QList<Entity*> avoidNodesAunit;
+                                    avoidNodesAunit.append(collideUnit->positionNode);
+                                    if(collideUnit->waypoints.count() > 0)
+                                        avoidNodesAunit.append(collideUnit->waypoints.first());
+                                    if(collideUnit->waypoints.count() > 1)
+                                        avoidNodesAunit.append(collideUnit->waypoints.at(1)); // second waypoint
+                                    QList<Entity*> avoidNodesCollideUnit;
+                                    avoidNodesCollideUnit.append(aunit->positionNode);
+                                    if(aunit->waypoints.count() > 0)
+                                        avoidNodesCollideUnit.append(aunit->waypoints.first()); // second waypoint
+                                    if(aunit->waypoints.count() > 1)
+                                        avoidNodesCollideUnit.append(aunit->waypoints.at(1));
+                                    aunit->setWaypoints(findPath(aunit->positionNode, aunit->waypoints.last(), avoidNodesAunit)); // generate new path to target, but avoid the other's path
+                                    collideUnit->setWaypoints(findPath(collideUnit->positionNode, collideUnit->waypoints.last(), avoidNodesCollideUnit)); // generate new path to target, but avoid the other's path
+                                }
+                            } else if(aunit->moveState == Entity::StateMoving || collideUnit->moveState == Entity::StateMoving) { // only one is moving
+                                qDebug() << "just one moving";
+                                Entity *movingUnit; // the moving unit
+                                Entity *stoppedUnit; // the unit standing still
+                                if(aunit->moveState == Entity::StateMoving) {
+                                    movingUnit = aunit;
+                                    stoppedUnit = collideUnit;
+                                } else {
+                                    movingUnit = collideUnit;
+                                    stoppedUnit = aunit;
+                                }
+                                if(stoppedUnit->moveState != Entity::StateQueued) {
+                                    movingUnit->moveState = Entity::StateQueued;
+                                    stoppedUnit->moveState = Entity::StateMovingOutOfTheWay;
+                                    stoppedUnit->movingAwayFrom = movingUnit; // we need to report back to this unit when we are done moving away
+                                    if(nodeNeighbors[aunit->positionNode].count() > 0) {
+                                        qDebug() << "neighbors" << nodeNeighbors[stoppedUnit->positionNode].count();
+                                        bool foundFreeNode = false;
+                                        foreach(Entity* node, nodeNeighbors[stoppedUnit->positionNode]) {
+                                            if(foundFreeNode) {
+                                                continue;
+                                            }
+                                            if(!movingUnit->waypoints.contains(node)) { // make sure the unit asking to get past is not going to any of these waypoints
+                                                stoppedUnit->setWaypoints(findPath(aunit->positionNode, node));
+                                                foundFreeNode = true;
+                                            }
+                                        }
+                                        if(!foundFreeNode) { // could not find free node
+                                            movingUnit->moveState = Entity::StateStopped;
+                                            stoppedUnit->moveState = Entity::StateStopped;
+                                            qDebug() << "Could not find free node!";
+                                        }
+                                    } // end if node neighbor count
+                                }
+                            } // end if state
+                        } // end if same team
+                    } // end if collided
+                } // end foreach all units
                 // end collision detection
                 // set the unit to attack its target (rotate/direction)
                 QVector3D aunitdir;
                 bool shallMove = false;
-                if(aunit->useMoveTarget && aunit->waypoints.count() > 0) {
-                    aunitdir = aunit->moveTarget - aunit->position;
+                if(aunit->isMoving()) {
+                    aunitdir = aunit->moveTarget->position - aunit->position;
                     shallMove = true;
                 } else if(aunit->currentTarget != NULL) {
                     aunitdir = aunit->currentTarget->position - aunit->position;
@@ -344,41 +402,49 @@ void GLWidget::paintGL()
                         if((aunit->currentTarget->position - aunit->position).length() < FireDistance) {
                             //                            aunit->velocity *= 0;
                             doMovement = false;
-                            aunit->useMoveTarget = false;
+                            aunit->moveState = Entity::StateStopped;
                             aunit->waypoints.clear();
                         } else {
-                            if(!aunit->useMoveTarget) {
-                                aunit->waypoints = findPath(aunit->positionNode, aunit->currentTarget->positionNode);
-                                aunit->useMoveTarget = true;
+                            if(!aunit->isMoving()) {
+                                aunit->setWaypoints(findPath(aunit->positionNode, aunit->currentTarget->positionNode));
                             }
                         }
                     }
-                    if((aunit->position - aunit->waypoints.first()->position).lengthSquared() < nodeSizeSquared) {
+                    if((aunit->position - aunit->moveTarget->position).lengthSquared() < NodeSizeSquared / 2) {
+                        aunit->positionNode = aunit->moveTarget;
                         if(aunit->waypoints.count() > 0) { // we still got somewhere to go
-                            aunit->positionNode = aunit->waypoints.first();
-                            if(aunit->waypoints.count() > 1) { // only remove if we have more than one waypoint left
-                                aunit->waypoints.removeFirst();
-                            }
-                            qDebug() << "Going to:" << aunit->waypoints.first()->position;
+                            aunit->moveTarget = aunit->waypoints.first();
+                            aunit->waypoints.removeFirst();
+                            qDebug() << "Going to:" << aunit->moveTarget->position;
                             doMovement = true;
-                        } else { // we are too close and we have no more places to go - lets stop!
-                            //                                aunit->velocity *= 0;
-                            aunit->useMoveTarget = false; // we are no longer to move towards a target since we are already there!
-                            doMovement = false;
+                        } else { // we are too close and we have no more places to go, let's get a bit closer, then stop
+                            if((aunit->position - aunit->moveTarget->position).lengthSquared() < 1) { // move to the center of the node
+                                aunit->moveState = Entity::StateStopped; // we are no longer to move towards a target since we are already there!
+                                doMovement = false;
+                                qDebug() << "At target!";
+                                aunit->moveState = Entity::StateStopped;
+                                if(aunit->movingAwayFrom != NULL) {
+                                    aunit->movingAwayFrom->moveState = Entity::StateMoving;
+                                    aunit->movingAwayFrom = NULL;
+                                }
+                            } else {
+                                doMovement = true;
+                            }
                         }
                     }
                     QVector3D vectorAcceleration;
-                    vectorAcceleration += - aunit->velocity * UnitAcceleration / UnitSpeed; // air resistance acts in the negative direction of the velocity
+                    //                    vectorAcceleration += - aunit->velocity * UnitAcceleration / UnitSpeed; // air resistance acts in the negative direction of the velocity
                     if(doMovement) { // only if we are moving, we will be affected by engine acceleration
-                        qreal aunitAcceleration = UnitAcceleration; // acceleration (force of the enemy's engine) minus air resistance - set so that the equal eachother at ENEMY_SPEED
+                        qreal aunitAcceleration = UnitAcceleration;
                         vectorAcceleration += aunitdir.normalized() * aunitAcceleration;
+                        aunit->moveState = Entity::StateMoving;
                     } // end doMovement
                     // side-friction
-//                    if(aunit->position.z() == 0) {
-//                        QVector3D projected = aunit->velocity - QVector3D::dotProduct(aunit->velocity, aunitdir.normalized()) * aunitdir.normalized();
-//                        qreal aunitFriction = - UnitFrictionSide * projected.length(); // we find the amount of friction applied
-//                        aunit->velocity += projected.normalized() * aunitFriction * Dt;	// apply the friction
-//                    }
+                    //                    if(aunit->position.z() == 0) {
+                    //                        QVector3D projected = aunit->velocity - QVector3D::dotProduct(aunit->velocity, aunitdir.normalized()) * aunitdir.normalized();
+                    //                        qreal aunitFriction = - UnitFrictionSide * projected.length(); // we find the amount of friction applied
+                    //                        aunit->velocity += projected.normalized() * aunitFriction * Dt;	// apply the friction
+                    //                    }
                     // all-way friction
                     vectorAcceleration += - aunit->velocity * UnitFrictionAll;
                     aunit->velocity += vectorAcceleration * Dt;
@@ -451,7 +517,7 @@ void GLWidget::paintGL()
 
     mainModelView = QMatrix4x4(); // reset
     // set up the main view (affects all objects)
-    mainModelView.perspective(40.0, aspectRatio, 1.0, 100.0);
+    mainModelView.perspective(40.0, aspectRatio, 1.0, 150.0);
     mainModelView.lookAt(camera + offset,QVector3D(0,0,0) + offset,QVector3D(0.0,0.0,1.0));
 
     QList<Entity*> allUnits; // all units, including enemies and our own
@@ -478,7 +544,7 @@ void GLWidget::paintGL()
                 }
             }
         }
-        if(true) {
+        if(drawNode) {
             node->draw(mainModelView);
         }
     }
@@ -525,6 +591,8 @@ void GLWidget::paintGL()
     painter.drawText(20, 80, "Unit queue: " + QString::number(recruitqueue));
     painter.drawText(width() - 200, 60, "score: " + QString::number(score));
     painter.drawText(width() - 200, 80, "enemies: " + QString::number(enemies.count()));
+    painter.drawText(width() - 200, 100, "moveState: " + QString::number(selectedUnit->moveState));
+    painter.drawText(width() - 200, 120, "collision: " + QString::number(collision));
 
     ui->draw(&painter);
 
@@ -553,10 +621,10 @@ void GLWidget::paintGL()
 void GLWidget::regenerateNodes() {
     nodes.clear();
     nodeNeighbors.clear();
-    for(int i = -mapSize; i < mapSize; i++) {
-        for(int j = -mapSize; j < mapSize; j++) {
+    for(int i = -MapSize; i < MapSize; i++) {
+        for(int j = -MapSize; j < MapSize; j++) {
             bool tooClose = false;
-            QVector3D position((qreal)i * nodeSize, (qreal)j * nodeSize, 0);
+            QVector3D position((qreal)i * NodeSize, (qreal)j * NodeSize, 0);
             foreach(Entity* building, buildings){
                 if((building->position - position).length() < 2) {
                     tooClose = true;
@@ -573,7 +641,7 @@ void GLWidget::regenerateNodes() {
     foreach(Entity* node, nodes) {
         QList<Entity*> neighbors;
         foreach(Entity* possibleNeighbor, nodes) {
-            if((node->position - possibleNeighbor->position).lengthSquared() <= nodeSizeDiagonal) { // if the distance between nodes are 1x1, a diagonal nodeneighbor will be x^2 = 1^2 + 1^2 away (Pythagoras)
+            if((node->position - possibleNeighbor->position).lengthSquared() <= NodeSizeDiagonal && possibleNeighbor != node) { // if the distance between nodes are 1x1, a diagonal nodeneighbor will be x^2 = 1^2 + 1^2 away (Pythagoras)
                 neighbors.append(possibleNeighbor);
             }
         }
@@ -581,7 +649,7 @@ void GLWidget::regenerateNodes() {
     }
 }
 
-QList<Entity*> GLWidget::findPath(Entity* startNode, Entity* goalNode) {
+QList<Entity*> GLWidget::findPath(Entity* startNode, Entity* goalNode, QList<Entity*> avoid) {
     qDebug() << "Finding path from" << startNode->position << "to" << goalNode->position;
     // che
     QList<Entity*> closedSet;
@@ -623,7 +691,7 @@ QList<Entity*> GLWidget::findPath(Entity* startNode, Entity* goalNode) {
         openSet.removeAll(x);
         closedSet.append(x);
         foreach(Entity* y, nodeNeighbors.value(x)) {
-            if(closedSet.contains(y)) {
+            if(closedSet.contains(y) || avoid.contains(y)) { // if in closed set or we should avoid this node
                 continue;
             }
             qreal tentativeGScore = 0;
@@ -782,11 +850,11 @@ void GLWidget::mouseReleaseEvent(QMouseEvent *event) {
                     if(length < ClickRadius && length < lastLength) {
                         if(aunit->team == TeamEnemies) {
                             selectedUnit->currentTarget = aunit;
-                            selectedUnit->useMoveTarget = false; // we shall no longer use our moveTarget variable
+                            selectedUnit->moveState = Entity::StateStopped; // we shall no longer use our moveTarget variable
                         } else if(aunit->team == TeamHumans) {
                             /*if (aunit->type == Entity::TypeUnit) */
-                                selectedUnit = aunit;
-                                aunit->select();
+                            selectedUnit = aunit;
+                            aunit->select();
 
                         }
 
@@ -797,8 +865,7 @@ void GLWidget::mouseReleaseEvent(QMouseEvent *event) {
                 Entity* cursorNode = closestNode(cursorPosition);
                 if(!foundUnit) { // if we didn't find anything, we assume that we want to move the selected unit
                     selectedUnit->currentTarget = NULL;
-                    selectedUnit->waypoints = findPath(selectedUnit->positionNode, cursorNode); // set the move target of the unit to this point
-                    selectedUnit->useMoveTarget = true; // let's move!
+                    selectedUnit->setWaypoints(findPath(selectedUnit->positionNode, cursorNode)); // set the move target of the unit to this point
                 }
             }
         }

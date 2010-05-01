@@ -46,7 +46,7 @@ public:
     QPoint project(QVector3D position);
 
     static const qreal MaxHealth = 100.0;
-    QList<Entity*> findPath(Entity* startPosition, Entity* endPosition);
+    QList<Entity*> findPath(Entity* startPosition, Entity* endPosition, QList<Entity*> avoid = QList<Entity*>());
     Entity* closestNode(QVector3D position);
 
 protected:
