@@ -33,11 +33,14 @@
 class Ui;
 class Bubble;
 class Cbutton;
+class Radar;
+
 class GLWidget : public QGLWidget {
 
     Q_OBJECT
 
     friend class Ui;
+    friend class Radar;
 public:
     GLWidget(QWidget *parent = 0);
     ~GLWidget();
@@ -118,7 +121,7 @@ private:
     QPoint dragStartPosition;
     bool dragging;
     QTime holdtime;
-    bool inMenu;
+    bool inUi;
     QTime recruittime; //vj: temp for test.    //bool recruiting;
     int recruitqueue;
 
