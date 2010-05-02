@@ -66,7 +66,7 @@ void Entity::initEntity(Model *model) {
     team = GLWidget::TeamHumans;
     this->model = model;
     moveState = StateStopped;
-//    movingAwayFrom = NULL;
+    movingAwayFrom = NULL;
 }
 bool Entity::isMoving() {
     if(moveState == StateMoving || moveState == StateMovingOutOfTheWay) {

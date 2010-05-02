@@ -34,7 +34,7 @@ const qreal UnitSpeed = 40.0; // m/s
 const qreal UnitAcceleration = 10.0; // m/s^2
 const qreal UnitFrictionSide = 6.0;
 const qreal UnitFrictionAll = 2.0;
-const qreal EnemySpawnDistance = 15; // m
+const qreal EnemySpawnDistance = GLWidget::NodeSize * 8; // m
 const qreal Dt = 0.01; // the timestep
 const qreal RotateSpeed = 90; // degrees/s
 const qreal BulletSpeed = 20; // m/s
@@ -57,7 +57,7 @@ const qreal ClickRadius = GLWidget::NodeSize / 2.0;
 const qreal ExplosionRadius = 3;
 const qreal ExplosionDamage = 30;
 const qreal ExplosionForce = 20;
-const qreal FireDistance = 20;
+const qreal FireDistance = GLWidget::NodeSize * 6.0;
 const qreal BulletSpawnTime = 2;
 QVector3D Gravity(0, 0, -10); // m/s^2
 const qreal GLWidget::MaxHealth;
@@ -84,6 +84,7 @@ GLWidget::GLWidget(QWidget *parent) : QGLWidget(parent)
     tankModel = new Model("tank-body.obj");
     tankModel->scale *= 0.5;
     bulletModel = new Model("bullet.obj");
+    bulletModel->scale *= 2.0;
     nodeModel = new Model("box.obj");
     // initial values
     camera = QVector3D(25, -25, 80);
@@ -320,7 +321,8 @@ void GLWidget::paintGL()
                             if(aunit->moveState == Entity::StateStopped && collideUnit->moveState == Entity::StateStopped) { // worst case scenario - they shouldn't come this far
                                 if(nodeNeighbors[aunit->positionNode].count() > 0) {
 //                                    qDebug() << "collision findpath";
-                                    aunit->setWaypoints(findPath(aunit->positionNode, nodeNeighbors[aunit->positionNode].first())); // should probably do a random selection
+                                    int randomInt = (int)((qreal) nodeNeighbors[aunit->positionNode].count() * (qreal) qrand() / (qreal) RAND_MAX);
+                                    aunit->setWaypoints(findPath(aunit->positionNode, nodeNeighbors[aunit->positionNode].at(randomInt))); // should probably do a random selection
                                     aunit->moveState = Entity::StateMovingOutOfTheWay;
                                     aunit->movingAwayFrom = collideUnit;
 //                                    qDebug() << "collision states" << aunit->moveState << collideUnit->moveState;
@@ -686,6 +688,14 @@ void GLWidget::regenerateNodes() {
 }
 
 QList<Entity*> GLWidget::findPath(Entity* startNode, Entity* goalNode, QList<Entity*> avoid) {
+    // bug fix - if one of the nodes for some strange reason does not exist (has been seen happening) - use a completely different node
+    if(!nodes.contains(startNode)) {
+        startNode = nodes.first();
+    }
+    if(!nodes.contains(goalNode)) {
+        goalNode = nodes.first();
+    }
+    // end bug fix
     qDebug() << "Finding path from" << startNode->position << "to" << goalNode->position;
     // che
     QList<Entity*> closedSet;
