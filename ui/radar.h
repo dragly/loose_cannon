@@ -6,6 +6,7 @@
 
 class Radar : public HudObject
 {
+    Q_OBJECT
 public:
     Radar(Ui* ui);
 
@@ -19,6 +20,9 @@ public:
     bool hovers();
     void resize();
 
+public slots:
+    void changeState();
+
 private:
     bool hoversIcon();
     bool hoversMap();
@@ -27,7 +31,6 @@ private:
     bool clickMap();
     bool hidden;
     bool btnDown;
-    Ui* ui;
 };
 
 #endif // RADAR_H

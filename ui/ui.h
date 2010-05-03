@@ -9,6 +9,7 @@ class GLWidget;
 class Window;
 class Controller;
 class HudObject;
+class HudIcon;
 
 class Ui
 {
@@ -16,6 +17,7 @@ class Ui
     friend class Radar;
     friend class Controller;
     friend class Cbutton;
+    friend class HudIcon;
 public:
     Ui(GLWidget* glW);
 

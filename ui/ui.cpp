@@ -9,7 +9,7 @@ Ui::Ui(GLWidget* glW)
     this->glW=glW;
     mouseDown=false;
 
-    addHudObject(new Radar(this));
+    new Radar(this);
 }
 
 void Ui::addHudObject(HudObject* object) {

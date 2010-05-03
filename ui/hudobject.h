@@ -1,11 +1,13 @@
 #ifndef HUDOBJECT_H
 #define HUDOBJECT_H
 
+#include <QObject>
 class QPainter;
+class Ui;
 
-
-class HudObject
+class HudObject : public QObject
 {
+    Q_OBJECT
 public:
     HudObject();
     virtual void draw(QPainter* painter);
@@ -16,6 +18,8 @@ public:
     virtual void move(int x, int y);
     virtual void hide();
     virtual void show();
+
+    Ui* ui;
 };
 
 #endif // HUDOBJECT_H

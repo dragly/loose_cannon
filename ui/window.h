@@ -74,7 +74,7 @@ private:
     QSize size;
     QSizeF relativeSize;
     QPoint relativePos;
-    Ui* ui;
+
     bool projected;
 };
 

@@ -1,6 +1,7 @@
 #include "radar.h"
 #include "ui.h"
 #include "window.h"
+#include "hudicon.h"
 
 //these should be fetched form glW
 const qreal MAPSIZE = GLWidget::MapSize * GLWidget::NodeSize; //copied from glwidgets mapsize, which (confusingly) should be multiplied with 2*nodedistance to get the actual map size.
@@ -20,12 +21,19 @@ Radar::Radar(Ui* ui)
 {
     this->ui = ui;
     this->btnDown = false;
+    HudIcon* hi =new HudIcon(this,Window::TopRight,0,0,"Radar");
+    QObject::connect(hi,SIGNAL(iconClicked()), this, SLOT(changeState()));
+    ui->addHudObject(this);
 }
 void Radar::draw(QPainter* painter) {
 
    drawIcon(painter);
    if (!hidden)
         drawMap(painter);
+}
+
+void Radar::changeState() {
+    hidden = !hidden;
 }
 
 bool Radar::click() {
