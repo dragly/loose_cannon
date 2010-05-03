@@ -32,6 +32,7 @@ Entity::Entity(Model *model, int type) {
     initEntity(model);
     this->type = type;
     this->menu = NULL;
+    this->moveTarget = NULL;
 }
 
 
