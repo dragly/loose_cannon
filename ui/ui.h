@@ -2,33 +2,39 @@
 #define UI_H
 
  #include <QList>
+#include <QPoint>
 
 class QPainter;
 class GLWidget;
 class Window;
 class Controller;
+class HudObject;
 
 class Ui
 {
     friend class Window;
+    friend class Radar;
     friend class Controller;
     friend class Cbutton;
 public:
     Ui(GLWidget* glW);
+
     void draw(QPainter* painter);
     void convertMousePos(int x, int y);
     bool mouseClick();
     void mouseRelease();
-    void addWindow(Window* window);
+    void move();
+
+    void addHudObject(HudObject* object);
     bool isMouseDown();
-    void moveToFront(Window *window);
+    void moveToFront(HudObject *object);
     void drawMap(QPainter* painter);
     bool clickMap();
 private:
     GLWidget* glW;
-    qreal mouseX,mouseY;
-    QList<Window*> windows;
-    Window* selectedWindow;
+    qreal mouseX,mouseY,lastMouseX,lastMouseY;
+    QList<HudObject*> hudObjects;
+    HudObject* selectedHudObject;
     bool mouseDown;
 };
 

@@ -25,15 +25,24 @@ void Window::init(Ui* ui, qreal x,qreal y, qreal sizeX, qreal sizeY, Alignments 
     this->title = title;
     this->projected=projected;
     this->hidden = true; //temp
+    this->alignment = alignment;
+    relativePos.setX(x);
+    relativePos.setY(y);
 
-    ui->addWindow(this);
+    ui->addHudObject(this);
 
     qDebug() << "Sizes!" << sizeX;
     relativeSize.setWidth(sizeX);
     relativeSize.setHeight(sizeY);
     resize();
+}
 
-  if (!projected) {
+void Window::resize() {
+    size.setWidth(relativeSize.width() * ui->glW->height());
+    size.setHeight(relativeSize.height() * ui->glW->height());
+    qDebug() << relativeSize << size;
+
+    if (!projected) {
         qreal xAlig, yAlig;
         if (alignment <= Window::TopRight)              //top
             yAlig = 0;
@@ -49,18 +58,13 @@ void Window::init(Ui* ui, qreal x,qreal y, qreal sizeX, qreal sizeY, Alignments 
         else                                            //right
             xAlig=ui->glW->width() - size.width();
 
-        this->pos.setX(x * ui->glW->height() + xAlig);
-        this->pos.setY(y * ui->glW->height() + yAlig);
+        this->pos.setX(relativePos.x() * ui->glW->height() + xAlig);
+        this->pos.setY(relativePos.y() * ui->glW->height() + yAlig);
     } else {
-        this->pos.setX(x * ui->glW->height());
-        this->pos.setY(y * ui->glW->height());
+        this->pos.setX(relativePos.x() * ui->glW->height());
+        this->pos.setY(relativePos.y() * ui->glW->height());
     }
-}
 
-void Window::resize() {
-    size.setWidth(relativeSize.width() * ui->glW->height());
-    size.setHeight(relativeSize.height() * ui->glW->height());
-    qDebug() << relativeSize << size;
 }
 
 void  Window::addController(Controller* controller) {
@@ -91,7 +95,7 @@ void Window::draw(QPainter* painter) {
 
 }
 
-bool Window::click() {
+void Window::clickRelease() {
 
     //check if we hover at all
     //if (!hovers()) //checked in ui
@@ -99,18 +103,15 @@ bool Window::click() {
 
     //check if we pressed the titlebar
     if (!projected && /*hovering the titlebar*/ false) {
-        return true;
+        return;
     }
     //check all elements
     for (int i=0; i<controllers.size(); i++) {
         Controller* control = controllers.at(i);
         if (control->click()) {
-            selectedController=control; //this one should always be at slot 0, to be drawn on top.
-            return true;
+            return;
         }
     }
-
-    return true;
 }
 bool Window::hovers() {
     QPoint location = pos;
@@ -124,6 +125,16 @@ bool Window::hovers() {
 
     return (ui->mouseX > location.x() && ui->mouseX < location.x()+size.width() && ui->mouseY > location.y() && ui->mouseY < location.y()+size.height());
 
+}
+
+bool Window::click() {
+    return hovers();
+
+}
+void Window::move(int x, int y) {
+    //move the window?
+
+    //move sliders etc
 }
 
 

@@ -104,7 +104,7 @@ void GLWidget::resetGame() {
     currentTime = 0.0;
     gameOver = false;
     dragging = false;
-    inMenu = false;
+    inUi = false;
     frames = 0;
     score = 0;
     gameOverTime = 0.0;
@@ -824,10 +824,10 @@ void GLWidget::mousePressEvent(QMouseEvent *event)
     ui->convertMousePos(event->x(),event->y());
     if (event->button() == Qt::LeftButton) {
         if (ui->mouseClick()) {
-            inMenu=true;
+            inUi=true;
             return;
         }
-        inMenu=false;
+        inUi=false;
 
         if(gameOver) { // make sure we have had the game over text shown for 1.5 seconds
             qDebug() << currentTime - gameOverTime;
@@ -850,7 +850,11 @@ void GLWidget::mousePressEvent(QMouseEvent *event)
 void GLWidget::mouseMoveEvent(QMouseEvent* event) {
     ui->convertMousePos(event->x(),event->y());
 
-    if (event->buttons() & Qt::LeftButton && !inMenu) {
+    if (event->buttons() & Qt::LeftButton) {
+        if (inUi) {
+            ui->move();
+            return;
+        }
         // this should be improved. This method is not accurate.
         QVector3D currentCursor = unProject(event->x(), event->y());
         if(dragging) {
@@ -874,7 +878,7 @@ void GLWidget::mouseMoveEvent(QMouseEvent* event) {
 void GLWidget::mouseReleaseEvent(QMouseEvent *event) {
     ui->convertMousePos(event->x(),event->y());
     if (event->button() == Qt::LeftButton) {
-        if (inMenu) {
+        if (inUi) {
             ui->mouseRelease();
         }  else if(!dragging) {
             if(holdtime.elapsed() > 1000) { // TODO: selection mode

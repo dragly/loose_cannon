@@ -32,7 +32,7 @@ void Cbutton::draw(QPainter *painter) {
     QPoint location = pos;
 
     QColor color;
-    if (parent->ui->selectedWindow == parent && hovers() && parent->ui->isMouseDown())
+    if (parent->ui->selectedHudObject == parent && hovers() && parent->ui->isMouseDown())
         color = Window::ColorHighlight;
     else
         color = Window::ColorBorder;

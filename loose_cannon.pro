@@ -14,6 +14,8 @@ SOURCES += main.cpp \
     ui/controller.cpp \
     ui/cbutton.cpp \
     node.cpp
+    ui/hudobject.cpp \
+    ui/radar.cpp
 SOURCES += glwidget.cpp
 SOURCES += mainwindow.cpp
 SOURCES += glm.cpp
@@ -24,6 +26,8 @@ HEADERS += glwidget.h \
     ui/controller.h \
     ui/cbutton.h \
     node.h
+    ui/hudobject.h \
+    ui/radar.h
 HEADERS += mainwindow.h
 HEADERS += glm.h
 RESOURCES += texture.qrc
