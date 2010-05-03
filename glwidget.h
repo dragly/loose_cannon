@@ -114,7 +114,7 @@ private:
     Model *nodeModel;
     bool gameOver;
     qreal gameOverTime;
-    qreal currentTime;
+    qreal lastFrameTime;
     QPoint dragLastPosition;
     QPoint dragStartPosition;
     bool dragging;
