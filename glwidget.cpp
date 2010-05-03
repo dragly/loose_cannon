@@ -54,10 +54,10 @@ const qreal DragDropTreshold = 20;
 const qreal ClickRadius = GLWidget::NodeSize / 2.0;
 
 // weapon constants
-const qreal ExplosionRadius = 3;
+const qreal ExplosionRadiusSquared = 3*3; // squared
 const qreal ExplosionDamage = 30;
 const qreal ExplosionForce = 20;
-const qreal FireDistance = GLWidget::NodeSize * 6.0;
+const qreal FireDistanceSquared = NodeSizeSquared * 6.0 * 6.0;
 const qreal BulletSpawnTime = 2;
 QVector3D Gravity(0, 0, -10); // m/s^2
 const qreal GLWidget::MaxHealth;
@@ -231,9 +231,9 @@ void GLWidget::paintGL()
     if(!gameOver) { // do logic
         foreach(Entity* enemy, enemies) {
             if(enemy->currentTarget != NULL) {
-                qreal currentDistance = (enemy->currentTarget->position - enemy->position).length();
+                qreal currentDistance = (enemy->currentTarget->position - enemy->position).lengthSquared();
                 foreach(Entity* unit, units) {
-                    qreal distance = (unit->position - enemy->position).length();
+                    qreal distance = (unit->position - enemy->position).lengthSquared();
                     if(currentDistance > distance) { // the enemy always selects the closest target
                         enemy->currentTarget = unit; // if we are closer, the enemy chooses to target us
                     }
@@ -254,7 +254,7 @@ void GLWidget::paintGL()
             bullet->rotation.setX(bulletAngleX);
             foreach(Entity* aunit, allUnits) {
                 QVector3D distance = bullet->position - aunit->position;
-                if(distance.length() < 1.5 && bullet->team != aunit->team) {
+                if(distance.lengthSquared() < 3 && bullet->team != aunit->team) {
                     hitUnit = true;
                 }
             } // foreach enemy
@@ -264,8 +264,8 @@ void GLWidget::paintGL()
                 // TODO: Animate explosion with sprites as seen here: http://news.developer.nvidia.com/2007/01/tips_strategies.html
                 foreach(Entity *hitUnit, allDestructibles) {
                     QVector3D distance = hitUnit->position - bullet->position;
-                    if(distance.length() < ExplosionRadius) { // in explosion radius
-                        qreal damage = ExplosionDamage * (distance.length() / ExplosionRadius); // the damage is relative to the distance
+                    if(distance.lengthSquared() < ExplosionRadiusSquared) { // in explosion radius
+                        qreal damage = ExplosionDamage * (distance.lengthSquared() / ExplosionRadiusSquared); // the damage is relative to the distance
                         hitUnit->health -= damage;
                         score += damage;
                         if(hitUnit->currentTarget == NULL && // if we have not selected a target
@@ -407,7 +407,7 @@ void GLWidget::paintGL()
             }
             if(aunit->currentTarget != NULL) { // if we have an enemy to kill and we're not messing around with bad placement
                 //                    qDebug() << "got target";
-                if((aunit->currentTarget->position - aunit->position).length() < FireDistance) {
+                if((aunit->currentTarget->position - aunit->position).lengthSquared() < FireDistanceSquared) {
                     //                        aunit->moveTarget = NULL;
                     aunit->waypoints.clear();;
                 } else {
@@ -494,7 +494,7 @@ void GLWidget::paintGL()
             }
             // fire bullets
             if(aunit->currentTarget != NULL /*&& difference < 1 && difference > -1*/ && lastFrameTime - aunit->lastBulletFired > BulletSpawnTime) {
-                if((aunit->currentTarget->position - aunit->position).length() < FireDistance) { // make sure we are close enough
+                if((aunit->currentTarget->position - aunit->position).lengthSquared() < FireDistanceSquared) { // make sure we are close enough
                     Entity *bullet = new Entity(bulletModel, Entity::TypeBullet);
                     bullet->scale *= 0.3;
                     bullet->position = aunit->position + QVector3D(0,0,0.4);
