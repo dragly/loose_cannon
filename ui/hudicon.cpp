@@ -18,9 +18,9 @@ HudIcon::HudIcon(HudObject* parent,  Window::Alignments alignment, qreal x, qrea
 }
 
 void HudIcon::draw(QPainter* painter) {
-    qreal xoff = x;
-    qreal yoff = y;
     int height = ui->glW->height();
+    qreal xoff = x*height;
+    qreal yoff = y*height;
     if (alignment == Window::TopRight) {
         xoff += ui->glW->width() - 0.05*height;
     }
@@ -47,7 +47,6 @@ void HudIcon::draw(QPainter* painter) {
 
 bool HudIcon::click() {
     return hovers();
-
 }
 
 void HudIcon::clickRelease() {
@@ -56,7 +55,13 @@ void HudIcon::clickRelease() {
 
 bool HudIcon::hovers() {
     int height = ui->glW->height();
-    QRect rect(ui->glW->width()-0.05*height,0,0.05*height,0.05*height);
+    qreal xoff = x*height;
+    qreal yoff = y*height;
+    if (alignment == Window::TopRight) {
+        xoff += ui->glW->width() - 0.05*height;
+    }
+
+    QRect rect(xoff,yoff,0.05*height,0.05*height);
 
     return (!(ui->mouseX < rect.x() || ui->mouseX > rect.x() + rect.width() || ui->mouseY < rect.y() || ui->mouseY > rect.y()+ rect.height()));
 

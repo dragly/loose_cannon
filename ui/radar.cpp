@@ -20,14 +20,12 @@ const qreal DotSize = GLWidget::NodeSize;
 Radar::Radar(Ui* ui)
 {
     this->ui = ui;
-    this->btnDown = false;
     HudIcon* hi =new HudIcon(this,Window::TopRight,0,0,"Radar");
     QObject::connect(hi,SIGNAL(iconClicked()), this, SLOT(changeState()));
     ui->addHudObject(this);
 }
 void Radar::draw(QPainter* painter) {
 
-   drawIcon(painter);
    if (!hidden)
         drawMap(painter);
 }
@@ -37,26 +35,12 @@ void Radar::changeState() {
 }
 
 bool Radar::click() {
-
-    if (hoversIcon()) {
-         btnDown=true;
-         return true;
-     }
-
     return (!hidden && clickMap());
 }
 
 void Radar::clickRelease() {
-
-    if (!hidden) {
-        if (btnDown && hoversIcon()) {
-            hidden = true;
-        } else if (!btnDown)
-            clickMap();
-    } else if (btnDown && hoversIcon())
-        show();
-
-    btnDown=false;
+    if (!hidden)
+        clickMap();
 }
 
 void Radar::hide() { //we want to keep the radar shown until minimized
@@ -69,45 +53,12 @@ void Radar::show() {
 }
 
 void Radar::move(int x, int y) {
-    if (!hidden && !btnDown)
+    if (!hidden)
         clickMap();
 }
 
 bool Radar::hovers() {
-
-    if (!hidden) {
-        return (hoversIcon() || hoversMap());
-    } else
-        return hoversIcon();
-}
-
-bool Radar::hoversIcon() {
-    int height = ui->glW->height();
-     QRect rect(ui->glW->width()-0.05*height,0,0.05*height,0.05*height);
-
-     return (!(ui->mouseX < rect.x() || ui->mouseX > rect.x() + rect.width() || ui->mouseY < rect.y() || ui->mouseY > rect.y()+ rect.height()));
-}
-
-void Radar::drawIcon(QPainter* painter) {
-
-    int height = ui->glW->height();
-    QRect rect(ui->glW->width()-0.05*height,0,0.05*height,0.05*height);
-
-    QColor color;
-    if (ui->selectedHudObject == this && hoversIcon() && ui->isMouseDown())
-        color = Window::ColorHighlight;
-    else
-        color = Window::ColorBorder;
-
-    painter->setPen(color);
-    painter->setBrush(Window::ColorBackground);
-
-    painter->drawRect(rect);
-
-    QFont font;
-    font.setPixelSize(0.02 * ui->glW->height());
-    painter->setFont(font);
-    painter->drawText(rect, Qt::AlignCenter, "radar");
+    return (!hidden && hoversMap());
 }
 
 bool Radar::hoversMap() {

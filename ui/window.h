@@ -12,7 +12,9 @@ class QColor;
 class Controller;
 class HudObject;
 
-class Window : public HudObject {
+class Window : public HudObject
+{
+    Q_OBJECT
 
 public:
 
@@ -56,6 +58,9 @@ public:
 
     void addController(Controller* controller);
     QVector3D* world; //IMPORTANT: This is a pointer, so it will crash if the location disappears, could do an entity pointer instead?
+
+public slots:
+    void changeState();
 
 private:
     void drawBackground(QPainter* painter);

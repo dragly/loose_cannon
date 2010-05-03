@@ -37,6 +37,10 @@ void Window::init(Ui* ui, qreal x,qreal y, qreal sizeX, qreal sizeY, Alignments 
     resize();
 }
 
+void Window::changeState() {
+    hidden = !hidden;
+}
+
 void Window::resize() {
     size.setWidth(relativeSize.width() * ui->glW->height());
     size.setHeight(relativeSize.height() * ui->glW->height());
@@ -63,6 +67,10 @@ void Window::resize() {
     } else {
         this->pos.setX(relativePos.x() * ui->glW->height());
         this->pos.setY(relativePos.y() * ui->glW->height());
+    }
+
+    for (int i=0; i<controllers.size(); i++) {
+        controllers.at(i)->resize();
     }
 
 }
