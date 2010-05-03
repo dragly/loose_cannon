@@ -66,6 +66,7 @@ public:
     bool initShaderProgram();
     void setShaderProgram(QGLShaderProgram *program);
     QVector3D scale;
+    QVector3D size() {return sizep;};
 private:
     // variables
     GLMmodel *model;
@@ -79,6 +80,9 @@ private:
     int matrixUniform;
     int texCoordAttr;
     int textureUniform;
+    QVector3D sizep;
+    QVector3D smallest;
+    QVector3D biggest;
 };
 
 class Window;
@@ -129,7 +133,6 @@ public:
     int moveState;
 
     Entity* movingAwayFrom;
-
 private:
     Model *model;
     Window* menu; //export if we make building a child entity class
