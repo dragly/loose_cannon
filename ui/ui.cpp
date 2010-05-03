@@ -2,6 +2,8 @@
 #include "glwidget.h"
 #include "window.h"
 #include "radar.h"
+#include "cbutton.h"
+#include "hudicon.h"
 
 
 Ui::Ui(GLWidget* glW)
@@ -9,11 +11,27 @@ Ui::Ui(GLWidget* glW)
     this->glW=glW;
     mouseDown=false;
 
+    //create standard hud objects.
     new Radar(this);
+
+
+    Window* baseMenu;
+    Cbutton* btn;
+    baseMenu = new Window(this,0,0,0.2,0.2,Window::CenterRight,true,"Units");
+    btn = new Cbutton(baseMenu,QPointF(0.015,0.05),"Tank");
+    HudIcon* hi = new HudIcon(baseMenu,Window::TopRight,0,0.5,"Units");
+    GLWidget::connect(btn, SIGNAL(btnClicked()),glW, SLOT(recruitUnit()));
+    GLWidget::connect(hi,SIGNAL(iconClicked()),baseMenu,SLOT(changeState()));
 }
 
 void Ui::addHudObject(HudObject* object) {
     hudObjects.prepend(object);
+}
+
+void Ui::resize() {
+    for (int i=0; i<hudObjects.size(); i++) {
+        hudObjects.at(i)->resize();
+    }
 }
 
 void Ui::moveToFront(HudObject* object) {

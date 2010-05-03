@@ -26,6 +26,7 @@ public:
     bool mouseClick();
     void mouseRelease();
     void move();
+    void resize();
 
     void addHudObject(HudObject* object);
     bool isMouseDown();

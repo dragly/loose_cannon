@@ -24,7 +24,7 @@ void Window::init(Ui* ui, qreal x,qreal y, qreal sizeX, qreal sizeY, Alignments 
     this->titlebar = titlebar;
     this->title = title;
     this->projected=projected;
-    this->hidden = true; //temp
+    this->hidden = false; //temp
     this->alignment = alignment;
     relativePos.setX(x);
     relativePos.setY(y);
@@ -35,6 +35,10 @@ void Window::init(Ui* ui, qreal x,qreal y, qreal sizeX, qreal sizeY, Alignments 
     relativeSize.setWidth(sizeX);
     relativeSize.setHeight(sizeY);
     resize();
+}
+
+void Window::changeState() {
+    hidden = !hidden;
 }
 
 void Window::resize() {
@@ -63,6 +67,10 @@ void Window::resize() {
     } else {
         this->pos.setX(relativePos.x() * ui->glW->height());
         this->pos.setY(relativePos.y() * ui->glW->height());
+    }
+
+    for (int i=0; i<controllers.size(); i++) {
+        controllers.at(i)->resize();
     }
 
 }

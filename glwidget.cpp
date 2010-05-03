@@ -129,10 +129,8 @@ void GLWidget::resetGame() {
     building->position = QVector3D(-4,4,0);
     building->positionNode = closestNode(building->position);
     building->health = 1000;
-    baseMenu = new Window(ui,0,0,0.2,0.2,Window::TopLeft,true,&building->position,true,"Base");
-    btn = new Cbutton(baseMenu,QPointF(0.015,0.05),"Recruit unit");
-    connect(btn, SIGNAL(btnClicked()),SLOT(recruitUnit()));
-    building->addMenuPoitner(baseMenu);
+
+    //building->addMenuPoitner(baseMenu);
     buildings.append(building);
     initEnemies();
     testUnit = new Entity(boxModel);
@@ -934,6 +932,5 @@ void GLWidget::recruitUnit(/*location ? */) {
 
 void GLWidget::resizeGL(int width, int height) {
     aspectRatio = (qreal) width / (qreal) height;
-    baseMenu->resize();
-    btn->resize();
+    ui->resize();
 }

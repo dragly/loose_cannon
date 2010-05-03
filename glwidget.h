@@ -98,9 +98,6 @@ private:
     QList<Entity*> buildings;
     QList<Entity*> bullets;
 
-    Window* baseMenu;
-    Cbutton* btn;
-
     QList<Node*> nodes; // should probably have their own class - using Entity for convenience
     QHash<Node*, QList<Node*> > nodeNeighbors;
 

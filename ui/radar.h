@@ -24,13 +24,10 @@ public slots:
     void changeState();
 
 private:
-    bool hoversIcon();
     bool hoversMap();
-    void drawIcon(QPainter* painter);
     void drawMap(QPainter* painter);
     bool clickMap();
     bool hidden;
-    bool btnDown;
 };
 
 #endif // RADAR_H
