@@ -88,8 +88,7 @@ GLWidget::GLWidget(QWidget *parent) : QGLWidget(parent)
     nodeModel = new Model("box.obj");
     // initial values
     camera = QVector3D(25, -25, 80);
-    dragBool = false;
-//    explosionSoundtime.restart();
+    //    explosionSoundtime.restart();
     // timer, should be set last, just in case
     timer = new QTimer(this);
     QObject::connect(timer, SIGNAL(timeout()), this, SLOT(updateGL()));
@@ -834,7 +833,7 @@ void GLWidget::mousePressEvent(QMouseEvent *event)
         dragStartPosition = event->pos();
         pressOffset = offset;
         testUnit->position = unProject(event->x(), event->y());
-
+        lastDragOffset = offset;
     }
 }
 // Dragging events
@@ -848,13 +847,11 @@ void GLWidget::mouseMoveEvent(QMouseEvent* event) {
         }
         // this should be improved. This method is not accurate.
         QVector3D currentCursor = unProject(event->x(), event->y());
+        QVector3D currentDragOffset = offset;
         if(dragging) {
-            if(!dragBool) {
-                offset -= 2 * (currentCursor - dragCursor); // offset is negative to get the "drag and drop"-feeling
-                dragBool = true;
-            } else {
-                dragBool = false;
-            }
+            offset -= (currentCursor - dragCursor) - (currentDragOffset - lastDragOffset); // offset is negative to get the "drag and drop"-feeling
+            lastDragOffset = currentDragOffset;
+            dragCursor = currentCursor;
         } else {
             if(holdtime.elapsed() > 1000) { // TODO: selection mode
 
@@ -862,7 +859,6 @@ void GLWidget::mouseMoveEvent(QMouseEvent* event) {
                 dragging = true;
             }
         }
-        dragCursor = currentCursor;
     }
 }
 
