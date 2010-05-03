@@ -13,6 +13,7 @@ SOURCES += main.cpp \
     ui/ui.cpp \
     ui/controller.cpp \
     ui/cbutton.cpp \
+    node.cpp \
     ui/hudobject.cpp \
     ui/radar.cpp \
     ui/hudicon.cpp
@@ -25,6 +26,7 @@ HEADERS += glwidget.h \
     ui/ui.h \
     ui/controller.h \
     ui/cbutton.h \
+    node.h \
     ui/hudobject.h \
     ui/radar.h \
     ui/hudicon.h

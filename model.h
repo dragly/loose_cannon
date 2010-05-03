@@ -26,6 +26,8 @@
 
 #include "glm.h"
 
+class Node;
+
 class ModelTriangle
 {
 public:
@@ -64,6 +66,7 @@ public:
     bool initShaderProgram();
     void setShaderProgram(QGLShaderProgram *program);
     QVector3D scale;
+    QVector3D size() {return sizep;};
 private:
     // variables
     GLMmodel *model;
@@ -77,6 +80,9 @@ private:
     int matrixUniform;
     int texCoordAttr;
     int textureUniform;
+    QVector3D sizep;
+    QVector3D smallest;
+    QVector3D biggest;
 };
 
 class Window;
@@ -104,10 +110,10 @@ public:
 //    bool linkShaderProgram();
 //    bool initShaderProgram();
     void setModel(Model *model);
-    void setWaypoints(QList<Entity*> waypoints);
+    void setWaypoints(QList<Node*> waypoints);
     bool isMoving();
-    QList<Entity*> waypoints;
-    Entity* moveTarget;
+    QList<Node*> waypoints;
+    Node* moveTarget;
 
     // variables
     QVector3D position;
@@ -119,7 +125,7 @@ public:
     Entity* currentTarget;
     bool useMoveTarget; // shall we move to a target? Often set to false after currentTarget has been set.
     qreal lastBulletFired;
-    Entity* positionNode;
+    Node* positionNode;
 
 
     int team;
@@ -127,7 +133,6 @@ public:
     int moveState;
 
     Entity* movingAwayFrom;
-
 private:
     Model *model;
     Window* menu; //export if we make building a child entity class

@@ -35,7 +35,7 @@ Entity::Entity(Model *model, int type) {
 }
 
 
-void Entity::setWaypoints(QList<Entity*> waypoints) {
+void Entity::setWaypoints(QList<Node*> waypoints) {
     this->waypoints = waypoints;
     if(waypoints.count() > 0) {
         this->moveTarget = waypoints.first();
@@ -107,6 +107,7 @@ void Model::setShaderProgram(QGLShaderProgram *program) {
 
 // Model functions
 void Model::load(QString filename) {
+    qDebug() << "loading file" << filename;
     model = glmReadOBJ(filename.toLatin1().data());
     if(model->numtexcoords < 1) {
         qWarning() << "Missing UV map.";
@@ -114,16 +115,38 @@ void Model::load(QString filename) {
     GLMgroup* group;
     group = model->groups;
     groups.clear();
+    bool firstVertex = true;
     while (group) {
         ModelGroup modelGroup;
         modelGroup.triangles.clear();
         for(uint i = 0; i < group->numtriangles; i++) {
             ModelTriangle *triangle = new ModelTriangle();
             for(int j = 0; j < 3; j++) {
-                QVector3D vector(model->vertices[3 * model->triangles[group->triangles[i]].vindices[j] + 0],
+                QVector3D vertex(model->vertices[3 * model->triangles[group->triangles[i]].vindices[j] + 0],
                                  model->vertices[3 * model->triangles[group->triangles[i]].vindices[j] + 1],
                                  model->vertices[3 * model->triangles[group->triangles[i]].vindices[j] + 2]);
-                triangle->vertices[j] = vector;
+                triangle->vertices[j] = vertex;
+                // save the size
+                if(smallest.x() > vertex.x() || firstVertex) {
+                    smallest.setX(vertex.x());
+                }
+                if(smallest.y() > vertex.y() || firstVertex) {
+                    smallest.setY(vertex.y());
+                }
+                if(smallest.z() > vertex.z() || firstVertex) {
+                    smallest.setZ(vertex.z());
+                }
+                if(biggest.x() < vertex.x() || firstVertex) {
+                    biggest.setX(vertex.x());
+                }
+                if(biggest.y() < vertex.y() || firstVertex) {
+                    biggest.setY(vertex.y());
+                }
+                if(biggest.z() < vertex.z() || firstVertex) {
+                    biggest.setZ(vertex.z());
+                }
+                firstVertex = false;
+                // end size saving
             }
             for(int j = 0; j < 3; j++) {
                 QVector3D vector(model->normals[3 * model->triangles[group->triangles[i]].nindices[j] + 0],
@@ -144,7 +167,9 @@ void Model::load(QString filename) {
         groups.append(modelGroup);
         group = group->next;
     }
-    qDebug() << "loading file";
+    sizep = biggest - smallest;
+    qDebug() << "file" << filename << "loaded";
+    qDebug() << "smallest:" << smallest << "biggest:" << biggest << "size:" << sizep;
 }
 bool Model::setShaderFiles(QString fragmentShader, QString vertexShader) {
     if(!setFragmentShaderFile(fragmentShader)) {
