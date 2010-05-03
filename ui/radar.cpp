@@ -198,8 +198,7 @@ void Radar::drawMap(QPainter* painter) {
     }
 
     painter->resetTransform();
+    painter->setClipRect(0,0,ui->glW->width(),height);//setClipping(false) doesnt seem to have any effect :<
     painter->setClipping(false);
-    //warning, did not work.
-    painter->setClipRect(0,0,ui->glW->width(),height);
 
 }
