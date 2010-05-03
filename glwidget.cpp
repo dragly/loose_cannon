@@ -582,7 +582,7 @@ void GLWidget::paintGL()
     glDisable(GL_CULL_FACE);
 
     painter.endNativePainting();
-
+#ifndef Q_WS_MAEMO_5
     foreach(Entity *aunit, allUnits) { // draw health bars
         // this function could probably have a few less calculations - some values may be set at resizeGL instead
         // all sizes are relative to the width and height of the screen to create a consistent experience on all devices
@@ -610,6 +610,8 @@ void GLWidget::paintGL()
             painter.drawRoundedRect((int)strokeX + 2, (int)strokeY + 2, fillWidth - 4, boxHeight - 4, 3, 3, Qt::AbsoluteSize);
         }
     }
+    ui->draw(&painter);
+#endif
 
     painter.setPen(Qt::blue);
     QString framesPerSecond;
@@ -621,9 +623,6 @@ void GLWidget::paintGL()
     painter.drawText(width() - 200, 80, "enemies: " + QString::number(enemies.count()));
     painter.drawText(width() - 200, 100, "moveState: " + QString::number(selectedUnit->moveState));
     painter.drawText(width() - 200, 120, "collision: " + QString::number(collision));
-
-    ui->draw(&painter);
-
     if(gameOver) {
         QFont font;
         font.setPixelSize(height() / 4);
