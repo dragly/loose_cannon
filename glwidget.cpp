@@ -26,8 +26,8 @@
 #include <stdio.h>
 #include <string.h>
 #include <time.h>
-#include "ui/window.h"
-#include "ui/cbutton.h"
+//#include "ui/window.h"
+//#include "ui/cbutton.h"
 #include "node.h"
 
 // constants

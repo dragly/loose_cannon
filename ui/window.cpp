@@ -39,6 +39,9 @@ void Window::init(Ui* ui, qreal x,qreal y, qreal sizeX, qreal sizeY, Alignments 
 
 void Window::changeState() {
     hidden = !hidden;
+    if (!hidden)
+        ui->moveToFront(this);
+
 }
 
 void Window::resize() {
@@ -84,8 +87,9 @@ void Window::hide() {
 }
 
 void Window::show() {
-    ui->moveToFront(this);
     hidden = false;
+    ui->moveToFront(this);
+
 }
 
 void Window::draw(QPainter* painter) {
@@ -136,7 +140,8 @@ bool Window::hovers() {
 }
 
 bool Window::click() {
-    return hovers();
+
+    return (!hidden && hovers());
 
 }
 void Window::move(int x, int y) {

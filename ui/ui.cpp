@@ -17,7 +17,7 @@ Ui::Ui(GLWidget* glW)
 
     Window* baseMenu;
     Cbutton* btn;
-    baseMenu = new Window(this,0,0,0.2,0.2,Window::CenterRight,true,"Units");
+    baseMenu = new Window(this,0,0,0.2,0.2,Window::Center,true,"Units");
     btn = new Cbutton(baseMenu,QPointF(0.015,0.05),"Tank");
     HudIcon* hi = new HudIcon(baseMenu,Window::TopRight,0,0.5,"Units");
     GLWidget::connect(btn, SIGNAL(btnClicked()),glW, SLOT(recruitUnit()));
@@ -36,8 +36,8 @@ void Ui::resize() {
 
 void Ui::moveToFront(HudObject* object) {
     //NB: will crash if 'window' is not part of the list.
-    hudObjects.move(hudObjects.indexOf(object),0);
-    selectedHudObject=object;
+   // hudObjects.move(hudObjects.indexOf(object),0);
+   // selectedHudObject=object;
 }
 
 void Ui::convertMousePos(int x, int y) {

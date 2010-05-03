@@ -50,7 +50,8 @@ bool HudIcon::click() {
 }
 
 void HudIcon::clickRelease() {
-    iconClicked();
+    if (hovers())
+        iconClicked();
 }
 
 bool HudIcon::hovers() {

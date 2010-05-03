@@ -20,9 +20,10 @@ const qreal DotSize = GLWidget::NodeSize;
 Radar::Radar(Ui* ui)
 {
     this->ui = ui;
-    HudIcon* hi =new HudIcon(this,Window::TopRight,0,0,"Radar");
-    QObject::connect(hi,SIGNAL(iconClicked()), this, SLOT(changeState()));
+    HudIcon* hi2 =new HudIcon(this,Window::TopRight,0,0,"Radar");
+    QObject::connect(hi2,SIGNAL(iconClicked()), this, SLOT(changeState()));
     ui->addHudObject(this);
+    this->hidden = true;
 }
 void Radar::draw(QPainter* painter) {
 
