@@ -111,8 +111,10 @@ private:
     Model *monkeyModel;
     Model *boxModel;
     Model *cannonModel;
-    Model *tankBodyModel;
-    Model *tankTowerModel;
+    Model *humanTankBodyModel;
+    Model *humanTankTowerModel;
+    Model *enemyTankBodyModel;
+    Model *enemyTankTowerModel;
     Model *bulletModel;
     Model *nodeModel;
     bool gameOver;

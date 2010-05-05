@@ -13,6 +13,7 @@ class Entity : public QObject
 public:
     enum Type {TypeUnit, TypeBuilding, TypeBullet};
     enum MoveState {StateMoving, StateStopped, StateMovingOutOfTheWay, StateQueued}; // Moving = going to waypoint, Queued = waiting for waipoint to become free.
+    enum AttackState {OrderAttack, OrderMove}; // Moving = going to waypoint, Queued = waiting for waipoint to become free.
     enum Transformation {Rotate = 0x01, Translate = 0x02, Scale = 0x04};
     Entity();
     Entity(Model *model);
@@ -53,6 +54,7 @@ public:
     int team;
     int type;
     int moveState;
+    int orders;
 
     Entity* movingAwayFrom;
 protected:

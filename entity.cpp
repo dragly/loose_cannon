@@ -37,6 +37,7 @@ void Entity::initEntity() {
     team = GLWidget::TeamHumans;
     moveState = StateStopped;
     movingAwayFrom = NULL;
+    orders = OrderMove;
 }
 
 
