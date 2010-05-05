@@ -35,6 +35,8 @@ class Bubble;
 class Cbutton;
 class Node;
 class Radar;
+class Entity;
+class Tank;
 
 class GLWidget : public QGLWidget {
 
@@ -109,7 +111,8 @@ private:
     Model *monkeyModel;
     Model *boxModel;
     Model *cannonModel;
-    Model *tankModel;
+    Model *tankBodyModel;
+    Model *tankTowerModel;
     Model *bulletModel;
     Model *nodeModel;
     bool gameOver;

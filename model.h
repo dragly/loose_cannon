@@ -66,7 +66,7 @@ public:
     bool initShaderProgram();
     void setShaderProgram(QGLShaderProgram *program);
     QVector3D scale;
-    QVector3D size() {return sizep;};
+    QVector3D size(bool useScale = true) {if(useScale) return sizep * scale; else return sizep;};
 private:
     // variables
     GLMmodel *model;
@@ -83,59 +83,6 @@ private:
     QVector3D sizep;
     QVector3D smallest;
     QVector3D biggest;
-};
-
-class Window;
-
-class Entity
-{
-public:
-    enum Type {TypeUnit, TypeBuilding, TypeBullet};
-    enum MoveState {StateMoving, StateStopped, StateMovingOutOfTheWay, StateQueued}; // Moving = going to waypoint, Queued = waiting for waipoint to become free.
-
-    Entity(Model *model);
-    Entity(Model *model, int type);
-    ~Entity();
-
-    void addMenuPoitner(Window* menu);
-    void select();
-    void initEntity(Model *model);
-    // functions
-
-    void draw(QMatrix4x4 modelview);
-//    void setTexture(GLuint texture);
-//    bool setShaderFiles(QString fragmentShader, QString vertexShader);
-//    bool setVertexShaderFile(QString filename);
-//    bool setFragmentShaderFile(QString filename);
-//    bool linkShaderProgram();
-//    bool initShaderProgram();
-    void setModel(Model *model);
-    void setWaypoints(QList<Node*> waypoints);
-    bool isMoving();
-    QList<Node*> waypoints;
-    Node* moveTarget;
-
-    // variables
-    QVector3D position;
-    QVector3D velocity;
-    QVector3D rotation;
-    QVector3D scale;
-
-    qreal health;
-    Entity* currentTarget;
-    bool useMoveTarget; // shall we move to a target? Often set to false after currentTarget has been set.
-    qreal lastBulletFired;
-    Node* positionNode;
-
-
-    int team;
-    int type;
-    int moveState;
-
-    Entity* movingAwayFrom;
-private:
-    Model *model;
-    Window* menu; //export if we make building a child entity class
 };
 
 #endif // MODEL_H

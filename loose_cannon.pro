@@ -16,7 +16,10 @@ SOURCES += main.cpp \
     node.cpp \
     ui/hudobject.cpp \
     ui/radar.cpp \
-    ui/hudicon.cpp
+    ui/hudicon.cpp \
+    entity.cpp \
+    unit.cpp \
+    tank.cpp
 SOURCES += glwidget.cpp
 SOURCES += mainwindow.cpp
 SOURCES += glm.cpp
@@ -29,7 +32,10 @@ HEADERS += glwidget.h \
     node.h \
     ui/hudobject.h \
     ui/radar.h \
-    ui/hudicon.h
+    ui/hudicon.h \
+    entity.h \
+    unit.h \
+    tank.h
 HEADERS += mainwindow.h
 HEADERS += glm.h
 RESOURCES += texture.qrc

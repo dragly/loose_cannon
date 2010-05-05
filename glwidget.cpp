@@ -18,6 +18,8 @@
 
 #include "glwidget.h"
 #include "model.h"
+#include "entity.h"
+#include "tank.h"
 #include "ui/ui.h"
 #include <QPainter>
 #include <QPaintEngine>
@@ -81,8 +83,10 @@ GLWidget::GLWidget(QWidget *parent) : QGLWidget(parent)
     monkeyModel = new Model("monkey1.obj");
     boxModel = new Model("box.obj");
     cannonModel = new Model("cannon.obj");
-    tankModel = new Model("tank-body.obj");
-    tankModel->scale *= 0.5;
+    tankBodyModel = new Model("tank-body.obj");
+    tankBodyModel->scale *= 0.5;
+    tankTowerModel = new Model("tank-head.obj");
+    tankTowerModel->scale *= 0.5;
     bulletModel = new Model("bullet.obj");
     bulletModel->scale *= 2.0;
     nodeModel = new Model("box.obj");
@@ -112,13 +116,13 @@ void GLWidget::resetGame() {
     gametime.start();
     bullets.clear();
     enemies.clear();
-    Entity* cannon = new Entity(tankModel, Entity::TypeUnit);
+    Tank* cannon = new Tank(tankBodyModel, tankTowerModel);
     cannon->position = QVector3D(10,5,1);
     cannon->positionNode = closestNode(cannon->position);
     cannon->team = TeamHumans;
     selectedUnit = cannon;
     units.append(cannon);
-    Entity* cannon2 = new Entity(tankModel, Entity::TypeUnit);
+    Tank* cannon2 = new Tank(tankBodyModel, tankTowerModel);
     cannon2->position = QVector3D(1,1,1);
     cannon2->positionNode = closestNode(cannon2->position);
     cannon2->team = TeamHumans;
@@ -155,7 +159,7 @@ void GLWidget::resetEnemy(Entity* enemy) {
 
 void GLWidget::createEnemy() {
     qDebug() << "Creating enemy";
-    Entity *enemy = new Entity(tankModel, Entity::TypeUnit);
+    Entity *enemy = new Entity(tankBodyModel, Entity::TypeUnit);
     enemy->team = TeamEnemies;
     enemies.append(enemy);
     resetEnemy(enemy);
@@ -174,7 +178,8 @@ void GLWidget::initializeGL ()
     bulletModel->setShaderProgram(program);
     boxModel->setShaderProgram(program);
     nodeModel->setShaderProgram(program);
-    tankModel->setShaderProgram(program);
+    tankBodyModel->setShaderProgram(program);
+    tankTowerModel->setShaderProgram(program);
     //    if(!monkeyModel->setShaderFiles("fshader.glsl","vshader.glsl")) {
     //        qDebug() << "Failed to set shader files.";
     //    }
@@ -199,7 +204,8 @@ void GLWidget::initializeGL ()
     monkeyModel->setTexture(furTexture);
     cannonModel->setTexture(metalTexture);
     bulletModel->setTexture(metalTexture);
-    tankModel->setTexture(metalTexture);
+    tankBodyModel->setTexture(metalTexture);
+    tankTowerModel->setTexture(metalTexture);
     // end textures
 
     glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR );
@@ -414,23 +420,23 @@ void GLWidget::paintGL()
                     }
                 }
             }
-            qreal aunitAngle = atan2(aunitdir.y(),aunitdir.x()) * 180 / M_PI + 90;
-            qreal difference = aunitAngle - aunit->rotation.z();
+            qreal goalAngle = atan2(aunitdir.y(),aunitdir.x()) * 180 / M_PI + 90;
+            qreal goalAngleDifference = goalAngle - aunit->rotation.z();
             // end direction calculations
             if(shallMove) {
                 bool doMovement = true;
-                while(difference > 180) difference -= 360;
-                while(difference < -180) difference += 360;
-                if(difference > 0) {
+                while(goalAngleDifference > 180) goalAngleDifference -= 360;
+                while(goalAngleDifference < -180) goalAngleDifference += 360;
+                if(goalAngleDifference > 0) {
                     aunit->rotation.setZ(aunit->rotation.z() + RotateSpeed * dt);
-                    if(difference - RotateSpeed * dt < 0) {
-                        aunit->rotation.setZ(aunitAngle);
+                    if(goalAngleDifference - RotateSpeed * dt < 0) {
+                        aunit->rotation.setZ(goalAngle);
                         doMovement = true;
                     }
-                } else if(difference < 0) {
+                } else if(goalAngleDifference < 0) {
                     aunit->rotation.setZ(aunit->rotation.z() - RotateSpeed * dt);
-                    if(difference + RotateSpeed * dt > 0) {
-                        aunit->rotation.setZ(aunitAngle);
+                    if(goalAngleDifference + RotateSpeed * dt > 0) {
+                        aunit->rotation.setZ(goalAngle);
                         doMovement = true;
                     }
                 }
@@ -491,13 +497,35 @@ void GLWidget::paintGL()
             }
             // fire bullets
             if(aunit->currentTarget != NULL /*&& difference < 1 && difference > -1*/ && lastFrameTime - aunit->lastBulletFired > BulletSpawnTime) {
-                if((aunit->currentTarget->position - aunit->position).lengthSquared() < FireDistanceSquared) { // make sure we are close enough
+                QVector3D bulletPosition = aunit->position + QVector3D(0,0,0.4);
+                QVector3D direction = aunit->currentTarget->position - bulletPosition;
+                QVector3D calcTarget = aunit->currentTarget->position + aunit->currentTarget->velocity * direction.length() / BulletSpeed; // hit a bit ahead of target, suggesting same speed all the way
+                QVector3D calcDirection = calcTarget - bulletPosition;
+
+                Tank* tankPointer = qobject_cast<Tank *>(aunit);
+                qreal towerRotationDifference = 0;
+                if(tankPointer != NULL) {
+                    qreal calcRotation = atan2(calcDirection.y(), calcDirection.x()) * 180 / M_PI + 90;
+                    towerRotationDifference = calcRotation - tankPointer->towerRotation.z();
+                    while(towerRotationDifference > 180) towerRotationDifference -= 360;
+                    while(towerRotationDifference < -180) towerRotationDifference += 360;
+                    if(towerRotationDifference > 0) {
+                        tankPointer->towerRotation.setZ(tankPointer->towerRotation.z() + RotateSpeed * dt);
+                        if(towerRotationDifference - RotateSpeed * dt < 0) {
+                            tankPointer->towerRotation.setZ(calcRotation);
+                        }
+                    } else if(towerRotationDifference < 0) {
+                        tankPointer->towerRotation.setZ(tankPointer->towerRotation.z() - RotateSpeed * dt);
+                        if(towerRotationDifference + RotateSpeed * dt > 0) {
+                            tankPointer->towerRotation.setZ(calcRotation);
+                        }
+                    }
+                }
+                if((aunit->currentTarget->position - aunit->position).lengthSquared() < FireDistanceSquared
+                   && qAbs(towerRotationDifference) < 1) { // make sure we are close enough
                     Entity *bullet = new Entity(bulletModel, Entity::TypeBullet);
                     bullet->scale *= 0.3;
-                    bullet->position = aunit->position + QVector3D(0,0,0.4);
-                    QVector3D direction = aunit->currentTarget->position - bullet->position;
-                    QVector3D calcTarget = aunit->currentTarget->position + aunit->currentTarget->velocity * direction.length() / BulletSpeed; // hit a bit ahead of target, suggesting same speed all the way
-                    QVector3D calcDirection = calcTarget - bullet->position;
+                    bullet->position = bulletPosition;
                     bullet->velocity = calcDirection.normalized() * BulletSpeed;
                     qreal bulletTime = calcDirection.length() / BulletSpeed;
                     qreal startSpeed = -Gravity.z() * bulletTime; // from v = v0 + at
@@ -516,7 +544,7 @@ void GLWidget::paintGL()
         if (recruitqueue > 0 && recruittime.elapsed() > 1000) {
             recruitqueue--;
             recruittime.restart();
-            Entity* cannon = new Entity(tankModel, Entity::TypeUnit);
+            Entity* cannon = new Entity(tankBodyModel, Entity::TypeUnit);
             cannon->position =/* aunit->position +*/ QVector3D(-4,6,6); //note, positioning might cause trouble with buildings at the edge of the map..
             cannon->positionNode = closestNode(cannon->position);
             cannon->team = TeamHumans;

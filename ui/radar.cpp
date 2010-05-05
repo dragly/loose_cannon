@@ -2,6 +2,7 @@
 #include "ui.h"
 #include "window.h"
 #include "hudicon.h"
+#include "entity.h"
 
 //these should be fetched form glW
 const qreal MAPSIZE = GLWidget::MapSize * GLWidget::NodeSize; //copied from glwidgets mapsize, which (confusingly) should be multiplied with 2*nodedistance to get the actual map size.
