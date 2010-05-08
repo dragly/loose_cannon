@@ -19,7 +19,8 @@ SOURCES += main.cpp \
     ui/hudicon.cpp \
     entity.cpp \
     unit.cpp \
-    tank.cpp
+    tank.cpp \
+    soundbank.cpp
 SOURCES += glwidget.cpp
 SOURCES += mainwindow.cpp
 SOURCES += glm.cpp
@@ -35,9 +36,11 @@ HEADERS += glwidget.h \
     ui/hudicon.h \
     entity.h \
     unit.h \
-    tank.h
+    tank.h \
+    soundbank.h
 HEADERS += mainwindow.h
 HEADERS += glm.h
 RESOURCES += texture.qrc
 QT += opengl \
-    phonon
+    phonon \
+    multimedia

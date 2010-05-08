@@ -37,6 +37,7 @@ class Node;
 class Radar;
 class Entity;
 class Tank;
+class SoundBank;
 
 class GLWidget : public QGLWidget {
 
@@ -58,7 +59,10 @@ public:
     static const qreal NodeSize = 8; // each node is 8x8 m (the length of a tank)
     QList<Node*> findPath(Node* startPosition, Node* endPosition, QList<Node*> avoid = QList<Node*>());
     Node* closestNode(QVector3D position);
-
+    // Sounds
+    SoundBank *soundBank;
+    int sndExplosion;
+    // end sounds
 protected:
     void paintGL ();
     void initializeGL ();
