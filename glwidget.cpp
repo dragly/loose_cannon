@@ -294,7 +294,7 @@ void GLWidget::paintGL()
             } // foreach enemy
             if(bullet->position.z() < 0 || hitUnit) { // we have an explosion
                 // TODO: Animate explosion with sprites as seen here: http://news.developer.nvidia.com/2007/01/tips_strategies.html
-                soundBank->play(sndExplosion);
+//                soundBank->play(sndExplosion);
                 foreach(Entity *hitUnit, allDestructibles) {
                     QVector3D distance = hitUnit->position - bullet->position;
                     if(distance.lengthSquared() < ExplosionRadiusSquared) { // in explosion radius
