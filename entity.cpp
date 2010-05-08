@@ -38,6 +38,7 @@ void Entity::initEntity() {
     moveState = StateStopped;
     movingAwayFrom = NULL;
     orders = OrderMove;
+    moveTarget = NULL;
 }
 
 
