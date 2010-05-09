@@ -40,14 +40,10 @@ int SoundBank::loadSample(const QString &fileName) {
     inputFile.setFileName(fileName);
     inputFile.open(QIODevice::ReadOnly);
 
-    QBuffer *buffer = new QBuffer();
-    buffer->open(QBuffer::ReadWrite);
-    QByteArray data = inputFile.readAll();
-    buffer->write(data);
-    qDebug() << "loadSample size" << buffer->size();
+    qDebug() << "loadSample size" << inputFile.size();
+    QByteArray *data = new QByteArray(inputFile.readAll());
     inputFile.close();
-    buffer->close();
-    audioSources.append(buffer);
+    audioSources.append(data);
     return audioSources.count() - 1;
 }
 
@@ -66,18 +62,12 @@ void SoundBank::play(int sample) {
         if(closedBuffers.count() > 0 && closedChannels.count() > 0) {
             buffer = closedBuffers.at(0);
             buffer->close();
-            buffer->setData(QByteArray()); // delete data from memory
             audioOutput = closedChannels.at(0);
         }
 ////        audioOutput->suspend();
     }
     // copy our buffer
-    QBuffer *inBuffer = audioSources.at(sample);
-    buffer->open(QBuffer::ReadWrite);
-    inBuffer->open(QBuffer::ReadOnly);
-    buffer->write(inBuffer->readAll());
-    inBuffer->close();
-    buffer->close();
+    buffer->setBuffer(audioSources.at(sample));
 
     // end copy, open buffer for reading
     buffer->open(QBuffer::ReadOnly);
@@ -99,11 +89,10 @@ void SoundBank::state(QAudio::State state)
     QAudioOutput *audioOutput = qobject_cast<QAudioOutput*>(sender());
     if(audioOutput != NULL) {
         QBuffer *buffer = hashOutputToBuffer.value(audioOutput);
-        qWarning() << " state=" << state << " == " << QAudio::IdleState;
-        qWarning() << " error=" << audioOutput->error();
+//        qWarning() << " state=" << state << " == " << QAudio::IdleState;
+//        qWarning() << " error=" << audioOutput->error();
         if(state == QAudio::IdleState) {
             buffer->close();
-            buffer->setData(QByteArray()); // delete data from memory
             freeBuffers.append(buffer);
             closedBuffers.removeOne(buffer);
 //            delete hashOutputToBuffer.value(audioOutput);

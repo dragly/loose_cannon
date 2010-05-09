@@ -28,5 +28,6 @@ int main( int argc, char ** argv )
     a.setApplicationName( "loose_cannon" );
     MainWindow mw;
     mw.showFullScreen();
+//    mw.show();
     return a.exec();
 }

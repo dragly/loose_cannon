@@ -10,8 +10,8 @@ public:
     SoundBank();
     QAudioDeviceInfo  device;
     QAudioFormat      settings;
-    QVector<QAudioOutput*> audioOuputs;
-    QVector<QBuffer*> audioSources;
+    QList<QAudioOutput*> audioOuputs;
+    QList<QByteArray*> audioSources;
     QHash<QAudioOutput*, QBuffer*> hashOutputToBuffer;
     int loadSample(const QString &fileName);
     void play(int sample);
