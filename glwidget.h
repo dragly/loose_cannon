@@ -63,6 +63,8 @@ public:
     SoundBank *soundBank;
     int sndExplosion;
     // end sounds
+signals:
+    void play(int sample);
 protected:
     void paintGL ();
     void initializeGL ();
