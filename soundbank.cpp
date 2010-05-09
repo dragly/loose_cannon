@@ -21,8 +21,8 @@ SoundBank::SoundBank()
     }
     device = info;
 
-    // create channels
-    for(int i = 0; i<8; i++) {
+    // to avoid recreating outputs and buffers for each sound played, we rather use an upper limit for the amount of sounds available
+    for(int i = 0; i<8; i++) { // create channels and buffers
         QAudioOutput *audioOutput = new QAudioOutput(device,settings,this);
         freeChannels.append(audioOutput);
         audioOutput->setNotifyInterval(100);
@@ -66,11 +66,9 @@ void SoundBank::play(int sample) {
         }
 ////        audioOutput->suspend();
     }
-    // copy our buffer
-    buffer->setBuffer(audioSources.at(sample));
+    buffer->setBuffer(audioSources.at(sample)); // set new data pointer to buffer
 
-    // end copy, open buffer for reading
-    buffer->open(QBuffer::ReadOnly);
+    buffer->open(QBuffer::ReadOnly); // open the buffer for reading
     hashOutputToBuffer.insert(audioOutput, buffer);
     counter.insert(audioOutput,0);
     audioOutput->start(buffer);
@@ -79,28 +77,28 @@ void SoundBank::play(int sample) {
 
 void SoundBank::status()
 {
-    QAudioOutput *audioOutput = qobject_cast<QAudioOutput*>(sender());
-    if(audioOutput != NULL) {
-//        qWarning() << "byteFree = " << audioOutput->bytesFree() << " bytes, elapsedUSecs = " << audioOutput->elapsedUSecs() << ", processedUSecs = " << audioOutput->processedUSecs();
-    }
+//    QAudioOutput *audioOutput = qobject_cast<QAudioOutput*>(sender());
+//    if(audioOutput != NULL) {
+////        qWarning() << "byteFree = " << audioOutput->bytesFree() << " bytes, elapsedUSecs = " << audioOutput->elapsedUSecs() << ", processedUSecs = " << audioOutput->processedUSecs();
+//    }
 }
 void SoundBank::state(QAudio::State state)
 {
-    QAudioOutput *audioOutput = qobject_cast<QAudioOutput*>(sender());
-    if(audioOutput != NULL) {
-        QBuffer *buffer = hashOutputToBuffer.value(audioOutput);
-//        qWarning() << " state=" << state << " == " << QAudio::IdleState;
-//        qWarning() << " error=" << audioOutput->error();
-        if(state == QAudio::IdleState) {
-            buffer->close();
-            freeBuffers.append(buffer);
-            closedBuffers.removeOne(buffer);
-//            delete hashOutputToBuffer.value(audioOutput);
-            freeChannels.append(audioOutput);
-            closedChannels.removeOne(audioOutput);
-            // closing and stopping causes extreme lags - they should be deleted, but not here!
-//            audioOutput->stop();
-//            delete audioOutput;
-        }
-    }
+//    QAudioOutput *audioOutput = qobject_cast<QAudioOutput*>(sender());
+//    if(audioOutput != NULL) {
+//        QBuffer *buffer = hashOutputToBuffer.value(audioOutput);
+////        qWarning() << " state=" << state << " == " << QAudio::IdleState;
+////        qWarning() << " error=" << audioOutput->error();
+//        if(state == QAudio::IdleState) {
+//            buffer->close();
+//            freeBuffers.append(buffer);
+//            closedBuffers.removeOne(buffer);
+////            delete hashOutputToBuffer.value(audioOutput);
+//            freeChannels.append(audioOutput);
+//            closedChannels.removeOne(audioOutput);
+//            // closing and stopping causes extreme lags - they should be deleted, but not here!
+////            audioOutput->stop();
+////            delete audioOutput;
+//        }
+//    }
 }
