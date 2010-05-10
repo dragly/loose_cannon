@@ -21,7 +21,7 @@
 #include "mainwindow.h"
 #include "glwidget.h"
 
-int main( int argc, char ** argv )
+int main(int argc, char ** argv )
 {
     Q_INIT_RESOURCE(texture);
     QApplication a( argc, argv );

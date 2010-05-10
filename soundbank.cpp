@@ -9,15 +9,16 @@ SoundBank::SoundBank()
     settings.setCodec("audio/pcm");
     settings.setByteOrder(QAudioFormat::LittleEndian);
     settings.setSampleType(QAudioFormat::SignedInt);
-    qDebug() << "Available sound devices:";
-    foreach(QAudioDeviceInfo deviceInfo, QAudioDeviceInfo::availableDevices(QAudio::AudioOutput)) {
-        qDebug() << deviceInfo.deviceName();
-    }
     QAudioDeviceInfo info(QAudioDeviceInfo::defaultOutputDevice());
     qDebug() << "default deviceName" << info.deviceName();
     if (!info.isFormatSupported(settings)) {
         qWarning()<<"default format not supported try to use nearest";
         settings = info.nearestFormat(settings);
+    }
+
+    qDebug() << "Available sound devices:";
+    foreach(QAudioDeviceInfo deviceInfo, QAudioDeviceInfo::availableDevices(QAudio::AudioOutput)) {
+        qDebug() << deviceInfo.deviceName();
     }
 
     if(settings.sampleSize() != 16) {

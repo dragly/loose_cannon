@@ -78,6 +78,9 @@ GLWidget::GLWidget(QWidget *parent) : QGLWidget(parent)
     //    explosion = Phonon::createPlayer(Phonon::GameCategory, Phonon::MediaSource("sounds/explosion-02.ogg"));
     //    explosion2 = Phonon::createPlayer(Phonon::GameCategory, Phonon::MediaSource("sounds/bomb-02.ogg"));
     //    explosion3 = Phonon::createPlayer(Phonon::GameCategory, Phonon::MediaSource("sounds/bomb-03.ogg"));
+    useSound = true;
+    drawHud = true;
+
     qsrand(time(NULL));
     setAttribute(Qt::WA_PaintOnScreen);
     setAttribute(Qt::WA_NoSystemBackground);
@@ -103,8 +106,10 @@ GLWidget::GLWidget(QWidget *parent) : QGLWidget(parent)
     audioSamples << sndExplosion;
     soundThread = new SoundThread(this, audioSamples);
     soundThread->start();
-//    sndExplosion = soundThread->loadSample("sounds/bomb.wav");
+    //    sndExplosion = soundThread->loadSample("sounds/bomb.wav");
     qDebug() << "main thread is" << QThread::currentThreadId();
+    grabKeyboard();
+    grabMouse();
     // timer, should be set last, just in case
     timer = new QTimer(this);
     QObject::connect(timer, SIGNAL(timeout()), this, SLOT(updateGL()));
@@ -299,7 +304,9 @@ void GLWidget::paintGL()
             } // foreach enemy
             if(bullet->position.z() < 0 || hitUnit) { // we have an explosion
                 // TODO: Animate explosion with sprites as seen here: http://news.developer.nvidia.com/2007/01/tips_strategies.html
-                emit playSound(sndExplosion); // play the sound in the soundBank thread
+                if(useSound) {
+                    emit playSound(sndExplosion); // play the sound in the soundBank thread
+                }
                 foreach(Entity *hitUnit, allDestructibles) {
                     QVector3D distance = hitUnit->position - bullet->position;
                     if(distance.lengthSquared() < ExplosionRadiusSquared) { // in explosion radius
@@ -663,36 +670,36 @@ void GLWidget::paintGL()
     glDisable(GL_CULL_FACE);
 
     painter.endNativePainting();
-#ifndef Q_WS_MAEMO_5
-    foreach(Entity *aunit, allUnits) { // draw health bars
-        // this function could probably have a few less calculations - some values may be set at resizeGL instead
-        // all sizes are relative to the width and height of the screen to create a consistent experience on all devices
-        // health bars are ugly and take up lots of screen space - health should probably be represented in a better way in the future
-        // only on selection of units, for instance?
-        if(aunit == selectedUnit) {
-            qreal boxWidth = width() * 0.07; // how wide is the box?
-            qreal boxHeight = width() * 0.008; // how tall is the box?
-            qreal yOffset = width() * 0.05; // how far above do we print the box?
-            qreal fillWidth = boxWidth * aunit->health / MaxHealth;
-            //QVector3D position = mainModelView * aunit->position;
-            QPoint projected = project(aunit->position);
-            qreal strokeX = projected.x() - boxWidth / 2.0;
-            qreal strokeY = projected.y() - yOffset;
-            painter.setPen(QPen(QColor(10, 10, 10, 120))); // dark alpha
-            painter.setBrush(QBrush(QColor(20, 30, 40, 100)));
-            painter.drawRoundedRect((int)strokeX, (int)strokeY, boxWidth, boxHeight, 3, 3, Qt::AbsoluteSize); // a box above each unit
-            qreal healthColor = 220 * aunit->health / MaxHealth; // a bit dark color :)
-            if(width() > 800) { // fix for small screens
-                painter.setPen(QPen(QColor(20,30,40,100))); // thin stroke
-            } else {
-                painter.setPen(QPen(QColor(0,0,0,0))); // no stroke
+    if(drawHud) {
+        foreach(Entity *aunit, allUnits) { // draw health bars
+            // this function could probably have a few less calculations - some values may be set at resizeGL instead
+            // all sizes are relative to the width and height of the screen to create a consistent experience on all devices
+            // health bars are ugly and take up lots of screen space - health should probably be represented in a better way in the future
+            // only on selection of units, for instance?
+            if(aunit == selectedUnit) {
+                qreal boxWidth = width() * 0.07; // how wide is the box?
+                qreal boxHeight = width() * 0.008; // how tall is the box?
+                qreal yOffset = width() * 0.05; // how far above do we print the box?
+                qreal fillWidth = boxWidth * aunit->health / MaxHealth;
+                //QVector3D position = mainModelView * aunit->position;
+                QPoint projected = project(aunit->position);
+                qreal strokeX = projected.x() - boxWidth / 2.0;
+                qreal strokeY = projected.y() - yOffset;
+                painter.setPen(QPen(QColor(10, 10, 10, 120))); // dark alpha
+                painter.setBrush(QBrush(QColor(20, 30, 40, 100)));
+                painter.drawRoundedRect((int)strokeX, (int)strokeY, boxWidth, boxHeight, 3, 3, Qt::AbsoluteSize); // a box above each unit
+                qreal healthColor = 220 * aunit->health / MaxHealth; // a bit dark color :)
+                if(width() > 800) { // fix for small screens
+                    painter.setPen(QPen(QColor(20,30,40,100))); // thin stroke
+                } else {
+                    painter.setPen(QPen(QColor(0,0,0,0))); // no stroke
+                }
+                painter.setBrush(QBrush(QColor(220 - healthColor, healthColor, 10, 210))); // a color dependent on health
+                painter.drawRoundedRect((int)strokeX + 2, (int)strokeY + 2, fillWidth - 4, boxHeight - 4, 3, 3, Qt::AbsoluteSize);
             }
-            painter.setBrush(QBrush(QColor(220 - healthColor, healthColor, 10, 210))); // a color dependent on health
-            painter.drawRoundedRect((int)strokeX + 2, (int)strokeY + 2, fillWidth - 4, boxHeight - 4, 3, 3, Qt::AbsoluteSize);
         }
+        ui->draw(&painter);
     }
-    ui->draw(&painter);
-#endif
 
     painter.setPen(Qt::blue);
     QString framesPerSecond;
@@ -700,6 +707,7 @@ void GLWidget::paintGL()
     painter.drawText(20, 40, framesPerSecond + " fps");
     painter.drawText(20, 60, "cursor: " + QString::number(pressCursor.x()) + ", " + QString::number(pressCursor.y()) + ", " + QString::number(pressCursor.z()));
     painter.drawText(20, 80, "Unit queue: " + QString::number(recruitqueue));
+    painter.drawText(20, 100, "Enable HUD - H, Sounds - S");
     painter.drawText(width() - 200, 60, "score: " + QString::number(score));
     painter.drawText(width() - 200, 80, "enemies: " + QString::number(enemies.count()));
     painter.drawText(width() - 200, 100, "moveState: " + QString::number(selectedUnit->moveState));
@@ -991,6 +999,19 @@ void GLWidget::mouseReleaseEvent(QMouseEvent *event) {
         dragging = false;
     }
 }
+
+void GLWidget::keyPressEvent(QKeyEvent *event) {
+    qDebug() << "Key event" << event->key() << Qt::Key_S;
+    switch(event->key()) {
+    case Qt::Key_S:
+        useSound = !useSound;
+        break;
+    case Qt::Key_H:
+        drawHud = !drawHud;
+        break;
+    }
+}
+
 void GLWidget::recruitUnit(/*location ? */) {
     /*if (enoughCash)*/  //one of your buildings. For now, just build cannons.
     if (recruitqueue == 0) {

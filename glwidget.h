@@ -134,12 +134,18 @@ private:
     QTime recruittime; //vj: temp for test.    //bool recruiting;
     int recruitqueue;
 
+    bool useSound;
+    bool drawHud;
+
     Ui* ui;
 
     // mouse events
     void mousePressEvent(QMouseEvent *event);
     void mouseMoveEvent(QMouseEvent* event);
     void mouseReleaseEvent(QMouseEvent *event);
+
+    // keyboard events
+    void keyPressEvent(QKeyEvent *event);
 public slots:
     void recruitUnit();
 };
