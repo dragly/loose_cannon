@@ -2,23 +2,18 @@
 
 #include "glwidget.h"
 
-SoundThread::SoundThread(GLWidget *glW)
+SoundThread::SoundThread(GLWidget *glW, QStringList samples)
 {
     this->glW = glW;
+    this->samples = samples;
 }
 
 void SoundThread::run() {
     qDebug() << "run thread is" << QThread::currentThreadId();
     soundBank = new SoundBank();
-    soundBank->loadSample("sounds/bomb.wav");
-    connect(glW, SIGNAL(play(int)), soundBank, SLOT(play(int)));
+    foreach(QString sample, samples) {
+        soundBank->loadSample(sample);
+    }
+    connect(glW, SIGNAL(playSound(QString)), soundBank, SLOT(play(QString)));
     exec();
-}
-
-int SoundThread::loadSample(QString fileName) {
-    return soundBank->loadSample(fileName);
-}
-
-void SoundThread::play(int sample) {
-    soundBank->play(sample);
 }

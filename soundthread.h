@@ -11,17 +11,16 @@ class SoundThread : public QThread
 {
     Q_OBJECT
 public:
-    SoundThread(GLWidget *glW);
+    SoundThread(GLWidget *glW, QStringList samples);
 
     int loadSample(QString fileName);
-
-public slots:
-    void play(int sample);
 
 private:
     void run();
     SoundBank *soundBank;
     GLWidget *glW;
+    QMutex mutex;
+    QStringList samples;
 
 };
 

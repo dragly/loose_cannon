@@ -34,7 +34,7 @@ SoundBank::SoundBank()
     qDebug() << "SoundBank::SoundBank() loaded";
 }
 
-int SoundBank::loadSample(const QString &fileName) {
+void SoundBank::loadSample(const QString &fileName) {
 
     qDebug() << "SoundBank::loadSample loading" << fileName;
 
@@ -45,36 +45,39 @@ int SoundBank::loadSample(const QString &fileName) {
     qDebug() << "SoundBank::loadSample size" << inputFile.size();
     QByteArray *data = new QByteArray(inputFile.readAll());
     inputFile.close();
-    audioSources.append(data);
-    return audioSources.count() - 1;
+    audioSamples.insert(fileName, data);
 }
 
-void SoundBank::play(int sample) {
-    qDebug() << "play thread is" << QThread::currentThreadId();
-    QBuffer *buffer;
-    QAudioOutput *audioOutput;
-    if(freeChannels.count() > 0 && freeBuffers.count() > 0) {
-        buffer = freeBuffers.at(0);
-        freeBuffers.removeAt(0);
-        closedBuffers.append(buffer);
-        audioOutput = freeChannels.at(0);
-        freeChannels.removeAt(0);
-        closedChannels.append(audioOutput);
-    } else {
-        qDebug() << "No free channels, opening!";
-        if(closedBuffers.count() > 0 && closedChannels.count() > 0) {
-            buffer = closedBuffers.at(0);
-            buffer->close();
-            audioOutput = closedChannels.at(0);
+void SoundBank::play(QString sample) {
+    if(audioSamples.contains(sample)) {
+        qDebug() << "play thread is" << QThread::currentThreadId();
+        QBuffer *buffer;
+        QAudioOutput *audioOutput;
+        if(freeChannels.count() > 0 && freeBuffers.count() > 0) {
+            buffer = freeBuffers.at(0);
+            freeBuffers.removeAt(0);
+            closedBuffers.append(buffer);
+            audioOutput = freeChannels.at(0);
+            freeChannels.removeAt(0);
+            closedChannels.append(audioOutput);
+        } else {
+            qDebug() << "No free channels, opening!";
+            if(closedBuffers.count() > 0 && closedChannels.count() > 0) {
+                buffer = closedBuffers.at(0);
+                buffer->close();
+                audioOutput = closedChannels.at(0);
+            }
+    ////        audioOutput->suspend();
         }
-////        audioOutput->suspend();
-    }
-    buffer->setBuffer(audioSources.at(sample)); // set new data pointer to buffer
+        buffer->setBuffer(audioSamples.value(sample)); // set new data pointer to buffer
 
-    buffer->open(QBuffer::ReadOnly); // open the buffer for reading
-    hashOutputToBuffer.insert(audioOutput, buffer);
-    counter.insert(audioOutput,0);
-    audioOutput->start(buffer);
+        buffer->open(QBuffer::ReadOnly); // open the buffer for reading
+        hashOutputToBuffer.insert(audioOutput, buffer);
+        counter.insert(audioOutput,0);
+        audioOutput->start(buffer);
+    } else {
+        qWarning() << "SoundBank::play - No such sample" << sample;
+    }
 }
 
 

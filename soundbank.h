@@ -11,9 +11,9 @@ public:
     QAudioDeviceInfo  device;
     QAudioFormat      settings;
     QList<QAudioOutput*> audioOuputs;
-    QList<QByteArray*> audioSources;
+    QHash<QString, QByteArray*> audioSamples;
     QHash<QAudioOutput*, QBuffer*> hashOutputToBuffer;
-    int loadSample(const QString &fileName);
+    void loadSample(const QString &fileName);
     QHash<QAudioOutput*,int> counter;
     int numberOfChannels;
     QList<QAudioOutput*> freeChannels;
@@ -22,7 +22,7 @@ public:
     QList<QBuffer*> closedBuffers;
 
 public slots:
-    void play(int sample);
+    void play(QString sample);
 
 private slots:
     void state(QAudio::State s);

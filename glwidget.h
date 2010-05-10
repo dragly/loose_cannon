@@ -61,10 +61,10 @@ public:
     Node* closestNode(QVector3D position);
     // Sounds
     SoundThread *soundThread;
-    int sndExplosion;
+    QString sndExplosion;
     // end sounds
 signals:
-    void play(int sample);
+    void playSound(QString sample);
 protected:
     void paintGL ();
     void initializeGL ();
