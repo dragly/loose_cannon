@@ -9,8 +9,12 @@ SoundBank::SoundBank()
     settings.setCodec("audio/pcm");
     settings.setByteOrder(QAudioFormat::LittleEndian);
     settings.setSampleType(QAudioFormat::SignedInt);
+    qDebug() << "Available sound devices:";
+    foreach(QAudioDeviceInfo deviceInfo, QAudioDeviceInfo::availableDevices(QAudio::AudioOutput)) {
+        qDebug() << deviceInfo.deviceName();
+    }
     QAudioDeviceInfo info(QAudioDeviceInfo::defaultOutputDevice());
-    qDebug() << "deviceName" << info.deviceName();
+    qDebug() << "default deviceName" << info.deviceName();
     if (!info.isFormatSupported(settings)) {
         qWarning()<<"default format not supported try to use nearest";
         settings = info.nearestFormat(settings);
@@ -23,7 +27,7 @@ SoundBank::SoundBank()
     device = info;
 
     // to avoid recreating outputs and buffers for each sound played, we rather use an upper limit for the amount of sounds available
-    for(int i = 0; i<16; i++) { // create channels and buffers
+    for(int i = 0; i<4; i++) { // create channels and buffers
         QAudioOutput *audioOutput = new QAudioOutput(device,settings,this);
         freeChannels.append(audioOutput);
         audioOutput->setNotifyInterval(100);
@@ -50,7 +54,7 @@ void SoundBank::loadSample(const QString &fileName) {
 
 void SoundBank::play(QString sample) {
     if(audioSamples.contains(sample)) {
-        qDebug() << "play thread is" << QThread::currentThreadId();
+//        qDebug() << "play thread is" << QThread::currentThreadId();
         QBuffer *buffer;
         QAudioOutput *audioOutput;
         if(freeChannels.count() > 0 && freeBuffers.count() > 0) {
