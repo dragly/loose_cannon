@@ -14,13 +14,15 @@ public:
     QList<QByteArray*> audioSources;
     QHash<QAudioOutput*, QBuffer*> hashOutputToBuffer;
     int loadSample(const QString &fileName);
-    void play(int sample);
     QHash<QAudioOutput*,int> counter;
     int numberOfChannels;
     QList<QAudioOutput*> freeChannels;
     QList<QBuffer*> freeBuffers;
     QList<QAudioOutput*> closedChannels;
     QList<QBuffer*> closedBuffers;
+
+public slots:
+    void play(int sample);
 
 private slots:
     void state(QAudio::State s);

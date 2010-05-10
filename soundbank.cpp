@@ -2,6 +2,7 @@
 
 SoundBank::SoundBank()
 {
+    qDebug() << "soundBank thread is" << QThread::currentThreadId();
     settings.setFrequency(48000);
     settings.setChannels(2);
     settings.setSampleSize(16);
@@ -48,11 +49,8 @@ int SoundBank::loadSample(const QString &fileName) {
     return audioSources.count() - 1;
 }
 
-void SoundBank::run() {
-    exec();
-}
-
 void SoundBank::play(int sample) {
+    qDebug() << "play thread is" << QThread::currentThreadId();
     QBuffer *buffer;
     QAudioOutput *audioOutput;
     if(freeChannels.count() > 0 && freeBuffers.count() > 0) {

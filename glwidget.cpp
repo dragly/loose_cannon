@@ -31,7 +31,7 @@
 //#include "ui/window.h"
 //#include "ui/cbutton.h"
 #include "node.h"
-#include "soundbank.h"
+#include "soundthread.h"
 
 // constants
 const qreal UnitSpeed = 40.0; // m/s
@@ -98,10 +98,10 @@ GLWidget::GLWidget(QWidget *parent) : QGLWidget(parent)
     nodeModel = new Model("box.obj");
     // initial values
     camera = QVector3D(25, -25, 80);
-    soundBank = new SoundBank();
-    sndExplosion = soundBank->loadSample("sounds/bomb.wav");
-    connect(this, SIGNAL(play(int)), soundBank, SLOT(play(int)));
-    soundBank->start();
+    soundThread = new SoundThread(this);
+    soundThread->start();
+//    sndExplosion = soundThread->loadSample("sounds/bomb.wav");
+    qDebug() << "main thread is" << QThread::currentThreadId();
     // timer, should be set last, just in case
     timer = new QTimer(this);
     QObject::connect(timer, SIGNAL(timeout()), this, SLOT(updateGL()));
@@ -296,7 +296,7 @@ void GLWidget::paintGL()
             } // foreach enemy
             if(bullet->position.z() < 0 || hitUnit) { // we have an explosion
                 // TODO: Animate explosion with sprites as seen here: http://news.developer.nvidia.com/2007/01/tips_strategies.html
-                emit play(sndExplosion); // play the sound in the soundBank thread
+                emit play(0); // play the sound in the soundBank thread
                 foreach(Entity *hitUnit, allDestructibles) {
                     QVector3D distance = hitUnit->position - bullet->position;
                     if(distance.lengthSquared() < ExplosionRadiusSquared) { // in explosion radius

@@ -37,7 +37,7 @@ class Node;
 class Radar;
 class Entity;
 class Tank;
-class SoundBank;
+class SoundThread;
 
 class GLWidget : public QGLWidget {
 
@@ -60,7 +60,7 @@ public:
     QList<Node*> findPath(Node* startPosition, Node* endPosition, QList<Node*> avoid = QList<Node*>());
     Node* closestNode(QVector3D position);
     // Sounds
-    SoundBank *soundBank;
+    SoundThread *soundThread;
     int sndExplosion;
     // end sounds
 signals:

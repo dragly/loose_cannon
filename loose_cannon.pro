@@ -20,7 +20,8 @@ SOURCES += main.cpp \
     entity.cpp \
     unit.cpp \
     tank.cpp \
-    soundbank.cpp
+    soundbank.cpp \
+    soundthread.cpp
 SOURCES += glwidget.cpp
 SOURCES += mainwindow.cpp
 SOURCES += glm.cpp
@@ -37,7 +38,8 @@ HEADERS += glwidget.h \
     entity.h \
     unit.h \
     tank.h \
-    soundbank.h
+    soundbank.h \
+    soundthread.h
 HEADERS += mainwindow.h
 HEADERS += glm.h
 RESOURCES += texture.qrc
