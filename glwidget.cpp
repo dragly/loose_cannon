@@ -23,7 +23,7 @@
 #include "ui/ui.h"
 #include <QPainter>
 #include <QPaintEngine>
-#include <Phonon/MediaObject>
+//#include <Phonon/MediaObject>
 #include <math.h>
 #include <stdio.h>
 #include <string.h>

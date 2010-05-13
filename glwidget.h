@@ -27,7 +27,7 @@
 #include <QtOpenGL/qglshaderprogram.h>
 #include <QTime>
 #include <QVector>
-#include <Phonon/MediaObject>
+//#include <Phonon/MediaObject>
 #include "model.h"
 
 class Ui;
