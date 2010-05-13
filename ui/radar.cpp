@@ -147,7 +147,7 @@ void Radar::drawMap(QPainter* painter) {
     //draw all surroundings and the map picture
     QRectF map(0,0,mapSize,mapSize);
 
-    painter->setClipRect(map); //clip stuff outside the map (mainly the camerasquare)
+//    painter->setClipRect(map); //clip stuff outside the map (mainly the camerasquare)
 
     painter->setPen(Window::ColorNone);
     painter->setBrush(Window::ColorBackground);
@@ -199,7 +199,7 @@ void Radar::drawMap(QPainter* painter) {
     }
 
     painter->resetTransform();
-    painter->setClipRect(0,0,ui->glW->width(),height);//setClipping(false) doesnt seem to have any effect :<
-    painter->setClipping(false);
+//    painter->setClipRect(0,0,ui->glW->width(),height);//setClipping(false) doesnt seem to have any effect :<
+//    painter->setClipping(false);
 
 }
