@@ -10,15 +10,16 @@ SoundBank::SoundBank()
     settings.setByteOrder(QAudioFormat::LittleEndian);
     settings.setSampleType(QAudioFormat::SignedInt);
     QAudioDeviceInfo info(QAudioDeviceInfo::defaultOutputDevice());
-    qDebug() << "default deviceName" << info.deviceName();
-    if (!info.isFormatSupported(settings)) {
-        qWarning()<<"default format not supported try to use nearest";
-        settings = info.nearestFormat(settings);
-    }
 
     qDebug() << "Available sound devices:";
     foreach(QAudioDeviceInfo deviceInfo, QAudioDeviceInfo::availableDevices(QAudio::AudioOutput)) {
         qDebug() << deviceInfo.deviceName();
+    }
+
+    qDebug() << "default deviceName" << info.deviceName();
+    if (!info.isFormatSupported(settings)) {
+        qWarning()<<"default format not supported try to use nearest";
+        settings = info.nearestFormat(settings);
     }
 
     if(settings.sampleSize() != 16) {
@@ -71,6 +72,9 @@ void SoundBank::play(QString sample) {
                 buffer = closedBuffers.at(0);
                 buffer->close();
                 audioOutput = closedChannels.at(0);
+            } else {
+                qDebug() << "No buffers at all!";
+                return;
             }
     ////        audioOutput->suspend();
         }

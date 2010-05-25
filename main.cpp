@@ -23,7 +23,7 @@
 
 int main(int argc, char ** argv )
 {
-    Q_INIT_RESOURCE(texture);
+//    Q_INIT_RESOURCE(texture);
     QApplication a( argc, argv );
     a.setApplicationName( "loose_cannon" );
     MainWindow mw;

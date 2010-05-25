@@ -42,6 +42,13 @@ HEADERS += glwidget.h \
     soundthread.h
 HEADERS += mainwindow.h
 HEADERS += glm.h
-RESOURCES += texture.qrc
+RESOURCES +=
 QT += opengl \
     multimedia
+
+unix {
+    QMAKE_POST_LINK = cp -R ../loose_cannon/data .;
+}
+win32 {
+    QMAKE_POST_LINK = xcopy ..\loose_cannon\data\*.* data /e;
+}

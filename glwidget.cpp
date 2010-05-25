@@ -72,12 +72,12 @@ GLWidget::~GLWidget()
 GLWidget::GLWidget(QWidget *parent) : QGLWidget(parent)
 {
     //    soundbank = new KGrSoundBank(2);
-    //    expsound = soundbank->loadSound("sounds/bomb-02.wav");
-    //    expsound2 = soundbank->loadSound("sounds/bomb-02.ogg");
+    //    expsound = soundbank->loadSound("data/sounds/bomb-02.wav");
+    //    expsound2 = soundbank->loadSound("data/sounds/bomb-02.ogg");
     //    qDebug() << QSound::isAvailable();
-    //    explosion = Phonon::createPlayer(Phonon::GameCategory, Phonon::MediaSource("sounds/explosion-02.ogg"));
-    //    explosion2 = Phonon::createPlayer(Phonon::GameCategory, Phonon::MediaSource("sounds/bomb-02.ogg"));
-    //    explosion3 = Phonon::createPlayer(Phonon::GameCategory, Phonon::MediaSource("sounds/bomb-03.ogg"));
+    //    explosion = Phonon::createPlayer(Phonon::GameCategory, Phonon::MediaSource("data/sounds/explosion-02.ogg"));
+    //    explosion2 = Phonon::createPlayer(Phonon::GameCategory, Phonon::MediaSource("data/sounds/bomb-02.ogg"));
+    //    explosion3 = Phonon::createPlayer(Phonon::GameCategory, Phonon::MediaSource("data/sounds/bomb-03.ogg"));
     useSound = true;
     drawHud = true;
 
@@ -85,28 +85,28 @@ GLWidget::GLWidget(QWidget *parent) : QGLWidget(parent)
     setAttribute(Qt::WA_PaintOnScreen);
     setAttribute(Qt::WA_NoSystemBackground);
     setAutoBufferSwap(false);
-    monkeyModel = new Model("monkey1.obj");
-    boxModel = new Model("box.obj");
-    cannonModel = new Model("cannon.obj");
-    humanTankBodyModel = new Model("tank-body.obj");
+    monkeyModel = new Model("data/objects/monkey1.obj");
+    boxModel = new Model("data/objects/box.obj");
+    cannonModel = new Model("data/objects/cannon.obj");
+    humanTankBodyModel = new Model("data/objects/tank-body.obj");
     humanTankBodyModel->scale *= 0.5;
-    humanTankTowerModel = new Model("tank-head.obj");
+    humanTankTowerModel = new Model("data/objects/tank-head.obj");
     humanTankTowerModel->scale *= 0.5;
-    enemyTankBodyModel = new Model("tank-body.obj");
+    enemyTankBodyModel = new Model("data/objects/tank-body.obj");
     enemyTankBodyModel->scale *= 0.5;
-    enemyTankTowerModel = new Model("tank-head.obj");
+    enemyTankTowerModel = new Model("data/objects/tank-head.obj");
     enemyTankTowerModel->scale *= 0.5;
-    bulletModel = new Model("bullet.obj");
+    bulletModel = new Model("data/objects/bullet.obj");
     bulletModel->scale *= 0.6;
-    nodeModel = new Model("box.obj");
+    nodeModel = new Model("data/objects/box.obj");
     // initial values
     camera = QVector3D(25, -25, 80);
-    sndExplosion = "sounds/bomb.wav";
+    sndExplosion = "data/sounds/bomb.wav";
     QStringList audioSamples;
     audioSamples << sndExplosion;
     soundThread = new SoundThread(this, audioSamples);
     soundThread->start();
-    //    sndExplosion = soundThread->loadSample("sounds/bomb.wav");
+    //    sndExplosion = soundThread->loadSample("data/sounds/bomb.wav");
     qDebug() << "main thread is" << QThread::currentThreadId();
     grabKeyboard();
     grabMouse();
@@ -188,8 +188,8 @@ void GLWidget::initializeGL ()
     glClearColor(0.8f, 0.7f, 0.8f, 1.0f);
     // create and set shaders
     QGLShaderProgram *program = new QGLShaderProgram(this);
-    program->addShaderFromSourceFile(QGLShader::Fragment, "fshader.glsl");
-    program->addShaderFromSourceFile(QGLShader::Vertex, "vshader.glsl");
+    program->addShaderFromSourceFile(QGLShader::Fragment, "data/shaders/fshader.glsl");
+    program->addShaderFromSourceFile(QGLShader::Vertex, "data/shaders/vshader.glsl");
     program->link();
     monkeyModel->setShaderProgram(program);
     cannonModel->setShaderProgram(program);
@@ -216,16 +216,16 @@ void GLWidget::initializeGL ()
     // create and set textures
     GLuint furTexture;
     glGenTextures(1, &furTexture);
-    furTexture = bindTexture(QImage("fur.resized.jpg"));
+    furTexture = bindTexture(QImage("data/textures/fur.resized.jpg"));
     GLuint metalTexture;
     glGenTextures(1, &metalTexture);
-    metalTexture = bindTexture(QImage("metal.small.jpg"));
+    metalTexture = bindTexture(QImage("data/textures/metal.small.jpg"));
     GLuint armyTexture;
     glGenTextures(1, &armyTexture);
-    armyTexture = bindTexture(QImage("army-texture.png"));
+    armyTexture = bindTexture(QImage("data/textures/army-texture.png"));
     GLuint yellowArmyTexture;
     glGenTextures(1, &yellowArmyTexture);
-    yellowArmyTexture = bindTexture(QImage("army-texture-yellow.png"));
+    yellowArmyTexture = bindTexture(QImage("data/textures/army-texture-yellow.png"));
     boxModel->setTexture(furTexture);
     monkeyModel->setTexture(furTexture);
     cannonModel->setTexture(metalTexture);
