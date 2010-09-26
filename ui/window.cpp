@@ -145,6 +145,8 @@ bool Window::click() {
 
 }
 void Window::move(int x, int y) {
+    Q_UNUSED(x)
+    Q_UNUSED(y)
     //move the window?
 
     //move sliders etc

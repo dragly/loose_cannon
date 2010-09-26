@@ -7,6 +7,7 @@ HudObject::HudObject()
 }
 
 void HudObject::draw(QPainter* painter) {
+    Q_UNUSED(painter);
 }
 
 bool HudObject::click(){
@@ -23,6 +24,8 @@ void HudObject::show(){
 }
 
 void HudObject::move(int x, int y){
+    Q_UNUSED(x)
+    Q_UNUSED(y)
 }
 
 bool HudObject::hovers(){

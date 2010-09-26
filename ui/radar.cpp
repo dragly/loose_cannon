@@ -55,6 +55,8 @@ void Radar::show() {
 }
 
 void Radar::move(int x, int y) {
+    Q_UNUSED(x)
+    Q_UNUSED(y)
     if (!hidden)
         clickMap();
 }

@@ -32,5 +32,5 @@ void Controller::move() {
 }
 
 void Controller::draw(QPainter *painter) {
-
+    Q_UNUSED(painter);
 }

@@ -455,7 +455,7 @@ static GLvoid
     char      buf[128];
     
     /* make a default group */
-    group = _glmAddGroup(model, "default");
+    group = _glmAddGroup(model, (char*)"default");
     
     numvertices = numnormals = numtexcoords = numtriangles = 0;
     while(fscanf(file, "%s", buf) != EOF) {
