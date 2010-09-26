@@ -121,7 +121,6 @@ private:
     Model *humanTankTowerModel;
     Model *enemyTankBodyModel;
     Model *enemyTankTowerModel;
-    Model *bulletModel;
     Model *nodeModel;
     bool gameOver;
     qreal gameOverTime;
